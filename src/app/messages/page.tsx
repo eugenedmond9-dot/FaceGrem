@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import ToastContainer, { ToastItem } from "../../components/ToastContainer";
@@ -35,7 +35,7 @@ type MessageRecord = {
   is_read: boolean;
 };
 
-export default function MessagesPage() {
+function MessagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -671,5 +671,19 @@ export default function MessagesPage() {
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#07111f] text-white">
+          Loading messages...
+        </div>
+      }
+    >
+      <MessagesPageContent />
+    </Suspense>
   );
 }
