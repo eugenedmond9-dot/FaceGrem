@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../lib/supabase";
@@ -8,16 +9,8 @@ export default function LandingPage() {
   const router = useRouter();
 
   const [loadingLogin, setLoadingLogin] = useState(false);
-  const [loadingSignup, setLoadingSignup] = useState(false);
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
-
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-
-  const [signupFullName, setSignupFullName] = useState("");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
-  const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
 
   useEffect(() => {
     const checkSession = async () => {
@@ -54,54 +47,6 @@ export default function LandingPage() {
     }
 
     router.push("/feed");
-  };
-
-  const handleSignup = async () => {
-    if (
-      !signupFullName.trim() ||
-      !signupEmail.trim() ||
-      !signupPassword.trim() ||
-      !signupConfirmPassword.trim()
-    ) {
-      alert("Please fill in all fields.");
-      return;
-    }
-
-    if (signupPassword !== signupConfirmPassword) {
-      alert("Passwords do not match.");
-      return;
-    }
-
-    if (signupPassword.length < 6) {
-      alert("Password must be at least 6 characters.");
-      return;
-    }
-
-    setLoadingSignup(true);
-
-    const { error } = await supabase.auth.signUp({
-      email: signupEmail.trim(),
-      password: signupPassword,
-      options: {
-        data: {
-          full_name: signupFullName.trim(),
-        },
-      },
-    });
-
-    setLoadingSignup(false);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    alert("Account created successfully. Check your email if confirmation is enabled.");
-    setIsSignupOpen(false);
-    setSignupFullName("");
-    setSignupEmail("");
-    setSignupPassword("");
-    setSignupConfirmPassword("");
   };
 
   return (
@@ -165,13 +110,12 @@ export default function LandingPage() {
                   </button>
 
                   <div className="pt-8">
-                    <button
-                      type="button"
-                      onClick={() => setIsSignupOpen(true)}
-                      className="w-full rounded-2xl border border-[#1877f2] bg-transparent py-4 text-lg font-semibold text-[#1877f2] transition hover:bg-[#1877f2]/5"
+                    <Link
+                      href="/signup"
+                      className="block w-full rounded-2xl border border-[#1877f2] bg-transparent py-4 text-center text-lg font-semibold text-[#1877f2] transition hover:bg-[#1877f2]/5"
                     >
                       Create new account
-                    </button>
+                    </Link>
                   </div>
 
                   <p className="pt-3 text-center text-xl font-semibold text-[#111827]">
@@ -239,68 +183,6 @@ export default function LandingPage() {
           <p className="mt-6 text-xs text-slate-500">FaceGrem © 2026</p>
         </div>
       </footer>
-
-      {isSignupOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 bg-black/40">
-          <div className="relative w-full max-w-xl rounded-[28px] bg-white p-6 shadow-2xl">
-            <button
-              onClick={() => setIsSignupOpen(false)}
-              className="absolute flex items-center justify-center w-10 h-10 text-2xl rounded-full right-4 top-4 bg-black/5 text-slate-500 hover:bg-black/10"
-            >
-              ×
-            </button>
-
-            <h3 className="text-3xl font-bold tracking-tight text-[#111827]">
-              Create your FaceGrem account
-            </h3>
-            <p className="mt-2 text-sm text-slate-500">
-              Join FaceGrem and start connecting.
-            </p>
-
-            <div className="mt-6 space-y-4">
-              <input
-                type="text"
-                value={signupFullName}
-                onChange={(e) => setSignupFullName(e.target.value)}
-                placeholder="Full name"
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
-              />
-
-              <input
-                type="email"
-                value={signupEmail}
-                onChange={(e) => setSignupEmail(e.target.value)}
-                placeholder="Email"
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
-              />
-
-              <input
-                type="password"
-                value={signupPassword}
-                onChange={(e) => setSignupPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
-              />
-
-              <input
-                type="password"
-                value={signupConfirmPassword}
-                onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                placeholder="Confirm password"
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
-              />
-
-              <button
-                onClick={handleSignup}
-                disabled={loadingSignup}
-                className="w-full rounded-2xl bg-[#1877f2] py-4 text-lg font-semibold text-white transition hover:bg-[#166fe5] disabled:opacity-70"
-              >
-                {loadingSignup ? "Creating account..." : "Create Account"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
