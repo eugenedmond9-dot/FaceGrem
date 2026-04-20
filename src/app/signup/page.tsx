@@ -23,6 +23,33 @@ const months = [
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
 
+function AnimatedBackground() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,119,242,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(6,182,212,0.12),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.12),transparent_30%),linear-gradient(to_bottom_right,#f2f4f7,#eef5ff)]" />
+
+      <div className="absolute left-0 top-20 h-72 w-72 animate-[floatOne_14s_ease-in-out_infinite] rounded-full bg-cyan-300/25 blur-3xl" />
+      <div className="absolute right-10 top-32 h-80 w-80 animate-[floatTwo_18s_ease-in-out_infinite] rounded-full bg-blue-400/20 blur-3xl" />
+      <div className="absolute bottom-12 left-1/4 h-72 w-72 animate-[floatThree_16s_ease-in-out_infinite] rounded-full bg-violet-400/18 blur-3xl" />
+
+      <style jsx global>{`
+        @keyframes floatOne {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(30px, -20px, 0) scale(1.08); }
+        }
+        @keyframes floatTwo {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(-35px, 25px, 0) scale(1.06); }
+        }
+        @keyframes floatThree {
+          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+          50% { transform: translate3d(15px, -30px, 0) scale(1.1); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export default function SignupPage() {
   const router = useRouter();
 
@@ -112,8 +139,10 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f2f4f7] text-[#101828]">
-      <main className="flex-1 px-5 py-8 sm:px-6">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f2f4f7] text-[#101828]">
+      <AnimatedBackground />
+
+      <main className="relative z-10 flex-1 px-5 py-8 sm:px-6">
         <div className="mx-auto max-w-[560px]">
           <div className="mb-5">
             <Link
@@ -126,7 +155,7 @@ export default function SignupPage() {
 
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1877f2] text-sm font-bold text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1877f2] text-sm font-bold text-white shadow-md shadow-blue-500/20">
                 F
               </div>
               <span className="text-xl font-semibold text-[#111827]">FaceGrem</span>
@@ -141,152 +170,154 @@ export default function SignupPage() {
             </p>
           </div>
 
-          <div className="space-y-5">
-            <div>
-              <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                Name
-              </label>
-              <div className="grid gap-4 sm:grid-cols-2">
+          <div className="rounded-[28px] border border-white/60 bg-white/55 p-5 shadow-[0_20px_80px_rgba(24,119,242,0.08)] backdrop-blur-xl sm:p-6">
+            <div className="space-y-5">
+              <div>
+                <label className="mb-3 block text-xl font-semibold text-[#111827]">
+                  Name
+                </label>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="First name"
+                    className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  />
+                  <input
+                    type="text"
+                    value={surname}
+                    onChange={(e) => setSurname(e.target.value)}
+                    placeholder="Surname"
+                    className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-3 block text-xl font-semibold text-[#111827]">
+                  Date of birth
+                </label>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <select
+                    value={birthDay}
+                    onChange={(e) => setBirthDay(e.target.value)}
+                    className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  >
+                    <option value="">Day</option>
+                    {days.map((day) => (
+                      <option key={day} value={day}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={birthMonth}
+                    onChange={(e) => setBirthMonth(e.target.value)}
+                    className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  >
+                    <option value="">Month</option>
+                    {months.map((month) => (
+                      <option key={month} value={month}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                    className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  >
+                    <option value="">Year</option>
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-3 block text-xl font-semibold text-[#111827]">
+                  Gender
+                </label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
+                >
+                  <option value="">Select your gender</option>
+                  <option value="Female">Female</option>
+                  <option value="Male">Male</option>
+                  <option value="Custom">Custom</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-3 block text-xl font-semibold text-[#111827]">
+                  Mobile number or email address
+                </label>
                 <input
                   type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="First name"
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  value={emailOrPhone}
+                  onChange={(e) => setEmailOrPhone(e.target.value)}
+                  placeholder="Mobile number or email address"
+                  className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 />
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  You may receive notifications from us. Learn why we ask for your contact
+                  information.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-3 block text-xl font-semibold text-[#111827]">
+                  Password
+                </label>
                 <input
-                  type="text"
-                  value={surname}
-                  onChange={(e) => setSurname(e.target.value)}
-                  placeholder="Surname"
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                Date of birth
-              </label>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <select
-                  value={birthDay}
-                  onChange={(e) => setBirthDay(e.target.value)}
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
-                >
-                  <option value="">Day</option>
-                  {days.map((day) => (
-                    <option key={day} value={day}>
-                      {day}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={birthMonth}
-                  onChange={(e) => setBirthMonth(e.target.value)}
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
-                >
-                  <option value="">Month</option>
-                  {months.map((month) => (
-                    <option key={month} value={month}>
-                      {month}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  value={birthYear}
-                  onChange={(e) => setBirthYear(e.target.value)}
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
-                >
-                  <option value="">Year</option>
-                  {years.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-3 text-sm leading-6 text-slate-700">
+                <p>
+                  By tapping Submit, you agree to create an account and to FaceGrem&apos;s
+                  Terms, Privacy Policy and Cookies Policy.
+                </p>
+                <p>
+                  The Privacy Policy describes the ways we can use the information we
+                  collect when you create an account.
+                </p>
               </div>
-            </div>
 
-            <div>
-              <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                Gender
-              </label>
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
+              <button
+                onClick={handleSignup}
+                disabled={loadingSignup}
+                className="w-full rounded-2xl bg-[#1877f2] py-4 text-lg font-semibold text-white transition hover:bg-[#166fe5] disabled:opacity-70"
               >
-                <option value="">Select your gender</option>
-                <option value="Female">Female</option>
-                <option value="Male">Male</option>
-                <option value="Custom">Custom</option>
-                <option value="Prefer not to say">Prefer not to say</option>
-              </select>
+                {loadingSignup ? "Creating account..." : "Submit"}
+              </button>
+
+              <Link
+                href="/"
+                className="block w-full rounded-2xl border border-black/10 bg-transparent py-4 text-center text-lg font-semibold text-[#111827] transition hover:bg-black/5"
+              >
+                I already have an account
+              </Link>
             </div>
-
-            <div>
-              <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                Mobile number or email address
-              </label>
-              <input
-                type="text"
-                value={emailOrPhone}
-                onChange={(e) => setEmailOrPhone(e.target.value)}
-                placeholder="Mobile number or email address"
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
-              />
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                You may receive notifications from us. Learn why we ask for your contact
-                information.
-              </p>
-            </div>
-
-            <div>
-              <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
-              />
-            </div>
-
-            <div className="space-y-3 text-sm leading-6 text-slate-700">
-              <p>
-                By tapping Submit, you agree to create an account and to FaceGrem&apos;s
-                Terms, Privacy Policy and Cookies Policy.
-              </p>
-              <p>
-                The Privacy Policy describes the ways we can use the information we
-                collect when you create an account.
-              </p>
-            </div>
-
-            <button
-              onClick={handleSignup}
-              disabled={loadingSignup}
-              className="w-full rounded-2xl bg-[#1877f2] py-4 text-lg font-semibold text-white transition hover:bg-[#166fe5] disabled:opacity-70"
-            >
-              {loadingSignup ? "Creating account..." : "Submit"}
-            </button>
-
-            <Link
-              href="/"
-              className="block w-full rounded-2xl border border-black/15 bg-transparent py-4 text-center text-lg font-semibold text-[#111827] transition hover:bg-black/5"
-            >
-              I already have an account
-            </Link>
           </div>
         </div>
       </main>
 
-      <footer className="border-t border-black/10 bg-[#f2f4f7] px-6 py-8 text-sm text-slate-500">
+      <footer className="relative z-10 px-6 py-8 text-sm border-t border-black/10 bg-white/35 text-slate-500 backdrop-blur-md">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-wrap gap-x-4 gap-y-2">
             {[
