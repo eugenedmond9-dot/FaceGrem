@@ -113,9 +113,9 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f2f4f7] text-[#101828]">
-      <main className="flex-1 px-6 py-10">
-        <div className="max-w-2xl mx-auto">
-          <div className="mb-6">
+      <main className="flex-1 px-5 py-8 sm:px-6">
+        <div className="mx-auto max-w-[560px]">
+          <div className="mb-5">
             <Link
               href="/"
               className="inline-flex items-center justify-center w-10 h-10 text-3xl transition rounded-full text-slate-500 hover:bg-black/5"
@@ -124,26 +124,26 @@ export default function SignupPage() {
             </Link>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1877f2] text-sm font-bold text-white">
                 F
               </div>
-              <span className="text-2xl font-semibold text-[#111827]">FaceGrem</span>
+              <span className="text-xl font-semibold text-[#111827]">FaceGrem</span>
             </div>
 
-            <h1 className="text-4xl font-bold tracking-tight text-[#111827]">
+            <h1 className="text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
               Get started on FaceGrem
             </h1>
-            <p className="mt-3 text-xl leading-8 text-slate-700">
+            <p className="mt-2 text-base leading-7 text-slate-700 sm:text-lg">
               Create an account to connect with friends, family and communities of
               people who share your interests.
             </p>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-5">
             <div>
-              <label className="mb-3 block text-2xl font-semibold text-[#111827]">
+              <label className="mb-3 block text-xl font-semibold text-[#111827]">
                 Name
               </label>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -152,27 +152,27 @@ export default function SignupPage() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="First name"
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 />
                 <input
                   type="text"
                   value={surname}
                   onChange={(e) => setSurname(e.target.value)}
                   placeholder="Surname"
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="mb-3 block text-2xl font-semibold text-[#111827]">
+              <label className="mb-3 block text-xl font-semibold text-[#111827]">
                 Date of birth
               </label>
               <div className="grid gap-4 sm:grid-cols-3">
                 <select
                   value={birthDay}
                   onChange={(e) => setBirthDay(e.target.value)}
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 >
                   <option value="">Day</option>
                   {days.map((day) => (
@@ -185,7 +185,7 @@ export default function SignupPage() {
                 <select
                   value={birthMonth}
                   onChange={(e) => setBirthMonth(e.target.value)}
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 >
                   <option value="">Month</option>
                   {months.map((month) => (
@@ -198,7 +198,7 @@ export default function SignupPage() {
                 <select
                   value={birthYear}
                   onChange={(e) => setBirthYear(e.target.value)}
-                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                  className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 >
                   <option value="">Year</option>
                   {years.map((year) => (
@@ -211,13 +211,13 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="mb-3 block text-2xl font-semibold text-[#111827]">
+              <label className="mb-3 block text-xl font-semibold text-[#111827]">
                 Gender
               </label>
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
               >
                 <option value="">Select your gender</option>
                 <option value="Female">Female</option>
@@ -228,7 +228,7 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="mb-3 block text-2xl font-semibold text-[#111827]">
+              <label className="mb-3 block text-xl font-semibold text-[#111827]">
                 Mobile number or email address
               </label>
               <input
@@ -236,16 +236,16 @@ export default function SignupPage() {
                 value={emailOrPhone}
                 onChange={(e) => setEmailOrPhone(e.target.value)}
                 placeholder="Mobile number or email address"
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
               />
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                You may receive notifications from us. Learn why we ask for your
-                contact information.
+                You may receive notifications from us. Learn why we ask for your contact
+                information.
               </p>
             </div>
 
             <div>
-              <label className="mb-3 block text-2xl font-semibold text-[#111827]">
+              <label className="mb-3 block text-xl font-semibold text-[#111827]">
                 Password
               </label>
               <input
@@ -253,11 +253,11 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
-                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
               />
             </div>
 
-            <div className="space-y-4 text-sm leading-7 text-slate-700">
+            <div className="space-y-3 text-sm leading-6 text-slate-700">
               <p>
                 By tapping Submit, you agree to create an account and to FaceGrem&apos;s
                 Terms, Privacy Policy and Cookies Policy.
