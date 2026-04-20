@@ -51,11 +51,11 @@ export default function LandingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f2f4f7] text-[#101828]">
-      <main className="flex-1">
-        <div className="mx-auto grid min-h-[78vh] max-w-7xl lg:grid-cols-2">
-          <section className="flex items-center px-6 py-14 lg:px-10 xl:px-16">
-            <div className="max-w-xl">
-              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#1877f2] text-4xl font-bold text-white shadow-lg">
+      <main className="flex-1 px-5 py-8 sm:px-6">
+        <div className="mx-auto grid min-h-[78vh] max-w-7xl gap-10 lg:grid-cols-2 lg:items-center">
+          <section className="flex items-center">
+            <div className="max-w-[560px]">
+              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#1877f2] text-4xl font-bold text-white shadow-lg">
                 F
               </div>
 
@@ -63,15 +63,15 @@ export default function LandingPage() {
                 Welcome to FaceGrem
               </div>
 
-              <h1 className="mt-8 text-5xl font-bold leading-tight tracking-tight text-[#111827] sm:text-6xl">
+              <h1 className="mt-8 text-4xl font-bold leading-tight tracking-tight text-[#111827] sm:text-5xl lg:text-6xl">
                 Your new social space to connect, share, and grow.
               </h1>
             </div>
           </section>
 
-          <section className="flex items-center px-6 border-l border-black/10 py-14 lg:px-10 xl:px-16">
-            <div className="w-full max-w-xl">
-              <div className="rounded-[28px] bg-transparent p-0 sm:p-2">
+          <section className="flex items-center justify-center lg:justify-end">
+            <div className="w-full max-w-[560px]">
+              <div className="rounded-[28px] bg-transparent">
                 <h2 className="mb-8 text-3xl font-bold tracking-tight text-[#111827]">
                   Log in to FaceGrem
                 </h2>
@@ -82,7 +82,7 @@ export default function LandingPage() {
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                     placeholder="Email address or mobile number"
-                    className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                    className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                   />
 
                   <input
@@ -90,7 +90,7 @@ export default function LandingPage() {
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="Password"
-                    className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-lg text-[#111827] outline-none transition focus:border-[#1877f2]"
+                    className="w-full rounded-2xl border border-black/15 bg-white px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                   />
 
                   <button
