@@ -340,7 +340,9 @@ function ProfilePageContent() {
       if (error) {
         alert(error.message);
       } else {
-        setFollows((prev) => prev.filter((follow) => follow.id !== existingFollow.id));
+        setFollows((prev) =>
+          prev.filter((follow) => follow.id !== existingFollow.id)
+        );
       }
     } else {
       const { data, error } = await supabase

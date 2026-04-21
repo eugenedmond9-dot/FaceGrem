@@ -4,6 +4,14 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import {
+  Language,
+  getSavedLanguage,
+  getSignupTranslations,
+  saveLanguage,
+} from "../../lib/i18n";
+import AuthBackground from "../../components/AuthBackground";
+import AuthFooter from "../../components/AuthFooter";
 
 const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
 const months = [
@@ -23,37 +31,12 @@ const months = [
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
 
-function AnimatedBackground() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(24,119,242,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(6,182,212,0.12),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.12),transparent_30%),linear-gradient(to_bottom_right,#f2f4f7,#eef5ff)]" />
-
-      <div className="absolute left-0 top-20 h-72 w-72 animate-[floatOne_14s_ease-in-out_infinite] rounded-full bg-cyan-300/25 blur-3xl" />
-      <div className="absolute right-10 top-32 h-80 w-80 animate-[floatTwo_18s_ease-in-out_infinite] rounded-full bg-blue-400/20 blur-3xl" />
-      <div className="absolute bottom-12 left-1/4 h-72 w-72 animate-[floatThree_16s_ease-in-out_infinite] rounded-full bg-violet-400/18 blur-3xl" />
-
-      <style jsx global>{`
-        @keyframes floatOne {
-          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-          50% { transform: translate3d(30px, -20px, 0) scale(1.08); }
-        }
-        @keyframes floatTwo {
-          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-          50% { transform: translate3d(-35px, 25px, 0) scale(1.06); }
-        }
-        @keyframes floatThree {
-          0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-          50% { transform: translate3d(15px, -30px, 0) scale(1.1); }
-        }
-      `}</style>
-    </div>
-  );
-}
-
 export default function SignupPage() {
   const router = useRouter();
 
   const [loadingSignup, setLoadingSignup] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] =
+    useState<Language>("English (UK)");
 
   const [firstName, setFirstName] = useState("");
   const [surname, setSurname] = useState("");
@@ -63,6 +46,10 @@ export default function SignupPage() {
   const [gender, setGender] = useState("");
   const [emailOrPhone, setEmailOrPhone] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    setSelectedLanguage(getSavedLanguage());
+  }, []);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -78,9 +65,20 @@ export default function SignupPage() {
     void checkSession();
   }, [router]);
 
+  const t = useMemo(
+    () => getSignupTranslations(selectedLanguage),
+    [selectedLanguage]
+  );
+
   const fullName = useMemo(() => {
     return `${firstName.trim()} ${surname.trim()}`.trim();
   }, [firstName, surname]);
+
+  const handleLanguageChange = (language: Language) => {
+    setSelectedLanguage(language);
+    saveLanguage(language);
+    alert(getSignupTranslations(language).languageChanged);
+  };
 
   const handleSignup = async () => {
     if (
@@ -93,19 +91,19 @@ export default function SignupPage() {
       !emailOrPhone.trim() ||
       !password.trim()
     ) {
-      alert("Please fill in all fields.");
+      alert(t.fillAllFields);
       return;
     }
 
     if (password.length < 6) {
-      alert("Password must be at least 6 characters.");
+      alert(t.passwordTooShort);
       return;
     }
 
     const looksLikeEmail = emailOrPhone.includes("@");
 
     if (!looksLikeEmail) {
-      alert("For now, FaceGrem signup supports email. Please enter an email address.");
+      alert(t.emailOnly);
       return;
     }
 
@@ -134,13 +132,13 @@ export default function SignupPage() {
       return;
     }
 
-    alert("Account created successfully. Check your email if confirmation is enabled.");
+    alert(t.signupSuccess);
     router.push("/");
   };
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#f2f4f7] text-[#101828]">
-      <AnimatedBackground />
+      <AuthBackground />
 
       <main className="relative z-10 flex-1 px-5 py-8 sm:px-6">
         <div className="mx-auto max-w-[560px]">
@@ -149,7 +147,7 @@ export default function SignupPage() {
               href="/"
               className="inline-flex items-center justify-center w-10 h-10 text-3xl transition rounded-full text-slate-500 hover:bg-black/5"
             >
-              ‹
+              {t.back}
             </Link>
           </div>
 
@@ -158,15 +156,16 @@ export default function SignupPage() {
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1877f2] text-sm font-bold text-white shadow-md shadow-blue-500/20">
                 F
               </div>
-              <span className="text-xl font-semibold text-[#111827]">FaceGrem</span>
+              <span className="text-xl font-semibold text-[#111827]">
+                {t.brandName}
+              </span>
             </div>
 
             <h1 className="text-3xl font-bold tracking-tight text-[#111827] sm:text-4xl">
-              Get started on FaceGrem
+              {t.pageTitle}
             </h1>
             <p className="mt-2 text-base leading-7 text-slate-700 sm:text-lg">
-              Create an account to connect with friends, family and communities of
-              people who share your interests.
+              {t.pageSubtitle}
             </p>
           </div>
 
@@ -174,21 +173,21 @@ export default function SignupPage() {
             <div className="space-y-5">
               <div>
                 <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                  Name
+                  {t.name}
                 </label>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <input
                     type="text"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="First name"
+                    placeholder={t.firstName}
                     className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                   />
                   <input
                     type="text"
                     value={surname}
                     onChange={(e) => setSurname(e.target.value)}
-                    placeholder="Surname"
+                    placeholder={t.surname}
                     className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                   />
                 </div>
@@ -196,7 +195,7 @@ export default function SignupPage() {
 
               <div>
                 <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                  Date of birth
+                  {t.dateOfBirth}
                 </label>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <select
@@ -204,7 +203,7 @@ export default function SignupPage() {
                     onChange={(e) => setBirthDay(e.target.value)}
                     className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                   >
-                    <option value="">Day</option>
+                    <option value="">{t.day}</option>
                     {days.map((day) => (
                       <option key={day} value={day}>
                         {day}
@@ -217,7 +216,7 @@ export default function SignupPage() {
                     onChange={(e) => setBirthMonth(e.target.value)}
                     className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                   >
-                    <option value="">Month</option>
+                    <option value="">{t.month}</option>
                     {months.map((month) => (
                       <option key={month} value={month}>
                         {month}
@@ -230,7 +229,7 @@ export default function SignupPage() {
                     onChange={(e) => setBirthYear(e.target.value)}
                     className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                   >
-                    <option value="">Year</option>
+                    <option value="">{t.year}</option>
                     {years.map((year) => (
                       <option key={year} value={year}>
                         {year}
@@ -242,60 +241,53 @@ export default function SignupPage() {
 
               <div>
                 <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                  Gender
+                  {t.gender}
                 </label>
                 <select
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
                   className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 >
-                  <option value="">Select your gender</option>
-                  <option value="Female">Female</option>
-                  <option value="Male">Male</option>
-                  <option value="Custom">Custom</option>
-                  <option value="Prefer not to say">Prefer not to say</option>
+                  <option value="">{t.selectGender}</option>
+                  <option value="Female">{t.female}</option>
+                  <option value="Male">{t.male}</option>
+                  <option value="Custom">{t.custom}</option>
+                  <option value="Prefer not to say">{t.preferNotToSay}</option>
                 </select>
               </div>
 
               <div>
                 <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                  Mobile number or email address
+                  {t.emailOrPhone}
                 </label>
                 <input
                   type="text"
                   value={emailOrPhone}
                   onChange={(e) => setEmailOrPhone(e.target.value)}
-                  placeholder="Mobile number or email address"
+                  placeholder={t.emailOrPhonePlaceholder}
                   className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 />
                 <p className="mt-3 text-sm leading-6 text-slate-600">
-                  You may receive notifications from us. Learn why we ask for your contact
-                  information.
+                  {t.contactInfoHelp}
                 </p>
               </div>
 
               <div>
                 <label className="mb-3 block text-xl font-semibold text-[#111827]">
-                  Password
+                  {t.password}
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
+                  placeholder={t.passwordPlaceholder}
                   className="w-full rounded-2xl border border-black/10 bg-white/90 px-5 py-4 text-base text-[#111827] outline-none transition focus:border-[#1877f2]"
                 />
               </div>
 
               <div className="space-y-3 text-sm leading-6 text-slate-700">
-                <p>
-                  By tapping Submit, you agree to create an account and to FaceGrem&apos;s
-                  Terms, Privacy Policy and Cookies Policy.
-                </p>
-                <p>
-                  The Privacy Policy describes the ways we can use the information we
-                  collect when you create an account.
-                </p>
+                <p>{t.termsTextOne}</p>
+                <p>{t.termsTextTwo}</p>
               </div>
 
               <button
@@ -303,75 +295,25 @@ export default function SignupPage() {
                 disabled={loadingSignup}
                 className="w-full rounded-2xl bg-[#1877f2] py-4 text-lg font-semibold text-white transition hover:bg-[#166fe5] disabled:opacity-70"
               >
-                {loadingSignup ? "Creating account..." : "Submit"}
+                {loadingSignup ? t.creatingAccount : t.submit}
               </button>
 
               <Link
                 href="/"
                 className="block w-full rounded-2xl border border-black/10 bg-transparent py-4 text-center text-lg font-semibold text-[#111827] transition hover:bg-black/5"
               >
-                I already have an account
+                {t.alreadyHaveAccount}
               </Link>
             </div>
           </div>
         </div>
       </main>
 
-      <footer className="relative z-10 px-6 py-8 text-sm border-t border-black/10 bg-white/35 text-slate-500 backdrop-blur-md">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex flex-wrap gap-x-4 gap-y-2">
-            {[
-              "English (UK)",
-              "Kiswahili",
-              "Français (France)",
-              "Español",
-              "Português (Brasil)",
-              "العربية",
-              "Deutsch",
-              "More languages…",
-            ].map((item) => (
-              <button
-                key={item}
-                className="transition hover:text-[#1877f2]"
-                type="button"
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-wrap mt-6 gap-x-4 gap-y-2">
-            {[
-              "Sign up",
-              "Log in",
-              "Video",
-              "Threads",
-              "Privacy Policy",
-              "Privacy Centre",
-              "About",
-              "Create ad",
-              "Create Page",
-              "Developers",
-              "Careers",
-              "Cookies",
-              "AdChoices",
-              "Terms",
-              "Help",
-              "Contact uploading and non-users",
-            ].map((item) => (
-              <button
-                key={item}
-                className="transition hover:text-[#1877f2]"
-                type="button"
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-
-          <p className="mt-6 text-xs text-slate-500">FaceGrem © 2026</p>
-        </div>
-      </footer>
+      <AuthFooter
+        selectedLanguage={selectedLanguage}
+        onLanguageChange={handleLanguageChange}
+        text={t}
+      />
     </div>
   );
 }

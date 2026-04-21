@@ -5,13 +5,6 @@ import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
-type UserProfile = {
-  id?: string;
-  email?: string;
-  full_name?: string;
-  avatar_url?: string;
-};
-
 type ProfileRecord = {
   id: string;
   full_name: string;
@@ -32,6 +25,12 @@ type PostRecord = {
   community_id?: string | null;
 };
 
+type LikeRecord = {
+  id: string;
+  post_id: string;
+  user_id: string;
+};
+
 type CommentRecord = {
   id: string;
   post_id: string;
@@ -41,100 +40,110 @@ type CommentRecord = {
   created_at: string;
 };
 
-type LikeRecord = {
-  id: string;
-  post_id: string;
-  user_id: string;
-};
-
-type FollowRecord = {
-  id: string;
-  follower_id: string;
-  following_id: string;
-};
-
-type NotificationRecord = {
-  id: string;
-  user_id: string;
-  is_read: boolean;
-};
-
-type MessageRecord = {
-  id: string;
-  conversation_id: string;
-  sender_id: string;
-  sender_name: string | null;
-  content: string;
-  created_at: string;
-  is_read: boolean;
-};
-
-type ConversationParticipantRecord = {
-  id: string;
-  conversation_id: string;
-  user_id: string;
-};
-
 type SavedPostRecord = {
   id: string;
   user_id: string;
   post_id: string;
 };
 
-type FeedTab = "for-you" | "following";
-type ComposerMode = "text" | "photo" | "video";
-type TopicFilter = "" | "Faith" | "Business";
+type CommunityRecord = {
+  id: string;
+  creator_id: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  created_at: string;
+};
 
-const storyChips = [
-  { label: "For You", type: "feed" as const },
-  { label: "Following", type: "feed" as const },
-  { label: "Creators", type: "link" as const, href: "/videos" },
-  { label: "Videos", type: "link" as const, href: "/videos" },
-  { label: "Faith", type: "filter" as const },
-  { label: "Business", type: "filter" as const },
-];
+type CommunityMemberRecord = {
+  id: string;
+  community_id: string;
+  user_id: string;
+  created_at: string;
+};
+
+type VideoRecord = {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  video_url: string;
+  thumbnail_url: string | null;
+  views_count: number | null;
+  created_at: string;
+};
+
+type NotificationRecord = {
+  id: string;
+  user_id: string;
+  actor_id: string | null;
+  type: string;
+  post_id: string | null;
+  actor_name: string | null;
+  content: string | null;
+  is_read: boolean | null;
+  created_at: string;
+};
+
+const quickActions = ["Photo", "Video", "Live", "Story"] as const;
+const feedTabs = ["For You", "Following", "Creators", "Videos", "Faith", "Business"] as const;
 
 export default function FeedPage() {
   const router = useRouter();
 
-  const [userProfile, setUserProfile] = useState<UserProfile>({});
+  const [userId, setUserId] = useState("");
+  const [userName, setUserName] = useState("FaceGrem User");
+  const [userAvatar, setUserAvatar] = useState("");
   const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
-  const [postText, setPostText] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
-  const [composerMode, setComposerMode] = useState<ComposerMode>("text");
-  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
-  const [selectedImagePreview, setSelectedImagePreview] = useState("");
-
   const [posts, setPosts] = useState<PostRecord[]>([]);
   const [likes, setLikes] = useState<LikeRecord[]>([]);
   const [comments, setComments] = useState<CommentRecord[]>([]);
-  const [follows, setFollows] = useState<FollowRecord[]>([]);
-  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
-  const [messages, setMessages] = useState<MessageRecord[]>([]);
-  const [participants, setParticipants] = useState<ConversationParticipantRecord[]>([]);
   const [savedPosts, setSavedPosts] = useState<SavedPostRecord[]>([]);
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
-  const [loadingPosts, setLoadingPosts] = useState(true);
-  const [creatingPost, setCreatingPost] = useState(false);
-  const [feedTab, setFeedTab] = useState<FeedTab>("for-you");
-  const [topicFilter, setTopicFilter] = useState<TopicFilter>("");
-  const [followLoadingId, setFollowLoadingId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const [editingPostText, setEditingPostText] = useState("");
+  const [communities, setCommunities] = useState<CommunityRecord[]>([]);
+  const [communityMembers, setCommunityMembers] = useState<CommunityMemberRecord[]>([]);
+  const [videos, setVideos] = useState<VideoRecord[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const trending = [
-    "#FaceGremLaunch",
-    "#CreatorMode",
-    "#NairobiConnect",
-    "#ShortVideo",
-    "#CommunityFirst",
-  ];
+  const [activeComposerAction, setActiveComposerAction] =
+    useState<(typeof quickActions)[number]>("Photo");
+  const [activeFeedTab, setActiveFeedTab] =
+    useState<(typeof feedTabs)[number]>("For You");
+
+  const [postText, setPostText] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [posting, setPosting] = useState(false);
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
       name
     )}&background=0f172a&color=ffffff&bold=true`;
+
+  const getProfileById = (profileId?: string) => {
+    if (!profileId) return undefined;
+    return profiles.find((profile) => profile.id === profileId);
+  };
+
+  const getBestNameForUser = (uid?: string, fallbackName?: string | null) => {
+    const profile = getProfileById(uid);
+    return profile?.full_name || fallbackName || "FaceGrem User";
+  };
+
+  const getBestAvatarForUser = (
+    uid?: string,
+    fallbackName?: string | null,
+    fallbackAvatarUrl?: string | null
+  ) => {
+    const profile = getProfileById(uid);
+    return (
+      profile?.avatar_url ||
+      fallbackAvatarUrl ||
+      getAvatarUrl(profile?.full_name || fallbackName || "FaceGrem User")
+    );
+  };
 
   const getYouTubeEmbedUrl = (url: string) => {
     try {
@@ -160,39 +169,6 @@ export default function FeedPage() {
     return url.includes("youtube.com") || url.includes("youtu.be");
   };
 
-  const resetComposerExtras = () => {
-    setVideoUrl("");
-    setSelectedImageFile(null);
-    setSelectedImagePreview("");
-  };
-
-  const getProfileById = (profileId?: string) => {
-    if (!profileId) return undefined;
-    return profiles.find((profile) => profile.id === profileId);
-  };
-
-  const getBestAvatarForUser = (
-    userId?: string,
-    fallbackName?: string,
-    fallbackAvatarUrl?: string | null
-  ) => {
-    const profile = userId ? getProfileById(userId) : undefined;
-
-    return (
-      profile?.avatar_url ||
-      fallbackAvatarUrl ||
-      getAvatarUrl(fallbackName || profile?.full_name || "FaceGrem User")
-    );
-  };
-
-  const getBestNameForUser = (
-    userId?: string,
-    fallbackName?: string | null
-  ) => {
-    const profile = userId ? getProfileById(userId) : undefined;
-    return profile?.full_name || fallbackName || "FaceGrem User";
-  };
-
   useEffect(() => {
     const loadFeed = async () => {
       const {
@@ -204,38 +180,25 @@ export default function FeedPage() {
         return;
       }
 
-      const fullName = session.user.user_metadata?.full_name || "FaceGrem User";
-      const metadataAvatarUrl = session.user.user_metadata?.avatar_url as
-        | string
-        | undefined;
+      const sessionUserId = session.user.id;
+      const sessionFullName =
+        session.user.user_metadata?.full_name || "FaceGrem User";
 
-      const { data: myProfileData } = await supabase
-        .from("profiles")
-        .select("id, full_name, username, bio, avatar_url")
-        .eq("id", session.user.id)
-        .single();
-
-      setUserProfile({
-        id: session.user.id,
-        email: session.user.email,
-        full_name: myProfileData?.full_name || fullName,
-        avatar_url:
-          myProfileData?.avatar_url ||
-          metadataAvatarUrl ||
-          getAvatarUrl(myProfileData?.full_name || fullName),
-      });
+      setUserId(sessionUserId);
+      setUserName(sessionFullName);
 
       const [
-        { data: postsData, error: postsError },
+        { data: profilesData },
+        { data: postsData },
         { data: likesData },
         { data: commentsData },
-        { data: followsData },
-        { data: profilesData },
-        { data: notificationsData },
-        { data: messagesData },
-        { data: participantsData },
         { data: savedPostsData },
+        { data: communitiesData },
+        { data: communityMembersData },
+        { data: videosData },
+        { data: notificationsData },
       ] = await Promise.all([
+        supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
         supabase
           .from("posts")
           .select(
@@ -246,299 +209,146 @@ export default function FeedPage() {
         supabase.from("likes").select("id, post_id, user_id"),
         supabase
           .from("comments")
-          .select("id, post_id, user_id, full_name, content, created_at")
-          .order("created_at", { ascending: true }),
-        supabase.from("follows").select("id, follower_id, following_id"),
-        supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
-        supabase.from("notifications").select("id, user_id, is_read"),
-        supabase
-          .from("messages")
-          .select(
-            "id, conversation_id, sender_id, sender_name, content, created_at, is_read"
-          ),
-        supabase
-          .from("conversation_participants")
-          .select("id, conversation_id, user_id"),
+          .select("id, post_id, user_id, full_name, content, created_at"),
         supabase.from("saved_posts").select("id, user_id, post_id"),
+        supabase
+          .from("communities")
+          .select("id, creator_id, name, category, description, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("community_members")
+          .select("id, community_id, user_id, created_at"),
+        supabase
+          .from("videos")
+          .select(
+            "id, user_id, title, description, category, video_url, thumbnail_url, views_count, created_at"
+          )
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("notifications")
+          .select(
+            "id, user_id, actor_id, type, post_id, actor_name, content, is_read, created_at"
+          )
+          .eq("user_id", sessionUserId)
+          .order("created_at", { ascending: false }),
       ]);
 
-      if (postsError) {
-        alert(postsError.message);
-      } else {
-        setPosts(postsData || []);
-      }
+      const allProfiles = profilesData || [];
+      const myProfile = allProfiles.find((profile) => profile.id === sessionUserId);
 
+      setProfiles(allProfiles);
+      setPosts(postsData || []);
       setLikes(likesData || []);
       setComments(commentsData || []);
-      setFollows(followsData || []);
-      setProfiles(profilesData || []);
-      setNotifications(notificationsData || []);
-      setMessages(messagesData || []);
-      setParticipants(participantsData || []);
       setSavedPosts(savedPostsData || []);
-      setLoadingPosts(false);
+      setCommunities(communitiesData || []);
+      setCommunityMembers(communityMembersData || []);
+      setVideos(videosData || []);
+      setNotifications(notificationsData || []);
+      setUserAvatar(
+        myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || sessionFullName)
+      );
+      setLoading(false);
     };
 
     void loadFeed();
   }, [router]);
 
-  useEffect(() => {
-    if (!userProfile.id) return;
-
-    const channel = supabase
-      .channel(`feed-notifications-${userProfile.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${userProfile.id}`,
-        },
-        (payload) => {
-          const newNotification = payload.new as NotificationRecord;
-
-          setNotifications((prev) => {
-            const exists = prev.some((item) => item.id === newNotification.id);
-            if (exists) return prev;
-            return [newNotification, ...prev];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${userProfile.id}`,
-        },
-        (payload) => {
-          const updatedNotification = payload.new as NotificationRecord;
-
-          setNotifications((prev) =>
-            prev.map((item) =>
-              item.id === updatedNotification.id ? updatedNotification : item
-            )
-          );
-        }
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [userProfile.id]);
-
-  const followingIds = useMemo(() => {
-    if (!userProfile.id) return [];
-    return follows
-      .filter((follow) => follow.follower_id === userProfile.id)
-      .map((follow) => follow.following_id);
-  }, [follows, userProfile.id]);
-
-  const visiblePosts = useMemo(() => {
-    const basePosts =
-      feedTab === "for-you"
-        ? posts
-        : posts.filter(
-            (post) =>
-              followingIds.includes(post.user_id) || post.user_id === userProfile.id
-          );
-
-    if (!topicFilter) return basePosts;
-
-    const keywords =
-      topicFilter === "Faith"
-        ? ["faith", "jesus", "christ", "bible", "prayer", "gospel", "church"]
-        : ["business", "money", "startup", "marketing", "brand", "sales", "client"];
-
-    return basePosts.filter((post) => {
-      const text = (post.content || "").toLowerCase();
-      return keywords.some((keyword) => text.includes(keyword));
-    });
-  }, [feedTab, posts, followingIds, userProfile.id, topicFilter]);
-
-  const suggestedProfiles = useMemo(() => {
-    if (!userProfile.id) return [];
-
-    return profiles
-      .filter((profile) => profile.id !== userProfile.id)
-      .filter((profile) => !followingIds.includes(profile.id))
-      .slice(0, 5);
-  }, [profiles, followingIds, userProfile.id]);
-
-  const searchResults = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return [];
-
-    return profiles
-      .filter((profile) => profile.id !== userProfile.id)
-      .filter((profile) => {
-        const fullName = (profile.full_name || "").toLowerCase();
-        const username = (profile.username || "").toLowerCase();
-        return fullName.includes(term) || username.includes(term);
-      })
-      .slice(0, 6);
-  }, [profiles, searchTerm, userProfile.id]);
-
-  const unreadNotificationCount = useMemo(() => {
-    if (!userProfile.id) return 0;
-
-    return notifications.filter(
-      (notification) =>
-        notification.user_id === userProfile.id && !notification.is_read
-    ).length;
-  }, [notifications, userProfile.id]);
-
-  const myConversationIds = useMemo(() => {
-    if (!userProfile.id) return [];
-
-    return participants
-      .filter((participant) => participant.user_id === userProfile.id)
-      .map((participant) => participant.conversation_id);
-  }, [participants, userProfile.id]);
-
-  const unreadMessageCount = useMemo(() => {
-    if (!userProfile.id) return 0;
-
-    return messages.filter(
-      (message) =>
-        myConversationIds.includes(message.conversation_id) &&
-        message.sender_id !== userProfile.id &&
-        !message.is_read
-    ).length;
-  }, [messages, myConversationIds, userProfile.id]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
-  };
-
-  const handleImageFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    setSelectedImageFile(file);
+    setImageFile(file);
 
     if (!file) {
-      setSelectedImagePreview("");
+      setImagePreview("");
       return;
     }
 
     const previewUrl = URL.createObjectURL(file);
-    setSelectedImagePreview(previewUrl);
+    setImagePreview(previewUrl);
   };
 
-  const uploadSelectedImage = async (userId: string) => {
-    if (!selectedImageFile) return null;
+  const uploadPostImage = async () => {
+    if (!imageFile || !userId) return null;
 
-    const fileExt = selectedImageFile.name.split(".").pop() || "jpg";
-    const safeExt = fileExt.toLowerCase();
+    const fileExt = imageFile.name.split(".").pop() || "jpg";
     const filePath = `${userId}/${Date.now()}-${Math.random()
       .toString(36)
-      .slice(2)}.${safeExt}`;
+      .slice(2)}.${fileExt.toLowerCase()}`;
 
     const { error: uploadError } = await supabase.storage
       .from("post-images")
-      .upload(filePath, selectedImageFile, {
+      .upload(filePath, imageFile, {
         cacheControl: "3600",
         upsert: false,
       });
 
-    if (uploadError) {
-      throw uploadError;
-    }
+    if (uploadError) throw uploadError;
 
     const { data } = supabase.storage.from("post-images").getPublicUrl(filePath);
     return data.publicUrl;
   };
 
   const handleCreatePost = async () => {
-    const trimmedText = postText.trim();
+    if (!userId) return;
+
+    const trimmedContent = postText.trim();
     const trimmedVideoUrl = videoUrl.trim();
 
-    if (!trimmedText && !selectedImageFile && !trimmedVideoUrl) {
-      alert("Add text, select a photo, or add a video URL before posting.");
+    if (!trimmedContent && !imageFile && !trimmedVideoUrl) {
+      alert("Add text, an image, or a video link.");
       return;
     }
 
-    if (composerMode === "photo" && !selectedImageFile) {
-      alert("Please choose a photo from your device.");
-      return;
-    }
-
-    if (composerMode === "video" && !trimmedVideoUrl) {
-      alert("Please add a video URL.");
-      return;
-    }
-
-    setCreatingPost(true);
+    setPosting(true);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      let imageUrl: string | null = null;
 
-      if (!session) {
-        alert("You must be logged in.");
-        setCreatingPost(false);
-        router.push("/");
-        return;
+      if (imageFile) {
+        imageUrl = await uploadPostImage();
       }
-
-      const fullName =
-        userProfile.full_name ||
-        session.user.user_metadata?.full_name ||
-        "FaceGrem User";
-      const avatarUrl =
-        userProfile.avatar_url ||
-        (session.user.user_metadata?.avatar_url as string | undefined) ||
-        getAvatarUrl(fullName);
-
-      let uploadedImageUrl: string | null = null;
-
-      if (composerMode === "photo" && selectedImageFile) {
-        uploadedImageUrl = await uploadSelectedImage(session.user.id);
-      }
-
-      const insertPayload = {
-        content: trimmedText,
-        user_id: session.user.id,
-        full_name: fullName,
-        avatar_url: avatarUrl,
-        image_url: composerMode === "photo" ? uploadedImageUrl : null,
-        video_url: composerMode === "video" ? trimmedVideoUrl : null,
-        community_id: null,
-      };
 
       const { data, error } = await supabase
         .from("posts")
-        .insert([insertPayload])
+        .insert([
+          {
+            user_id: userId,
+            content: trimmedContent,
+            full_name: userName,
+            avatar_url: userAvatar,
+            image_url: imageUrl,
+            video_url: trimmedVideoUrl || null,
+          },
+        ])
         .select(
           "id, user_id, content, created_at, full_name, avatar_url, image_url, video_url, community_id"
         );
 
       if (error) {
         alert(error.message);
-      } else if (data && data.length > 0) {
-        setPosts((prevPosts) => [data[0], ...prevPosts]);
-        setPostText("");
-        resetComposerExtras();
-        setComposerMode("text");
+        setPosting(false);
+        return;
       }
+
+      if (data && data.length > 0) {
+        setPosts((prev) => [data[0], ...prev]);
+      }
+
+      setPostText("");
+      setVideoUrl("");
+      setImageFile(null);
+      setImagePreview("");
+      setActiveComposerAction("Photo");
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Image upload failed.";
-      alert(message);
+      alert(error instanceof Error ? error.message : "Could not create post.");
     }
 
-    setCreatingPost(false);
+    setPosting(false);
   };
 
-  const handleToggleLike = async (postId: string) => {
-    if (!userProfile.id) return;
-
+  const handleToggleLike = async (postId: string, ownerId: string) => {
     const existingLike = likes.find(
-      (like) => like.post_id === postId && like.user_id === userProfile.id
+      (like) => like.post_id === postId && like.user_id === userId
     );
 
     if (existingLike) {
@@ -547,166 +357,58 @@ export default function FeedPage() {
       if (!error) {
         setLikes((prev) => prev.filter((like) => like.id !== existingLike.id));
       }
-    } else {
-      const { data, error } = await supabase
-        .from("likes")
-        .insert([{ post_id: postId, user_id: userProfile.id }])
-        .select("id, post_id, user_id");
 
-      if (!error && data && data.length > 0) {
-        setLikes((prev) => [...prev, data[0]]);
-
-        const targetPost = posts.find((post) => post.id === postId);
-
-        if (targetPost && targetPost.user_id !== userProfile.id) {
-          await supabase.from("notifications").insert([
-            {
-              user_id: targetPost.user_id,
-              actor_id: userProfile.id,
-              type: "like",
-              post_id: postId,
-              actor_name: getBestNameForUser(userProfile.id, userProfile.full_name),
-            },
-          ]);
-        }
-      } else if (error) {
-        alert(error.message);
-      }
+      return;
     }
-  };
-
-  const handleCommentChange = (postId: string, value: string) => {
-    setCommentInputs((prev) => ({
-      ...prev,
-      [postId]: value,
-    }));
-  };
-
-  const handleAddComment = async (postId: string) => {
-    const content = (commentInputs[postId] || "").trim();
-    if (!content || !userProfile.id) return;
 
     const { data, error } = await supabase
-      .from("comments")
-      .insert([
-        {
-          post_id: postId,
-          user_id: userProfile.id,
-          full_name: getBestNameForUser(userProfile.id, userProfile.full_name),
-          content,
-        },
-      ])
-      .select("id, post_id, user_id, full_name, content, created_at");
-
-    if (!error && data && data.length > 0) {
-      setComments((prev) => [...prev, data[0]]);
-      setCommentInputs((prev) => ({
-        ...prev,
-        [postId]: "",
-      }));
-
-      const targetPost = posts.find((post) => post.id === postId);
-
-      if (targetPost && targetPost.user_id !== userProfile.id) {
-        await supabase.from("notifications").insert([
-          {
-            user_id: targetPost.user_id,
-            actor_id: userProfile.id,
-            type: "comment",
-            post_id: postId,
-            actor_name: getBestNameForUser(userProfile.id, userProfile.full_name),
-            content,
-          },
-        ]);
-      }
-    } else if (error) {
-      alert(error.message);
-    }
-  };
-
-  const handleDeleteComment = async (commentId: string) => {
-    const { error } = await supabase.from("comments").delete().eq("id", commentId);
+      .from("likes")
+      .insert([{ post_id: postId, user_id: userId }])
+      .select("id, post_id, user_id");
 
     if (error) {
       alert(error.message);
       return;
     }
 
-    setComments((prev) => prev.filter((comment) => comment.id !== commentId));
-  };
+    if (data && data.length > 0) {
+      setLikes((prev) => [...prev, data[0]]);
+    }
 
-  const handleFollowUser = async (targetUserId: string) => {
-    if (!userProfile.id || userProfile.id === targetUserId) return;
-
-    setFollowLoadingId(targetUserId);
-
-    const { data, error } = await supabase
-      .from("follows")
-      .insert([
-        {
-          follower_id: userProfile.id,
-          following_id: targetUserId,
-        },
-      ])
-      .select("id, follower_id, following_id");
-
-    if (error) {
-      alert(error.message);
-    } else if (data && data.length > 0) {
-      setFollows((prev) => [...prev, data[0]]);
-
+    if (ownerId !== userId) {
       await supabase.from("notifications").insert([
         {
-          user_id: targetUserId,
-          actor_id: userProfile.id,
-          type: "follow",
-          actor_name: getBestNameForUser(userProfile.id, userProfile.full_name),
+          user_id: ownerId,
+          actor_id: userId,
+          type: "like",
+          post_id: postId,
+          actor_name: userName,
         },
       ]);
     }
-
-    setFollowLoadingId(null);
   };
 
-  const isPostSaved = (postId: string) => {
-    if (!userProfile.id) return false;
-
-    return savedPosts.some(
-      (savedPost) =>
-        savedPost.user_id === userProfile.id && savedPost.post_id === postId
-    );
-  };
-
-  const handleToggleSavePost = async (postId: string) => {
-    if (!userProfile.id) return;
-
-    const existingSavedPost = savedPosts.find(
-      (savedPost) =>
-        savedPost.user_id === userProfile.id && savedPost.post_id === postId
+  const handleToggleSave = async (postId: string) => {
+    const existingSaved = savedPosts.find(
+      (saved) => saved.post_id === postId && saved.user_id === userId
     );
 
-    if (existingSavedPost) {
+    if (existingSaved) {
       const { error } = await supabase
         .from("saved_posts")
         .delete()
-        .eq("id", existingSavedPost.id);
+        .eq("id", existingSaved.id);
 
       if (!error) {
-        setSavedPosts((prev) =>
-          prev.filter((savedPost) => savedPost.id !== existingSavedPost.id)
-        );
+        setSavedPosts((prev) => prev.filter((saved) => saved.id !== existingSaved.id));
       }
+
       return;
     }
 
     const { data, error } = await supabase
       .from("saved_posts")
-      .insert([
-        {
-          user_id: userProfile.id,
-          post_id: postId,
-        },
-      ])
+      .insert([{ post_id: postId, user_id: userId }])
       .select("id, user_id, post_id");
 
     if (error) {
@@ -717,44 +419,6 @@ export default function FeedPage() {
     if (data && data.length > 0) {
       setSavedPosts((prev) => [...prev, data[0]]);
     }
-  };
-
-  const handleStartEditPost = (post: PostRecord) => {
-    setEditingPostId(post.id);
-    setEditingPostText(post.content);
-  };
-
-  const handleCancelEditPost = () => {
-    setEditingPostId(null);
-    setEditingPostText("");
-  };
-
-  const handleSaveEditedPost = async (postId: string) => {
-    const trimmedContent = editingPostText.trim();
-
-    if (!trimmedContent) {
-      alert("Post cannot be empty.");
-      return;
-    }
-
-    const { error } = await supabase
-      .from("posts")
-      .update({ content: trimmedContent })
-      .eq("id", postId);
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId ? { ...post, content: trimmedContent } : post
-      )
-    );
-
-    setEditingPostId(null);
-    setEditingPostText("");
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -771,41 +435,74 @@ export default function FeedPage() {
     setPosts((prev) => prev.filter((post) => post.id !== postId));
     setLikes((prev) => prev.filter((like) => like.post_id !== postId));
     setComments((prev) => prev.filter((comment) => comment.post_id !== postId));
-    setSavedPosts((prev) => prev.filter((savedPost) => savedPost.post_id !== postId));
+    setSavedPosts((prev) => prev.filter((saved) => saved.post_id !== postId));
   };
 
-  const handleComingSoon = (feature: "Live" | "Story") => {
-    alert(`${feature} is coming soon on FaceGrem.`);
-  };
-
-  const handleSharePost = async (postId: string) => {
-    const shareUrl = `${window.location.origin}/post/${postId}`;
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      alert("Post link copied!");
-    } catch {
-      alert("Could not copy post link.");
-    }
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
-
-  const getPostLikes = (postId: string) =>
+  const getPostLikesCount = (postId: string) =>
     likes.filter((like) => like.post_id === postId).length;
 
-  const hasLikedPost = (postId: string) =>
-    !!likes.find((like) => like.post_id === postId && like.user_id === userProfile.id);
+  const getPostCommentsCount = (postId: string) =>
+    comments.filter((comment) => comment.post_id === postId).length;
 
-  const getPostComments = (postId: string) =>
-    comments.filter((comment) => comment.post_id === postId);
+  const isSaved = (postId: string) =>
+    savedPosts.some((saved) => saved.user_id === userId && saved.post_id === postId);
+
+  const isLiked = (postId: string) =>
+    likes.some((like) => like.user_id === userId && like.post_id === postId);
+
+  const unreadNotificationsCount = notifications.filter(
+    (notification) => !notification.is_read
+  ).length;
+
+  const myCommunityIds = useMemo(() => {
+    return communityMembers
+      .filter((member) => member.user_id === userId)
+      .map((member) => member.community_id);
+  }, [communityMembers, userId]);
+
+  const filteredPosts = useMemo(() => {
+    switch (activeFeedTab) {
+      case "Following":
+        return posts.filter((post) => post.user_id !== userId);
+      case "Creators":
+        return posts.filter((post) => {
+          const profile = getProfileById(post.user_id);
+          return !!profile?.username;
+        });
+      case "Faith":
+        return posts.filter((post) => {
+          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
+          return text.includes("faith") || text.includes("jesus") || text.includes("church");
+        });
+      case "Business":
+        return posts.filter((post) => {
+          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
+          return (
+            text.includes("business") ||
+            text.includes("market") ||
+            text.includes("brand") ||
+            text.includes("money")
+          );
+        });
+      case "Videos":
+        return posts.filter((post) => !!post.video_url);
+      case "For You":
+      default:
+        return posts;
+    }
+  }, [activeFeedTab, posts, userId, profiles]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#07111f] text-white">
+        Loading FaceGrem feed...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#07111f] text-white">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-[#07111f]/85 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#07111f]/85 backdrop-blur-xl">
         <div className="flex items-center justify-between gap-4 px-4 py-4 mx-auto max-w-7xl sm:px-6">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center font-bold shadow-lg h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/20">
@@ -813,648 +510,434 @@ export default function FeedPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight">FaceGrem</h1>
-              <p className="text-xs text-slate-400">Your social home</p>
+              <p className="text-xs text-slate-400">Home Feed</p>
             </div>
           </div>
 
-          <div className="relative flex-1 hidden md:flex md:justify-center">
-            <div className="w-full max-w-xl">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search people by name or username..."
-                className="w-full px-4 py-3 text-sm text-white border outline-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400"
-              />
-
-              {searchResults.length > 0 && (
-                <div className="absolute left-0 right-0 top-[60px] z-40 mx-auto w-full max-w-xl rounded-2xl border border-white/10 bg-[#0b1220] p-3 shadow-2xl">
-                  <div className="space-y-2">
-                    {searchResults.map((profile) => (
-                      <Link
-                        key={profile.id}
-                        href={`/profile?id=${profile.id}`}
-                        onClick={() => setSearchTerm("")}
-                        className="flex items-center gap-3 px-3 py-3 transition rounded-2xl hover:bg-white/5"
-                      >
-                        <img
-                          src={getBestAvatarForUser(profile.id, profile.full_name, profile.avatar_url)}
-                          alt={profile.full_name || "FaceGrem User"}
-                          className="object-cover w-10 h-10 rounded-2xl"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-white">
-                            {profile.full_name || "FaceGrem User"}
-                          </p>
-                          <p className="text-xs text-slate-400">
-                            {profile.username ? `@${profile.username}` : "@user"}
-                          </p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
-              href="/notifications"
-              className="relative px-4 py-2 text-sm font-medium transition border rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+              href="/videos"
+              className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
             >
-              Notifications
-              {unreadNotificationCount > 0 && (
-                <span className="absolute -right-2 -top-2 rounded-full bg-cyan-400 px-2 py-0.5 text-xs font-semibold text-slate-900">
-                  {unreadNotificationCount}
-                </span>
-              )}
+              Videos
             </Link>
-
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium transition border rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+            <Link
+              href="/communities"
+              className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
             >
-              Log out
-            </button>
+              Communities
+            </Link>
+            <Link
+              href="/messages"
+              className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+            >
+              Messages
+            </Link>
+            <Link
+              href="/saved"
+              className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+            >
+              Saved
+            </Link>
+            <Link
+              href="/profile"
+              className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+            >
+              Profile
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[260px_minmax(0,1fr)_320px]">
-        <aside className="hidden lg:block">
+      <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[280px_minmax(0,1fr)_320px]">
+        <aside className="space-y-6">
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <p className="text-sm text-slate-400">Signed in as</p>
-
-            <div className="flex items-center gap-3 mt-4">
+            <Link href="/profile" className="flex items-center gap-3 hover:opacity-90">
               <img
-                src={getBestAvatarForUser(userProfile.id, userProfile.full_name, userProfile.avatar_url)}
-                alt={userProfile.full_name || "FaceGrem User"}
+                src={userAvatar}
+                alt={userName}
                 className="object-cover h-14 w-14 rounded-2xl"
               />
               <div>
-                <h2 className="text-xl font-semibold">{userProfile.full_name}</h2>
-                <p className="text-sm text-slate-400">{userProfile.email}</p>
+                <p className="font-semibold text-white">{userName}</p>
+                <p className="text-sm text-slate-400">View your profile</p>
               </div>
-            </div>
+            </Link>
+          </div>
 
-            <div className="mt-6 space-y-3 text-sm">
-              <div className="px-4 py-3 rounded-2xl bg-white/10">Home Feed</div>
-
-              <Link
-                href="/messages"
-                className="flex items-center justify-between px-4 py-3 rounded-2xl text-slate-300 hover:bg-white/10"
-              >
-                <span>Messages</span>
-                {unreadMessageCount > 0 && (
-                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-cyan-400 text-slate-900">
-                    {unreadMessageCount}
-                  </span>
-                )}
+          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <p className="text-sm font-medium text-cyan-200">Shortcuts</p>
+            <div className="mt-4 space-y-3 text-sm">
+              <Link href="/videos" className="block px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10">
+                Open Videos
               </Link>
-
-              <Link
-                href="/videos"
-                className="block px-4 py-3 rounded-2xl text-slate-300 hover:bg-white/10"
-              >
-                Videos
+              <Link href="/communities" className="block px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10">
+                Open Communities
               </Link>
-
-              <Link
-                href="/communities"
-                className="block px-4 py-3 rounded-2xl text-slate-300 hover:bg-white/10"
-              >
-                Communities
+              <Link href="/messages" className="block px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10">
+                Direct Messages
               </Link>
-
-              <Link
-                href="/notifications"
-                className="flex items-center justify-between px-4 py-3 rounded-2xl text-slate-300 hover:bg-white/10"
-              >
-                <span>Notifications</span>
-                {unreadNotificationCount > 0 && (
-                  <span className="px-2 py-1 text-xs font-semibold rounded-full bg-cyan-400 text-slate-900">
-                    {unreadNotificationCount}
-                  </span>
-                )}
-              </Link>
-
-              <Link
-                href="/saved"
-                className="block px-4 py-3 rounded-2xl text-slate-300 hover:bg-white/10"
-              >
+              <Link href="/saved" className="block px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10">
                 Saved Posts
               </Link>
-
-              <Link
-                href="/profile"
-                className="block px-4 py-3 rounded-2xl text-slate-300 hover:bg-white/10"
-              >
-                Profile
+              <Link href="/threads" className="block px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10">
+                Threads
               </Link>
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <p className="text-sm font-medium text-cyan-200">Your communities</p>
+            <div className="mt-4 space-y-3">
+              {communities.filter((community) => myCommunityIds.includes(community.id)).length === 0 ? (
+                <p className="text-sm text-slate-400">You have not joined any communities yet.</p>
+              ) : (
+                communities
+                  .filter((community) => myCommunityIds.includes(community.id))
+                  .slice(0, 4)
+                  .map((community) => (
+                    <Link
+                      key={community.id}
+                      href={`/communities/${community.id}`}
+                      className="block px-4 py-3 rounded-2xl bg-white/5 hover:bg-white/10"
+                    >
+                      <p className="font-medium text-white">{community.name}</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        {community.category || "Community"}
+                      </p>
+                    </Link>
+                  ))
+              )}
             </div>
           </div>
         </aside>
 
         <section className="space-y-6">
-          <div className="rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_30%),linear-gradient(to_bottom_right,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-6 backdrop-blur-xl">
-            <p className="text-sm font-medium text-cyan-200">Welcome back</p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight">
-              Good to see you, {userProfile.full_name || "FaceGrem User"}.
-            </h2>
-            <p className="max-w-2xl mt-3 text-sm leading-7 text-slate-300">
-              Share text, photos, and video links on FaceGrem.
-            </p>
-          </div>
+          <div className="rounded-[30px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <div className="flex items-center gap-4">
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="object-cover w-12 h-12 rounded-2xl"
+              />
+              <textarea
+                value={postText}
+                onChange={(e) => setPostText(e.target.value)}
+                rows={3}
+                placeholder={`What's happening, ${userName.split(" ")[0]}?`}
+                className="w-full px-4 py-3 text-sm text-white border outline-none resize-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400"
+              />
+            </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-            <div className="flex flex-wrap gap-3">
-              {storyChips.map((story) => {
-                if (story.type === "link") {
-                  return (
-                    <Link
-                      key={story.label}
-                      href={story.href}
-                      className="px-4 py-2 text-sm transition border rounded-full border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-                    >
-                      {story.label}
-                    </Link>
-                  );
-                }
+            <div className="grid grid-cols-2 gap-3 mt-5 sm:grid-cols-4">
+              {quickActions.map((action) => (
+                <button
+                  key={action}
+                  type="button"
+                  onClick={() => setActiveComposerAction(action)}
+                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                    activeComposerAction === action
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white"
+                      : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                  }`}
+                >
+                  {action}
+                </button>
+              ))}
+            </div>
 
-                if (story.label === "For You") {
-                  return (
-                    <button
-                      key={story.label}
-                      onClick={() => {
-                        setFeedTab("for-you");
-                        setTopicFilter("");
-                      }}
-                      className={`rounded-full px-4 py-2 text-sm transition ${
-                        feedTab === "for-you" && !topicFilter
-                          ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white"
-                          : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-                      }`}
-                    >
-                      {story.label}
-                    </button>
-                  );
-                }
+            {(activeComposerAction === "Photo" || activeComposerAction === "Story") && (
+              <div className="mt-4">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="block w-full px-4 py-3 text-sm text-white border rounded-2xl border-white/10 bg-white/5 file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-3 file:py-2 file:text-cyan-200"
+                />
+                {imagePreview && (
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="object-cover w-full mt-4 max-h-72 rounded-3xl"
+                  />
+                )}
+              </div>
+            )}
 
-                if (story.label === "Following") {
-                  return (
-                    <button
-                      key={story.label}
-                      onClick={() => {
-                        setFeedTab("following");
-                        setTopicFilter("");
-                      }}
-                      className={`rounded-full px-4 py-2 text-sm transition ${
-                        feedTab === "following" && !topicFilter
-                          ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white"
-                          : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-                      }`}
-                    >
-                      {story.label}
-                    </button>
-                  );
-                }
+            {(activeComposerAction === "Video" || activeComposerAction === "Live") && (
+              <div className="mt-4">
+                <input
+                  type="text"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder={
+                    activeComposerAction === "Live"
+                      ? "Paste a live stream or video URL"
+                      : "Paste a YouTube or video URL"
+                  }
+                  className="w-full px-4 py-3 text-sm text-white border outline-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400"
+                />
+              </div>
+            )}
 
-                return (
-                  <button
-                    key={story.label}
-                    onClick={() => {
-                      setFeedTab("for-you");
-                      setTopicFilter(story.label as TopicFilter);
-                    }}
-                    className={`rounded-full px-4 py-2 text-sm transition ${
-                      topicFilter === story.label
-                        ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white"
-                        : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-                    }`}
-                  >
-                    {story.label}
-                  </button>
-                );
-              })}
+            <div className="flex justify-end mt-5">
+              <button
+                onClick={handleCreatePost}
+                disabled={posting}
+                className="px-6 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70"
+              >
+                {posting ? "Posting..." : "Post"}
+              </button>
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur-xl">
-            <div className="flex items-start gap-4">
-              <img
-                src={getBestAvatarForUser(userProfile.id, userProfile.full_name, userProfile.avatar_url)}
-                alt={userProfile.full_name || "FaceGrem User"}
-                className="object-cover w-12 h-12 rounded-2xl"
-              />
+          <div className="flex flex-wrap gap-3">
+            {feedTabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => {
+                  setActiveFeedTab(tab);
+                  if (tab === "Videos") router.push("/videos");
+                  if (tab === "Creators" || tab === "Faith" || tab === "Business") {
+                    // stays in feed, only filters posts
+                  }
+                }}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  activeFeedTab === tab
+                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white"
+                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
 
-              <div className="flex-1">
-                <textarea
-                  value={postText}
-                  onChange={(e) => setPostText(e.target.value)}
-                  rows={4}
-                  placeholder="What do you want to share today?"
-                  className="w-full px-4 py-3 text-sm text-white transition border outline-none resize-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400 focus:border-cyan-400/60"
-                />
+          {filteredPosts.length === 0 ? (
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-slate-300">
+              No posts found for this section yet.
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {filteredPosts.map((post) => {
+                const authorName = getBestNameForUser(post.user_id, post.full_name);
+                const authorAvatar = getBestAvatarForUser(
+                  post.user_id,
+                  post.full_name,
+                  post.avatar_url
+                );
+                const likesCount = getPostLikesCount(post.id);
+                const commentsCount = getPostCommentsCount(post.id);
 
-                {composerMode === "photo" && (
-                  <div className="mt-4 space-y-3">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageFileChange}
-                      className="block w-full px-4 py-3 text-sm text-white border rounded-2xl border-white/10 bg-white/5 file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-3 file:py-2 file:text-cyan-200"
-                    />
-
-                    {selectedImagePreview && (
-                      <div className="overflow-hidden rounded-[24px] border border-white/10">
+                return (
+                  <article
+                    key={post.id}
+                    className="rounded-[30px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <Link
+                        href={`/profile?id=${post.user_id}`}
+                        className="flex items-center gap-3 hover:opacity-90"
+                      >
                         <img
-                          src={selectedImagePreview}
-                          alt="Preview"
-                          className="object-cover w-full max-h-80"
+                          src={authorAvatar}
+                          alt={authorName}
+                          className="object-cover w-12 h-12 rounded-2xl"
+                        />
+                        <div>
+                          <p className="font-semibold text-white">{authorName}</p>
+                          <p className="text-xs text-slate-400">
+                            {new Date(post.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </Link>
+
+                      {post.user_id === userId && (
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          className="px-4 py-2 text-xs text-red-200 border rounded-2xl border-red-400/20 bg-red-500/10 hover:bg-red-500/20"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+
+                    {post.content && (
+                      <p className="mt-4 text-sm leading-7 text-slate-200">{post.content}</p>
+                    )}
+
+                    {post.image_url && (
+                      <div className="mt-5 overflow-hidden rounded-[28px] border border-white/10">
+                        <img
+                          src={post.image_url}
+                          alt="Post"
+                          className="max-h-[560px] w-full object-cover"
                         />
                       </div>
                     )}
-                  </div>
-                )}
 
-                {composerMode === "video" && (
-                  <div className="mt-4">
-                    <input
-                      type="text"
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      placeholder="Paste video URL..."
-                      className="w-full px-4 py-3 text-sm text-white border outline-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400"
-                    />
-                  </div>
-                )}
-
-                <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
-                  <div className="flex flex-wrap gap-2 text-xs text-slate-300">
-                    <button
-                      onClick={() => {
-                        setComposerMode((prev) => (prev === "photo" ? "text" : "photo"));
-                        if (composerMode !== "photo") {
-                          setVideoUrl("");
-                        }
-                      }}
-                      className={`rounded-full px-3 py-2 ${
-                        composerMode === "photo"
-                          ? "bg-cyan-500/20 text-cyan-200"
-                          : "bg-white/10"
-                      }`}
-                    >
-                      Photo
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setComposerMode((prev) => (prev === "video" ? "text" : "video"));
-                        if (composerMode !== "video") {
-                          setSelectedImageFile(null);
-                          setSelectedImagePreview("");
-                        }
-                      }}
-                      className={`rounded-full px-3 py-2 ${
-                        composerMode === "video"
-                          ? "bg-cyan-500/20 text-cyan-200"
-                          : "bg-white/10"
-                      }`}
-                    >
-                      Video
-                    </button>
-
-                    <button
-                      onClick={() => handleComingSoon("Live")}
-                      className="px-3 py-2 rounded-full bg-white/10"
-                    >
-                      Live
-                    </button>
-
-                    <button
-                      onClick={() => handleComingSoon("Story")}
-                      className="px-3 py-2 rounded-full bg-white/10"
-                    >
-                      Story
-                    </button>
-                  </div>
-
-                  <button
-                    onClick={handleCreatePost}
-                    disabled={creatingPost}
-                    className="px-5 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70"
-                  >
-                    {creatingPost ? "Posting..." : "Post to FaceGrem"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {loadingPosts ? (
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-sm text-slate-300 backdrop-blur-xl">
-              Loading posts...
-            </div>
-          ) : visiblePosts.length === 0 ? (
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-sm text-slate-300 backdrop-blur-xl">
-              {topicFilter
-                ? `No ${topicFilter.toLowerCase()} posts found yet.`
-                : feedTab === "following"
-                ? "No posts from people you follow yet."
-                : "No posts yet. Be the first to post on FaceGrem."}
-            </div>
-          ) : (
-            visiblePosts.map((post) => {
-              const postComments = getPostComments(post.id);
-              const liked = hasLikedPost(post.id);
-              const likeCount = getPostLikes(post.id);
-
-              const authorName = getBestNameForUser(post.user_id, post.full_name);
-              const authorAvatar = getBestAvatarForUser(
-                post.user_id,
-                post.full_name || undefined,
-                post.avatar_url
-              );
-
-              return (
-                <article
-                  key={post.id}
-                  className="rounded-[30px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <Link
-                      href={`/profile?id=${post.user_id}`}
-                      className="flex items-center gap-3 hover:opacity-90"
-                    >
-                      <img
-                        src={authorAvatar}
-                        alt={authorName}
-                        className="object-cover w-12 h-12 rounded-2xl"
-                      />
-                      <div>
-                        <p className="font-semibold text-white">{authorName}</p>
-                        <p className="text-xs text-slate-400">
-                          {formatTime(post.created_at)}
-                        </p>
+                    {post.video_url && (
+                      <div className="mt-5 overflow-hidden rounded-[28px] border border-white/10 bg-black/30">
+                        {isYouTubeUrl(post.video_url) ? (
+                          <iframe
+                            src={getYouTubeEmbedUrl(post.video_url)}
+                            title={`feed-video-${post.id}`}
+                            className="w-full h-72 md:h-96"
+                            allowFullScreen
+                          />
+                        ) : (
+                          <video
+                            controls
+                            className="w-full bg-black h-72 md:h-96"
+                            src={post.video_url}
+                          />
+                        )}
                       </div>
-                    </Link>
+                    )}
 
-                    <span className="px-3 py-1 text-xs rounded-full bg-white/10 text-slate-300">
-                      Public
-                    </span>
-                  </div>
+                    {!post.image_url && !post.video_url && !post.content && (
+                      <div className="mt-5 h-40 rounded-[28px] bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10" />
+                    )}
 
-                  {post.user_id === userProfile.id && editingPostId !== post.id && (
-                    <div className="flex gap-3 mt-4">
+                    <div className="flex flex-wrap gap-3 mt-5">
                       <button
-                        onClick={() => handleStartEditPost(post)}
+                        onClick={() => handleToggleLike(post.id, post.user_id)}
+                        className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
+                          isLiked(post.id)
+                            ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
+                            : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        }`}
+                      >
+                        ❤️ {likesCount}
+                      </button>
+
+                      <Link
+                        href={`/post/${post.id}`}
                         className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
                       >
-                        Edit
-                      </button>
+                        💬 {commentsCount}
+                      </Link>
+
                       <button
-                        onClick={() => handleDeletePost(post.id)}
-                        className="px-4 py-2 text-sm text-red-200 border rounded-2xl border-red-400/20 bg-red-500/10 hover:bg-red-500/20"
+                        onClick={() => handleToggleSave(post.id)}
+                        className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
+                          isSaved(post.id)
+                            ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
+                            : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        }`}
                       >
-                        Delete
+                        {isSaved(post.id) ? "Saved" : "Save"}
                       </button>
+
+                      <Link
+                        href={`/post/${post.id}`}
+                        className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-cyan-300 hover:bg-white/10"
+                      >
+                        Open post
+                      </Link>
                     </div>
-                  )}
-
-                  {editingPostId === post.id ? (
-                    <div className="mt-4 space-y-3">
-                      <textarea
-                        value={editingPostText}
-                        onChange={(e) => setEditingPostText(e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-3 text-sm text-white border outline-none resize-none rounded-2xl border-white/10 bg-white/5"
-                      />
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => handleSaveEditedPost(post.id)}
-                          className="px-4 py-2 text-sm font-semibold text-white rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={handleCancelEditPost}
-                          className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      {post.content && (
-                        <p className="mt-4 text-sm leading-7 text-slate-200">{post.content}</p>
-                      )}
-
-                      {post.image_url && (
-                        <div className="mt-5 overflow-hidden rounded-[28px] border border-white/10">
-                          <img
-                            src={post.image_url}
-                            alt="Post"
-                            className="max-h-[520px] w-full object-cover"
-                          />
-                        </div>
-                      )}
-
-                      {post.video_url && (
-                        <div className="mt-5 overflow-hidden rounded-[28px] border border-white/10 bg-black/30">
-                          {isYouTubeUrl(post.video_url) ? (
-                            <iframe
-                              src={getYouTubeEmbedUrl(post.video_url)}
-                              title={`video-${post.id}`}
-                              className="w-full h-72 md:h-96"
-                              allowFullScreen
-                            />
-                          ) : (
-                            <video
-                              controls
-                              className="w-full bg-black h-72 md:h-96"
-                              src={post.video_url}
-                            />
-                          )}
-                        </div>
-                      )}
-
-                      {!post.image_url && !post.video_url && (
-                        <div className="mt-5 h-40 rounded-[28px] bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10" />
-                      )}
-                    </>
-                  )}
-
-                  <Link
-                    href={`/post/${post.id}`}
-                    className="inline-block mt-4 text-sm font-medium text-cyan-300 hover:text-cyan-200"
-                  >
-                    Open post
-                  </Link>
-
-                  <div className="flex flex-wrap items-center gap-3 mt-5 text-sm">
-                    <button
-                      onClick={() => handleToggleLike(post.id)}
-                      className={`rounded-2xl px-4 py-2 font-medium transition ${
-                        liked
-                          ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                          : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                      }`}
-                    >
-                      ❤️ {likeCount} {likeCount === 1 ? "Like" : "Likes"}
-                    </button>
-
-                    <div className="px-4 py-2 border rounded-2xl border-white/10 bg-white/5 text-slate-300">
-                      💬 {postComments.length} {postComments.length === 1 ? "Comment" : "Comments"}
-                    </div>
-
-                    <button
-                      onClick={() => handleToggleSavePost(post.id)}
-                      className={`rounded-2xl px-4 py-2 font-medium transition ${
-                        isPostSaved(post.id)
-                          ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                          : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                      }`}
-                    >
-                      🔖 {isPostSaved(post.id) ? "Saved" : "Save"}
-                    </button>
-
-                    <button
-                      onClick={() => handleSharePost(post.id)}
-                      className="px-4 py-2 border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                    >
-                      ↗ Share
-                    </button>
-                  </div>
-
-                  <div className="mt-5 space-y-3">
-                    {postComments.map((comment) => {
-                      const commentAuthorName = getBestNameForUser(
-                        comment.user_id,
-                        comment.full_name
-                      );
-                      const commentAuthorAvatar = getBestAvatarForUser(
-                        comment.user_id,
-                        comment.full_name || undefined,
-                        null
-                      );
-
-                      return (
-                        <div
-                          key={comment.id}
-                          className="px-4 py-3 border rounded-2xl border-white/10 bg-white/5"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex gap-3">
-                              <img
-                                src={commentAuthorAvatar}
-                                alt={commentAuthorName}
-                                className="object-cover w-10 h-10 rounded-2xl"
-                              />
-                              <div>
-                                <p className="text-sm font-semibold text-white">
-                                  {commentAuthorName}
-                                </p>
-                                <p className="mt-1 text-sm text-slate-300">
-                                  {comment.content}
-                                </p>
-                                <p className="mt-2 text-xs text-slate-500">
-                                  {formatTime(comment.created_at)}
-                                </p>
-                              </div>
-                            </div>
-
-                            {comment.user_id === userProfile.id && (
-                              <button
-                                onClick={() => handleDeleteComment(comment.id)}
-                                className="px-3 py-2 text-xs border rounded-xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                              >
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex gap-3 mt-4">
-                    <input
-                      type="text"
-                      value={commentInputs[post.id] || ""}
-                      onChange={(e) => handleCommentChange(post.id, e.target.value)}
-                      placeholder="Write a comment..."
-                      className="flex-1 px-4 py-3 text-sm text-white border outline-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400"
-                    />
-                    <button
-                      onClick={() => handleAddComment(post.id)}
-                      className="px-4 py-3 text-sm font-semibold text-white rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600"
-                    >
-                      Comment
-                    </button>
-                  </div>
-                </article>
-              );
-            })
+                  </article>
+                );
+              })}
+            </div>
           )}
         </section>
 
         <aside className="space-y-6">
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <p className="text-sm font-medium text-slate-300">Suggested users</p>
-            <div className="mt-4 space-y-4">
-              {suggestedProfiles.length === 0 ? (
-                <p className="text-sm text-slate-400">No suggestions right now.</p>
-              ) : (
-                suggestedProfiles.map((profile) => (
-                  <div
-                    key={profile.id}
-                    className="flex items-center justify-between gap-3"
-                  >
-                    <Link
-                      href={`/profile?id=${profile.id}`}
-                      className="flex items-center gap-3 hover:opacity-90"
-                    >
-                      <img
-                        src={getBestAvatarForUser(profile.id, profile.full_name, profile.avatar_url)}
-                        alt={profile.full_name || "FaceGrem User"}
-                        className="object-cover w-10 h-10 rounded-2xl"
-                      />
-                      <div>
-                        <p className="text-sm font-medium text-white">
-                          {profile.full_name || "FaceGrem User"}
-                        </p>
-                        <p className="text-xs text-slate-400">
-                          {profile.username ? `@${profile.username}` : "@user"}
-                        </p>
-                      </div>
-                    </Link>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-cyan-200">Notifications</p>
+              <Link href="/notifications" className="text-xs text-cyan-300 hover:text-cyan-200">
+                View all
+              </Link>
+            </div>
 
-                    <button
-                      onClick={() => handleFollowUser(profile.id)}
-                      disabled={followLoadingId === profile.id}
-                      className="px-3 py-2 text-xs font-semibold bg-white rounded-xl text-slate-900 disabled:opacity-70"
-                    >
-                      {followLoadingId === profile.id ? "..." : "Follow"}
-                    </button>
-                  </div>
-                ))
+            <div className="px-4 py-3 mt-4 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200">
+              Unread notifications: {unreadNotificationsCount}
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {notifications.slice(0, 4).map((notification) => (
+                <div
+                  key={notification.id}
+                  className="px-4 py-3 border rounded-2xl border-white/10 bg-white/5"
+                >
+                  <p className="text-sm text-white">
+                    {notification.actor_name || "Someone"} {notification.type}
+                    {notification.content ? `: ${notification.content}` : ""}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {new Date(notification.created_at).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+
+              {notifications.length === 0 && (
+                <p className="text-sm text-slate-400">No notifications yet.</p>
               )}
             </div>
           </div>
 
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <p className="text-sm font-medium text-slate-300">Trending now</p>
-            <div className="mt-4 space-y-3">
-              {trending.map((item) => (
-                <div
-                  key={item}
-                  className="px-4 py-3 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200"
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-cyan-200">Trending videos</p>
+              <Link href="/videos" className="text-xs text-cyan-300 hover:text-cyan-200">
+                Open videos
+              </Link>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {videos.slice(0, 3).map((video) => (
+                <Link
+                  key={video.id}
+                  href="/videos"
+                  className="block p-4 border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
                 >
-                  {item}
-                </div>
+                  <p className="font-medium text-white">{video.title}</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {(video.views_count || 0).toLocaleString()} views
+                  </p>
+                </Link>
               ))}
+
+              {videos.length === 0 && (
+                <p className="text-sm text-slate-400">No videos published yet.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-cyan-200">Popular communities</p>
+              <Link href="/communities" className="text-xs text-cyan-300 hover:text-cyan-200">
+                Open communities
+              </Link>
+            </div>
+
+            <div className="mt-4 space-y-4">
+              {communities.slice(0, 4).map((community) => {
+                const memberCount = communityMembers.filter(
+                  (member) => member.community_id === community.id
+                ).length;
+
+                return (
+                  <Link
+                    key={community.id}
+                    href={`/communities/${community.id}`}
+                    className="block p-4 border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                  >
+                    <p className="font-medium text-white">{community.name}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {community.category || "Community"} • {memberCount} members
+                    </p>
+                  </Link>
+                );
+              })}
+
+              {communities.length === 0 && (
+                <p className="text-sm text-slate-400">No communities created yet.</p>
+              )}
             </div>
           </div>
         </aside>

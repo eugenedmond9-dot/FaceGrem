@@ -11,14 +11,6 @@ type SavedPostRecord = {
   post_id: string;
 };
 
-type ProfileRecord = {
-  id: string;
-  full_name: string;
-  username: string;
-  bio: string;
-  avatar_url?: string | null;
-};
-
 type PostRecord = {
   id: string;
   user_id: string;
@@ -31,6 +23,29 @@ type PostRecord = {
   community_id?: string | null;
 };
 
+type ProfileRecord = {
+  id: string;
+  full_name: string;
+  username: string;
+  bio: string;
+  avatar_url?: string | null;
+};
+
+type LikeRecord = {
+  id: string;
+  post_id: string;
+  user_id: string;
+};
+
+type CommentRecord = {
+  id: string;
+  post_id: string;
+  user_id: string;
+  full_name: string | null;
+  content: string;
+  created_at: string;
+};
+
 export default function SavedPage() {
   const router = useRouter();
 
@@ -38,6 +53,8 @@ export default function SavedPage() {
   const [savedPosts, setSavedPosts] = useState<SavedPostRecord[]>([]);
   const [posts, setPosts] = useState<PostRecord[]>([]);
   const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
+  const [likes, setLikes] = useState<LikeRecord[]>([]);
+  const [comments, setComments] = useState<CommentRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const getAvatarUrl = (name: string) =>
@@ -50,18 +67,17 @@ export default function SavedPage() {
     return profiles.find((profile) => profile.id === profileId);
   };
 
-  const getBestNameForUser = (userId?: string, fallbackName?: string | null) => {
-    const profile = getProfileById(userId);
+  const getBestNameForUser = (uid?: string, fallbackName?: string | null) => {
+    const profile = getProfileById(uid);
     return profile?.full_name || fallbackName || "FaceGrem User";
   };
 
   const getBestAvatarForUser = (
-    userId?: string,
+    uid?: string,
     fallbackName?: string | null,
     fallbackAvatarUrl?: string | null
   ) => {
-    const profile = getProfileById(userId);
-
+    const profile = getProfileById(uid);
     return (
       profile?.avatar_url ||
       fallbackAvatarUrl ||
@@ -94,7 +110,7 @@ export default function SavedPage() {
   };
 
   useEffect(() => {
-    const loadSavedPosts = async () => {
+    const loadSavedPage = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -104,56 +120,66 @@ export default function SavedPage() {
         return;
       }
 
-      setUserId(session.user.id);
+      const currentUserId = session.user.id;
+      setUserId(currentUserId);
 
-      const [{ data: savedData }, { data: postsData }, { data: profilesData }] =
-        await Promise.all([
-          supabase
-            .from("saved_posts")
-            .select("id, user_id, post_id")
-            .eq("user_id", session.user.id),
-          supabase
-            .from("posts")
-            .select(
-              "id, user_id, content, created_at, full_name, avatar_url, image_url, video_url, community_id"
-            )
-            .is("community_id", null)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("profiles")
-            .select("id, full_name, username, bio, avatar_url"),
-        ]);
+      const [
+        { data: savedPostsData },
+        { data: postsData },
+        { data: profilesData },
+        { data: likesData },
+        { data: commentsData },
+      ] = await Promise.all([
+        supabase.from("saved_posts").select("id, user_id, post_id").eq("user_id", currentUserId),
+        supabase
+          .from("posts")
+          .select(
+            "id, user_id, content, created_at, full_name, avatar_url, image_url, video_url, community_id"
+          )
+          .order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
+        supabase.from("likes").select("id, post_id, user_id"),
+        supabase
+          .from("comments")
+          .select("id, post_id, user_id, full_name, content, created_at"),
+      ]);
 
-      setSavedPosts(savedData || []);
+      setSavedPosts(savedPostsData || []);
       setPosts(postsData || []);
       setProfiles(profilesData || []);
+      setLikes(likesData || []);
+      setComments(commentsData || []);
       setLoading(false);
     };
 
-    void loadSavedPosts();
+    void loadSavedPage();
   }, [router]);
 
-  const savedFeed = useMemo(() => {
-    const savedIds = savedPosts.map((item) => item.post_id);
-    return posts.filter((post) => savedIds.includes(post.id));
+  const savedPostItems = useMemo(() => {
+    const savedIds = new Set(savedPosts.map((saved) => saved.post_id));
+    return posts.filter((post) => savedIds.has(post.id));
   }, [savedPosts, posts]);
 
-  const handleUnsave = async (postId: string) => {
-    const existing = savedPosts.find(
-      (savedPost) => savedPost.user_id === userId && savedPost.post_id === postId
-    );
+  const getPostLikesCount = (postId: string) =>
+    likes.filter((like) => like.post_id === postId).length;
 
-    if (!existing) return;
+  const getPostCommentsCount = (postId: string) =>
+    comments.filter((comment) => comment.post_id === postId).length;
 
-    const { error } = await supabase
-      .from("saved_posts")
-      .delete()
-      .eq("id", existing.id);
+  const handleRemoveSavedPost = async (savedId: string, postId: string) => {
+    const { error } = await supabase.from("saved_posts").delete().eq("id", savedId);
 
-    if (!error) {
-      setSavedPosts((prev) => prev.filter((item) => item.id !== existing.id));
+    if (error) {
+      alert(error.message);
+      return;
     }
+
+    setSavedPosts((prev) => prev.filter((saved) => saved.id !== savedId));
+    setPosts((prev) => prev.filter((post) => post.id !== postId || !savedPosts.some((s) => s.post_id === post.id && s.id !== savedId)));
   };
+
+  const findSavedRecord = (postId: string) =>
+    savedPosts.find((saved) => saved.post_id === postId && saved.user_id === userId);
 
   if (loading) {
     return (
@@ -187,64 +213,76 @@ export default function SavedPage() {
       </header>
 
       <main className="max-w-4xl px-6 py-10 mx-auto">
-        <div className="mb-8 rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_30%),linear-gradient(to_bottom_right,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-6 backdrop-blur-xl">
-          <p className="text-sm font-medium text-cyan-200">Bookmarks</p>
+        <section className="rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_30%),linear-gradient(to_bottom_right,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-6 backdrop-blur-xl">
+          <p className="text-sm font-medium text-cyan-200">Your collection</p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight">
-            Your saved FaceGrem posts
+            Posts you saved to revisit later.
           </h2>
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            Come back to the posts you wanted to keep.
+            Keep ideas, videos, messages, and moments you want to come back to.
           </p>
-        </div>
+        </section>
 
-        {savedFeed.length === 0 ? (
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-slate-300">
-            You have no saved posts yet.
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {savedFeed.map((post) => {
+        <section className="mt-8 space-y-6">
+          {savedPostItems.length === 0 ? (
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-slate-300">
+              You have not saved any posts yet.
+            </div>
+          ) : (
+            savedPostItems.map((post) => {
               const authorName = getBestNameForUser(post.user_id, post.full_name);
               const authorAvatar = getBestAvatarForUser(
                 post.user_id,
                 post.full_name,
                 post.avatar_url
               );
+              const savedRecord = findSavedRecord(post.id);
+              const likesCount = getPostLikesCount(post.id);
+              const commentsCount = getPostCommentsCount(post.id);
 
               return (
                 <article
                   key={post.id}
                   className="rounded-[30px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
                 >
-                  <Link
-                    href={`/profile?id=${post.user_id}`}
-                    className="flex items-center gap-3 hover:opacity-90"
-                  >
-                    <img
-                      src={authorAvatar}
-                      alt={authorName}
-                      className="object-cover w-12 h-12 rounded-2xl"
-                    />
-                    <div>
-                      <p className="font-semibold text-white">{authorName}</p>
-                      <p className="text-xs text-slate-400">
-                        {new Date(post.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                  </Link>
+                  <div className="flex items-start justify-between gap-4">
+                    <Link
+                      href={`/profile?id=${post.user_id}`}
+                      className="flex items-center gap-3 hover:opacity-90"
+                    >
+                      <img
+                        src={authorAvatar}
+                        alt={authorName}
+                        className="object-cover w-12 h-12 rounded-2xl"
+                      />
+                      <div>
+                        <p className="font-semibold text-white">{authorName}</p>
+                        <p className="text-xs text-slate-400">
+                          {new Date(post.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                    </Link>
+
+                    {savedRecord && (
+                      <button
+                        onClick={() => handleRemoveSavedPost(savedRecord.id, post.id)}
+                        className="px-4 py-2 text-xs text-red-200 border rounded-2xl border-red-400/20 bg-red-500/10 hover:bg-red-500/20"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
 
                   {post.content && (
-                    <p className="mt-4 text-sm leading-7 text-slate-200">
-                      {post.content}
-                    </p>
+                    <p className="mt-4 text-sm leading-7 text-slate-200">{post.content}</p>
                   )}
 
                   {post.image_url && (
                     <div className="mt-5 overflow-hidden rounded-[28px] border border-white/10">
                       <img
                         src={post.image_url}
-                        alt="Saved post"
-                        className="max-h-[520px] w-full object-cover"
+                        alt="Post"
+                        className="max-h-[560px] w-full object-cover"
                       />
                     </div>
                   )}
@@ -272,26 +310,25 @@ export default function SavedPage() {
                     <div className="mt-5 h-40 rounded-[28px] bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10" />
                   )}
 
-                  <div className="flex gap-3 mt-5">
+                  <div className="flex flex-wrap gap-3 mt-5">
+                    <div className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-300">
+                      ❤️ {likesCount}
+                    </div>
+                    <div className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-300">
+                      💬 {commentsCount}
+                    </div>
                     <Link
                       href={`/post/${post.id}`}
                       className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-cyan-300 hover:bg-white/10"
                     >
                       Open post
                     </Link>
-
-                    <button
-                      onClick={() => handleUnsave(post.id)}
-                      className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                    >
-                      Remove
-                    </button>
                   </div>
                 </article>
               );
-            })}
-          </div>
-        )}
+            })
+          )}
+        </section>
       </main>
     </div>
   );
