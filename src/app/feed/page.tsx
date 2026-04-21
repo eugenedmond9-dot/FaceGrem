@@ -925,262 +925,237 @@ export default function FeedPage() {
           ) : (
             <div className="space-y-6">
               {filteredPosts.map((post) => {
-                const authorName = getBestNameForUser(post.user_id, post.full_name);
-                const authorAvatar = getBestAvatarForUser(
-                  post.user_id,
-                  post.full_name,
-                  post.avatar_url
-                );
-                const likesCount = getPostLikesCount(post.id);
-                const commentsCount = getPostCommentsCount(post.id);
-
-                return (
-                  <article
-                    key={post.id}
-                    className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl"
-                  >
-                    <div className="p-5 sm:p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <Link
-                          href={`/profile?id=${post.user_id}`}
-                          className="flex items-center min-w-0 gap-3 hover:opacity-90"
-                        >
-                          <img
-                            src={authorAvatar}
-                            alt={authorName}
-                            className="object-cover w-12 h-12 rounded-2xl"
-                          />
-                          <div className="min-w-0">
-                            <p className="font-semibold text-white truncate">{authorName}</p>
-                            <p className="text-xs text-slate-400">
-                              {new Date(post.created_at).toLocaleString()}
-                            </p>
-                          </div>
-                        </Link>
-
-                        {post.user_id === userId && (
-                          <button
-                            onClick={() => handleDeletePost(post.id)}
-                            className="px-4 py-2 text-xs text-red-200 transition border rounded-2xl border-red-400/20 bg-red-500/10 hover:bg-red-500/20"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </div>
-
-                      {post.content && (
-                        <p className="mt-5 text-[15px] leading-8 text-slate-200">
-                          {post.content}
-                        </p>
-                      )}
-                    </div>
-
-                    {post.image_url && (
-                      <div className="border-y border-white/10 bg-black/20">
-                        <img
-                          src={post.image_url}
-                          alt="Post"
-                          className="max-h-[700px] w-full object-cover"
-                        />
-                      </div>
-                    )}
-
-                    {post.video_url && (
-                      <div className="border-y border-white/10 bg-black/30">
-                        {isYouTubeUrl(post.video_url) ? (
-                          <iframe
-                            src={getYouTubeEmbedUrl(post.video_url)}
-                            title={`feed-video-${post.id}`}
-                            className="h-80 w-full md:h-[460px]"
-                            allowFullScreen
-                          />
-                        ) : (
-                          <video
-                            controls
-                            className="h-80 w-full bg-black md:h-[460px]"
-                            src={post.video_url}
-                          />
-                        )}
-                      </div>
-                    )}
-
-                    <div className="p-5 sm:p-6">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <button
-                          onClick={() => handleToggleLike(post.id, post.user_id)}
-                          className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
-                            isLiked(post.id)
-                              ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                              : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                          }`}
-                        >
-                          ❤️ {likesCount}
-                        </button>
-
-                        <Link
-                          href={`/post/${post.id}`}
-                          className="px-4 py-2 text-sm transition border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                        >
-                          💬 {commentsCount}
-                        </Link>
-
-                        <button
-                          onClick={() => handleToggleSave(post.id)}
-                          className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
-                            isSaved(post.id)
-                              ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                              : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                          }`}
-                        >
-                          {isSaved(post.id) ? "Saved" : "Save"}
-                        </button>
-
-                        <Link
-                          href={`/post/${post.id}`}
-                          className="px-4 py-2 text-sm transition border rounded-2xl border-white/10 bg-white/5 text-cyan-300 hover:bg-white/10"
-                        >
-                          Open post
-                        </Link>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        <aside className="space-y-6">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-cyan-200">Live activity</p>
-              <Link href="/notifications" className="text-xs text-cyan-300 hover:text-cyan-200">
-                View all
-              </Link>
-            </div>
-
-            <div className="px-4 py-3 mt-4 border rounded-2xl border-white/10 bg-white/5">
-              <p className="text-xs text-slate-400">Unread notifications</p>
-              <p className="mt-1 text-2xl font-bold text-white">{unreadNotificationsCount}</p>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {latestActivity.length === 0 ? (
-                <p className="text-sm text-slate-400">No notifications yet.</p>
-              ) : (
-                latestActivity.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className="px-4 py-3 border rounded-2xl border-white/10 bg-white/5"
-                  >
-                    <p className="text-sm leading-6 text-white">
-                      <span className="font-medium">
-                        {notification.actor_name || "Someone"}
-                      </span>{" "}
-                      {notification.type}
-                      {notification.content ? `: ${notification.content}` : ""}
-                    </p>
-                    <p className="mt-2 text-xs text-slate-400">
-                      {new Date(notification.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-cyan-200">Trending now</p>
-              <span className="text-xs text-slate-400">Updated live</span>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {trendingTopics.map((topic, index) => (
-                <div
-                  key={topic.name}
-                  className="flex items-center justify-between px-4 py-3 border rounded-2xl border-white/10 bg-white/5"
-                >
-                  <div>
-                    <p className="text-xs text-slate-400">#{index + 1}</p>
-                    <p className="mt-1 font-medium text-white">{topic.name}</p>
-                  </div>
-                  <span className="px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-200">
-                    {topic.pulse}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-cyan-200">Trending videos</p>
-              <Link href="/videos" className="text-xs text-cyan-300 hover:text-cyan-200">
-                Open videos
-              </Link>
-            </div>
-
-            <div className="mt-4 space-y-4">
-              {latestVideoCards.length === 0 ? (
-                <p className="text-sm text-slate-400">No videos published yet.</p>
-              ) : (
-                latestVideoCards.map((video) => (
-                  <Link
-                    key={video.id}
-                    href="/videos"
-                    className="block p-4 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
-                  >
-                    <p className="font-medium text-white">{video.title}</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {(video.views_count || 0).toLocaleString()} views
-                    </p>
-                  </Link>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-semibold text-cyan-200">Suggested communities</p>
-              <Link
-                href="/communities"
-                className="text-xs text-cyan-300 hover:text-cyan-200"
-              >
-                Discover
-              </Link>
-            </div>
-
-            <div className="mt-4 space-y-4">
-              {suggestedCommunities.length === 0 ? (
-                <p className="text-sm text-slate-400">
-                  You are already in all visible communities.
-                </p>
-              ) : (
-                suggestedCommunities.map((community) => {
-                  const memberCount = communityMembers.filter(
-                    (member) => member.community_id === community.id
-                  ).length;
-
-                  return (
-                    <Link
-                      key={community.id}
-                      href={`/communities/${community.id}`}
-                      className="block p-4 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
-                    >
-                      <p className="font-medium text-white">{community.name}</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {community.category || "Community"} • {memberCount} members
-                      </p>
-                    </Link>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </aside>
-      </main>
-    </div>
+  const authorProfile = getProfileById(post.user_id);
+  const authorName = getBestNameForUser(post.user_id, post.full_name);
+  const authorAvatar = getBestAvatarForUser(
+    post.user_id,
+    post.full_name,
+    post.avatar_url
   );
-}
+  const likesCount = getPostLikesCount(post.id);
+  const commentsCount = getPostCommentsCount(post.id);
+
+  const latestComments = comments
+    .filter((comment) => comment.post_id === post.id)
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+    .slice(0, 2);
+
+  return (
+    <article
+      key={post.id}
+      className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+    >
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <Link
+            href={`/profile?id=${post.user_id}`}
+            className="flex items-center min-w-0 gap-3 hover:opacity-90"
+          >
+            <img
+              src={authorAvatar}
+              alt={authorName}
+              className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
+            />
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-semibold text-white truncate">{authorName}</p>
+
+                {authorProfile?.username && (
+                  <span className="text-sm truncate text-slate-400">
+                    @{authorProfile.username}
+                  </span>
+                )}
+
+                <span className="hidden w-1 h-1 rounded-full bg-slate-500 sm:block" />
+
+                <span className="text-xs text-slate-400">
+                  {new Date(post.created_at).toLocaleString()}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 mt-1">
+                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
+                  Public
+                </span>
+
+                {post.video_url && (
+                  <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
+                    Video post
+                  </span>
+                )}
+
+                {post.image_url && !post.video_url && (
+                  <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-2.5 py-1 text-[11px] text-fuchsia-200">
+                    Photo post
+                  </span>
+                )}
+              </div>
+            </div>
+          </Link>
+
+          {post.user_id === userId && (
+            <button
+              onClick={() => handleDeletePost(post.id)}
+              className="px-4 py-2 text-xs text-red-200 transition border rounded-2xl border-red-400/20 bg-red-500/10 hover:bg-red-500/20"
+            >
+              Delete
+            </button>
+          )}
+        </div>
+
+        {post.content && (
+          <div className="mt-5">
+            <p className="text-[15px] leading-8 text-slate-200">{post.content}</p>
+          </div>
+        )}
+      </div>
+
+      {post.image_url && (
+        <div className="px-3 pb-3 border-y border-white/10 bg-black/20 sm:px-4 sm:pb-4">
+          <div className="overflow-hidden rounded-[28px]">
+            <img
+              src={post.image_url}
+              alt="Post"
+              className="max-h-[720px] w-full object-cover"
+            />
+          </div>
+        </div>
+      )}
+
+      {post.video_url && (
+        <div className="px-3 pb-3 border-y border-white/10 bg-black/30 sm:px-4 sm:pb-4">
+          <div className="overflow-hidden rounded-[28px]">
+            {isYouTubeUrl(post.video_url) ? (
+              <iframe
+                src={getYouTubeEmbedUrl(post.video_url)}
+                title={`feed-video-${post.id}`}
+                className="h-80 w-full md:h-[480px]"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                controls
+                className="h-80 w-full bg-black md:h-[480px]"
+                src={post.video_url}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5">
+              <span className="text-base">❤️</span>
+              <span className="text-slate-200">
+                {likesCount} {likesCount === 1 ? "like" : "likes"}
+              </span>
+            </div>
+
+            <div className="rounded-full bg-white/5 px-3 py-1.5 text-slate-300">
+              {commentsCount} {commentsCount === 1 ? "comment" : "comments"}
+            </div>
+          </div>
+
+          <Link
+            href={`/post/${post.id}`}
+            className="text-sm font-medium transition text-cyan-300 hover:text-cyan-200"
+          >
+            View discussion
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mt-4 sm:grid-cols-4">
+          <button
+            onClick={() => handleToggleLike(post.id, post.user_id)}
+            className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+              isLiked(post.id)
+                ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
+                : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+            }`}
+          >
+            {isLiked(post.id) ? "Liked" : "Like"}
+          </button>
+
+          <Link
+            href={`/post/${post.id}`}
+            className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+          >
+            Comment
+          </Link>
+
+          <button
+            onClick={() => handleToggleSave(post.id)}
+            className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+              isSaved(post.id)
+                ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
+                : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+            }`}
+          >
+            {isSaved(post.id) ? "Saved" : "Save"}
+          </button>
+
+          <Link
+            href={`/post/${post.id}`}
+            className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-white/10 bg-white/5 text-cyan-300 hover:bg-white/10"
+          >
+            Open
+          </Link>
+        </div>
+
+        {latestComments.length > 0 && (
+          <div className="pt-4 mt-5 space-y-3 border-t border-white/10">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+              Recent comments
+            </p>
+
+            {latestComments.map((comment) => {
+              const commentAuthorName = getBestNameForUser(
+                comment.user_id,
+                comment.full_name
+              );
+              const commentAuthorAvatar = getBestAvatarForUser(
+                comment.user_id,
+                comment.full_name,
+                null
+              );
+
+              return (
+                <div
+                  key={comment.id}
+                  className="flex items-start gap-3 px-3 py-3 border rounded-2xl border-white/10 bg-white/5"
+                >
+                  <img
+                    src={commentAuthorAvatar}
+                    alt={commentAuthorName}
+                    className="object-cover h-9 w-9 rounded-xl"
+                  />
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium text-white">
+                        {commentAuthorName}
+                      </p>
+                      <span className="text-[11px] text-slate-400">
+                        {new Date(comment.created_at).toLocaleString()}
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-300">
+                      {comment.content}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </article>
+  );
+})}
