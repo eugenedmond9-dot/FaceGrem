@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import MobileBottomNav from "../../../components/MobileBottomNav";
 
 type PostRecord = {
   id: string;
@@ -62,6 +63,7 @@ export default function PostDetailPage() {
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
+  const [userAvatar, setUserAvatar] = useState("");
 
   const [post, setPost] = useState<PostRecord | null>(null);
   const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
@@ -73,6 +75,7 @@ export default function PostDetailPage() {
 
   const [commentText, setCommentText] = useState("");
   const [commenting, setCommenting] = useState(false);
+  const [searchText, setSearchText] = useState("");
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -176,11 +179,17 @@ export default function PostDetailPage() {
         return;
       }
 
+      const allProfiles = profilesData || [];
+      const myProfile = allProfiles.find((profile) => profile.id === currentUserId);
+
       setPost(postData);
-      setProfiles(profilesData || []);
+      setProfiles(allProfiles);
       setLikes(likesData || []);
       setComments(commentsData || []);
       setSavedPosts(savedPostsData || []);
+      setUserAvatar(
+        myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || currentUserName)
+      );
 
       if (postData.community_id) {
         const { data: communityData } = await supabase
@@ -199,7 +208,19 @@ export default function PostDetailPage() {
   }, [postId, router]);
 
   const likesCount = likes.length;
-  const commentsCount = comments.length;
+
+  const filteredComments = useMemo(() => {
+    const term = searchText.trim().toLowerCase();
+    if (!term) return comments;
+
+    return comments.filter((comment) => {
+      const author = getBestNameForUser(comment.user_id, comment.full_name).toLowerCase();
+      const text = `${comment.content} ${author}`.toLowerCase();
+      return text.includes(term);
+    });
+  }, [comments, searchText, profiles]);
+
+  const commentsCount = filteredComments.length;
 
   const isLiked = useMemo(() => {
     return likes.some((like) => like.user_id === userId);
@@ -324,232 +345,523 @@ export default function PostDetailPage() {
 
   if (loading || !post) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#07111f] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
         Loading post...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#07111f] text-white">
-      <header className="border-b border-white/10 bg-[#07111f]/85 backdrop-blur-xl">
-        <div className="flex items-center justify-between max-w-5xl px-6 py-4 mx-auto">
+    <div className="min-h-screen bg-[#020817] pb-24 text-white xl:pb-0">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.10),transparent_25%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_22%),linear-gradient(to_bottom,#020817,#07111f_45%,#020817)]" />
+        <div className="absolute left-0 rounded-full top-10 h-72 w-72 bg-cyan-400/10 blur-3xl" />
+        <div className="absolute top-0 right-0 rounded-full h-96 w-96 bg-blue-500/10 blur-3xl" />
+      </div>
+
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#020817]/75 backdrop-blur-2xl">
+        <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center font-bold shadow-lg h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/20">
-              F
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">FaceGrem</h1>
-              <p className="text-xs text-slate-400">Post Detail</p>
+            <Link href="/feed" className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 font-bold text-white shadow-[0_12px_40px_rgba(34,211,238,0.28)] sm:h-12 sm:w-12">
+                F
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
+                <p className="text-xs text-slate-400">Post discussion</p>
+              </div>
+            </Link>
+          </div>
+
+          <div className="flex-1 hidden lg:block">
+            <div className="max-w-xl mx-auto">
+              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.18)] transition focus-within:border-cyan-400/40">
+                <span className="text-sm text-slate-400">⌕</span>
+                <input
+                  type="text"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="Search comments on this post..."
+                  className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
+                />
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 ml-auto">
             {community ? (
               <Link
                 href={`/communities/${community.id}`}
-                className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                className="hidden rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 md:inline-flex"
               >
-                Open community
+                Community
               </Link>
             ) : (
               <Link
                 href="/feed"
-                className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                className="hidden rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 md:inline-flex"
               >
-                Back to Feed
+                Feed
               </Link>
             )}
+
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 px-2 py-2 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 sm:px-2 sm:pr-3"
+            >
+              <img
+                src={userAvatar || getAvatarUrl(userName)}
+                alt={userName}
+                className="object-cover h-9 w-9 rounded-xl ring-1 ring-cyan-400/20"
+              />
+              <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
+                {userName}
+              </span>
+            </Link>
+          </div>
+        </div>
+
+        <div className="px-4 pb-4 sm:px-6 lg:hidden">
+          <div className="mx-auto space-y-3 max-w-7xl">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.18)] transition focus-within:border-cyan-400/40">
+              <span className="text-sm text-slate-400">⌕</span>
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search comments..."
+                className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              <Link
+                href="/feed"
+                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+              >
+                Feed
+              </Link>
+              <Link
+                href="/videos"
+                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+              >
+                Videos
+              </Link>
+              <Link
+                href="/communities"
+                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+              >
+                Groups
+              </Link>
+              <Link
+                href="/messages"
+                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+              >
+                Chat
+              </Link>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl px-6 py-10 mx-auto">
-        {community && (
-          <section className="mb-6 rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_30%),linear-gradient(to_bottom_right,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-5 backdrop-blur-xl">
-            <p className="text-sm font-medium text-cyan-200">Community post</p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight">{community.name}</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              {community.description || "Community discussion"}
-            </p>
-          </section>
-        )}
+      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
+        <aside className="hidden xl:block">
+          <div className="sticky top-[104px] space-y-4">
+            {community && (
+              <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.12),rgba(15,23,42,0.94)_45%,rgba(30,41,59,0.94))] p-4 shadow-[0_20px_60px_rgba(6,182,212,0.10)] backdrop-blur-xl">
+                <p className="text-sm font-semibold text-cyan-200">Community post</p>
+                <h3 className="mt-2 text-xl font-bold text-white">{community.name}</h3>
+                <p className="mt-2 text-sm leading-7 text-slate-300">
+                  {community.description || "Community discussion"}
+                </p>
+              </div>
+            )}
 
-        <article className="rounded-[30px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-          <div className="flex items-start justify-between gap-4">
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-3 backdrop-blur-xl">
+              <p className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
+                Navigate
+              </p>
+
+              <div className="space-y-1.5">
+                <Link
+                  href="/feed"
+                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-base">🏠</span>
+                    Home feed
+                  </span>
+                  <span className="text-slate-500">→</span>
+                </Link>
+
+                {community && (
+                  <Link
+                    href={`/communities/${community.id}`}
+                    className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
+                  >
+                    <span className="flex items-center gap-3">
+                      <span className="text-base">👥</span>
+                      Community
+                    </span>
+                    <span className="text-slate-500">→</span>
+                  </Link>
+                )}
+
+                <Link
+                  href={`/profile?id=${post.user_id}`}
+                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-base">👤</span>
+                    Author profile
+                  </span>
+                  <span className="text-slate-500">→</span>
+                </Link>
+
+                <Link
+                  href="/messages"
+                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="text-base">💬</span>
+                    Messages
+                  </span>
+                  <span className="text-slate-500">→</span>
+                </Link>
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+              <p className="text-sm font-semibold text-cyan-200">Discussion stats</p>
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
+                  <p className="text-xs text-slate-400">Likes</p>
+                  <p className="mt-2 text-xl font-bold text-white">{likesCount}</p>
+                </div>
+                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
+                  <p className="text-xs text-slate-400">Comments</p>
+                  <p className="mt-2 text-xl font-bold text-white">{comments.length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <section className="min-w-0 space-y-5 sm:space-y-6">
+          <article className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <div className="p-5 sm:p-6">
+              {community && (
+                <div className="mb-5 inline-flex rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-200">
+                  Posted in {community.name}
+                </div>
+              )}
+
+              <div className="flex items-start justify-between gap-4">
+                <Link
+                  href={`/profile?id=${post.user_id}`}
+                  className="flex items-center gap-3 hover:opacity-90"
+                >
+                  <img
+                    src={authorAvatar}
+                    alt={authorName}
+                    className="object-cover h-14 w-14 rounded-2xl ring-1 ring-white/10"
+                  />
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-white">{authorName}</p>
+                      <span className="text-xs text-slate-400">
+                        {new Date(post.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">Public post</p>
+                  </div>
+                </Link>
+
+                <span className="px-3 py-1 text-xs border rounded-full border-white/10 bg-white/5 text-slate-300">
+                  {community ? community.name : "Public"}
+                </span>
+              </div>
+
+              {post.content && (
+                <div className="mt-6">
+                  <p className="text-[15px] leading-8 text-slate-200">{post.content}</p>
+                </div>
+              )}
+            </div>
+
+            {post.image_url && (
+              <div className="px-3 pb-3 border-y border-white/10 bg-black/20 sm:px-4 sm:pb-4">
+                <div className="overflow-hidden rounded-[28px]">
+                  <img
+                    src={post.image_url}
+                    alt="Post"
+                    className="max-h-[720px] w-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
+
+            {post.video_url && (
+              <div className="px-3 pb-3 border-y border-white/10 bg-black/30 sm:px-4 sm:pb-4">
+                <div className="overflow-hidden rounded-[28px]">
+                  {isYouTubeUrl(post.video_url) ? (
+                    <iframe
+                      src={getYouTubeEmbedUrl(post.video_url)}
+                      title={`post-video-${post.id}`}
+                      className="h-80 w-full md:h-[480px]"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video
+                      controls
+                      className="h-80 w-full bg-black md:h-[480px]"
+                      src={post.video_url}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="p-5 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5">
+                    <span className="text-base">❤️</span>
+                    <span className="text-slate-200">
+                      {likesCount} {likesCount === 1 ? "like" : "likes"}
+                    </span>
+                  </div>
+
+                  <div className="rounded-full bg-white/5 px-3 py-1.5 text-slate-300">
+                    {comments.length} {comments.length === 1 ? "comment" : "comments"}
+                  </div>
+                </div>
+
+                <Link
+                  href={`/profile?id=${post.user_id}`}
+                  className="text-sm font-medium transition text-cyan-300 hover:text-cyan-200"
+                >
+                  View author
+                </Link>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+                <button
+                  onClick={handleToggleLike}
+                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                    isLiked
+                      ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
+                      : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                  }`}
+                >
+                  {isLiked ? "Liked" : "Like"}
+                </button>
+
+                <div className="px-4 py-3 text-sm font-medium text-center border rounded-2xl border-white/10 bg-white/5 text-slate-300">
+                  {comments.length} Comments
+                </div>
+
+                <button
+                  onClick={handleToggleSave}
+                  className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                    savedRecord
+                      ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
+                      : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                  }`}
+                >
+                  {savedRecord ? "Saved" : "Save"}
+                </button>
+
+                <Link
+                  href={`/messages?user=${post.user_id}`}
+                  className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-white/10 bg-white/5 text-cyan-300 hover:bg-white/10"
+                >
+                  Message
+                </Link>
+              </div>
+            </div>
+          </article>
+
+          <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.92)_45%,rgba(15,23,42,0.96))] shadow-[0_25px_80px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:rounded-[34px]">
+            <div className="px-4 py-4 border-b border-white/10 sm:px-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-cyan-200">Join the conversation</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Add your thoughts to this post
+                  </p>
+                </div>
+
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+                  {comments.length} total comments
+                </span>
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-6">
+              <form onSubmit={handleAddComment}>
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  rows={4}
+                  placeholder="Write your comment..."
+                  className="w-full px-4 py-3 text-sm text-white transition border outline-none resize-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400 focus:border-cyan-400/40"
+                />
+
+                <div className="flex justify-end mt-4">
+                  <button
+                    type="submit"
+                    disabled={commenting}
+                    className="px-6 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70"
+                  >
+                    {commenting ? "Posting..." : "Add comment"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-cyan-200">Comments</p>
+                <h3 className="mt-1 text-2xl font-bold tracking-tight text-white">
+                  Discussion ({filteredComments.length})
+                </h3>
+              </div>
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+                {searchText.trim() ? "Filtered" : "All"}
+              </span>
+            </div>
+          </section>
+
+          {filteredComments.length === 0 ? (
+            <div className="rounded-[30px] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
+              <p className="text-lg font-medium text-white">No comments found.</p>
+              <p className="mt-2 text-sm text-slate-400">
+                Be the first to start the discussion here.
+              </p>
+            </div>
+          ) : (
+            <section className="space-y-4">
+              {filteredComments.map((comment) => {
+                const commentAuthorName = getBestNameForUser(
+                  comment.user_id,
+                  comment.full_name
+                );
+                const commentAuthorAvatar = getBestAvatarForUser(
+                  comment.user_id,
+                  comment.full_name,
+                  null
+                );
+
+                return (
+                  <article
+                    key={comment.id}
+                    className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Link href={`/profile?id=${comment.user_id}`} className="shrink-0">
+                        <img
+                          src={commentAuthorAvatar}
+                          alt={commentAuthorName}
+                          className="object-cover h-11 w-11 rounded-2xl"
+                        />
+                      </Link>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Link
+                            href={`/profile?id=${comment.user_id}`}
+                            className="font-medium text-white hover:text-cyan-300"
+                          >
+                            {commentAuthorName}
+                          </Link>
+                          <span className="text-xs text-slate-400">
+                            {new Date(comment.created_at).toLocaleString()}
+                          </span>
+                        </div>
+
+                        <p className="mt-2 text-sm leading-7 text-slate-200">
+                          {comment.content}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+          )}
+        </section>
+
+        <aside className="space-y-5 xl:space-y-5">
+          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-cyan-200">Author</p>
+                <p className="mt-1 text-xs text-slate-400">Person who shared this post</p>
+              </div>
+            </div>
+
             <Link
               href={`/profile?id=${post.user_id}`}
-              className="flex items-center gap-3 hover:opacity-90"
+              className="flex items-center gap-3 p-4 mt-4 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
             >
               <img
                 src={authorAvatar}
                 alt={authorName}
-                className="object-cover h-14 w-14 rounded-2xl"
+                className="object-cover w-12 h-12 rounded-2xl"
               />
-              <div>
-                <p className="font-semibold text-white">{authorName}</p>
-                <p className="text-xs text-slate-400">
-                  {new Date(post.created_at).toLocaleString()}
+              <div className="min-w-0">
+                <p className="font-medium text-white truncate">{authorName}</p>
+                <p className="text-xs truncate text-slate-400">
+                  Open profile
                 </p>
               </div>
             </Link>
-
-            <span className="px-3 py-1 text-xs border rounded-full border-white/10 bg-white/5 text-slate-300">
-              {community ? community.name : "Public"}
-            </span>
           </div>
 
-          {post.content && (
-            <p className="mt-5 text-sm leading-8 text-slate-200">{post.content}</p>
-          )}
-
-          {post.image_url && (
-            <div className="mt-6 overflow-hidden rounded-[28px] border border-white/10">
-              <img
-                src={post.image_url}
-                alt="Post"
-                className="max-h-[620px] w-full object-cover"
-              />
-            </div>
-          )}
-
-          {post.video_url && (
-            <div className="mt-6 overflow-hidden rounded-[28px] border border-white/10 bg-black/30">
-              {isYouTubeUrl(post.video_url) ? (
-                <iframe
-                  src={getYouTubeEmbedUrl(post.video_url)}
-                  title={`post-video-${post.id}`}
-                  className="h-80 w-full md:h-[420px]"
-                  allowFullScreen
-                />
-              ) : (
-                <video
-                  controls
-                  className="h-80 w-full bg-black md:h-[420px]"
-                  src={post.video_url}
-                />
-              )}
-            </div>
-          )}
-
-          {!post.image_url && !post.video_url && !post.content && (
-            <div className="mt-6 h-40 rounded-[28px] bg-gradient-to-br from-cyan-400/10 via-blue-500/10 to-purple-500/10" />
-          )}
-
-          <div className="flex flex-wrap gap-3 mt-6">
-            <button
-              onClick={handleToggleLike}
-              className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
-                isLiked
-                  ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                  : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-              }`}
-            >
-              ❤️ {likesCount}
-            </button>
-
-            <div className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-300">
-              💬 {commentsCount}
+          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-cyan-200">Quick links</p>
+                <p className="mt-1 text-xs text-slate-400">Move around FaceGrem fast</p>
+              </div>
             </div>
 
-            <button
-              onClick={handleToggleSave}
-              className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
-                savedRecord
-                  ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                  : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-              }`}
-            >
-              {savedRecord ? "Saved" : "Save"}
-            </button>
-          </div>
-        </article>
-
-        <section className="mt-8 rounded-[30px] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-          <p className="text-sm font-medium text-cyan-200">Join the conversation</p>
-
-          <form onSubmit={handleAddComment} className="mt-4">
-            <textarea
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              rows={4}
-              placeholder="Write your comment..."
-              className="w-full px-4 py-3 text-sm text-white border outline-none resize-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400"
-            />
-
-            <div className="flex justify-end mt-4">
-              <button
-                type="submit"
-                disabled={commenting}
-                className="px-6 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70"
+            <div className="mt-4 space-y-3">
+              <Link
+                href="/feed"
+                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                {commenting ? "Posting..." : "Add comment"}
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <section className="mt-8 space-y-4">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-            <h3 className="text-xl font-bold tracking-tight text-white">
-              Comments ({commentsCount})
-            </h3>
-          </div>
-
-          {comments.length === 0 ? (
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-slate-300">
-              No comments yet. Be the first to comment.
-            </div>
-          ) : (
-            comments.map((comment) => {
-              const commentAuthorName = getBestNameForUser(
-                comment.user_id,
-                comment.full_name
-              );
-              const commentAuthorAvatar = getBestAvatarForUser(
-                comment.user_id,
-                comment.full_name,
-                null
-              );
-
-              return (
-                <article
-                  key={comment.id}
-                  className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
+                Back to feed
+              </Link>
+              {community && (
+                <Link
+                  href={`/communities/${community.id}`}
+                  className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
                 >
-                  <div className="flex items-start gap-3">
-                    <Link href={`/profile?id=${comment.user_id}`} className="shrink-0">
-                      <img
-                        src={commentAuthorAvatar}
-                        alt={commentAuthorName}
-                        className="object-cover h-11 w-11 rounded-2xl"
-                      />
-                    </Link>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Link
-                          href={`/profile?id=${comment.user_id}`}
-                          className="font-medium text-white hover:text-cyan-300"
-                        >
-                          {commentAuthorName}
-                        </Link>
-                        <span className="text-xs text-slate-400">
-                          {new Date(comment.created_at).toLocaleString()}
-                        </span>
-                      </div>
-
-                      <p className="mt-2 text-sm leading-7 text-slate-200">
-                        {comment.content}
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              );
-            })
-          )}
-        </section>
+                  Open community
+                </Link>
+              )}
+              <Link
+                href={`/messages?user=${post.user_id}`}
+                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+              >
+                Message author
+              </Link>
+              <Link
+                href="/profile"
+                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+              >
+                Visit your profile
+              </Link>
+            </div>
+          </div>
+        </aside>
       </main>
+
+      <MobileBottomNav />
     </div>
   );
 }
