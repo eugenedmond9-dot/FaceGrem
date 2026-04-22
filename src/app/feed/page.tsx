@@ -106,9 +106,9 @@ const quickActions = ["Photo", "Video", "Live", "Story"] as const;
 const feedTabs = ["For You", "Following", "Creators", "Videos", "Faith", "Business"] as const;
 
 const glassCard =
-  "border border-white/10 bg-white/[0.045] backdrop-blur-2xl shadow-[0_20px_60px_rgba(2,8,23,0.45)]";
+  "border border-white/[0.06] bg-white/[0.028] backdrop-blur-[28px] shadow-[0_18px_50px_rgba(2,8,23,0.18)]";
 const softCard =
-  "border border-white/10 bg-white/[0.035] backdrop-blur-2xl shadow-[0_14px_40px_rgba(2,8,23,0.30)]";
+  "border border-white/[0.05] bg-white/[0.02] backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]";
 
 export default function FeedPage() {
   const router = useRouter();
@@ -843,7 +843,7 @@ export default function FeedPage() {
             transform: translate3d(0, 0, 0) scale(1);
           }
           50% {
-            transform: translate3d(40px, -30px, 0) scale(1.15);
+            transform: translate3d(34px, -24px, 0) scale(1.08);
           }
         }
 
@@ -853,7 +853,7 @@ export default function FeedPage() {
             transform: translate3d(0, 0, 0) scale(1);
           }
           50% {
-            transform: translate3d(-35px, 35px, 0) scale(1.1);
+            transform: translate3d(-28px, 28px, 0) scale(1.06);
           }
         }
 
@@ -863,20 +863,34 @@ export default function FeedPage() {
             transform: translate3d(0, 0, 0) scale(1);
           }
           50% {
-            transform: translate3d(20px, 25px, 0) scale(1.08);
+            transform: translate3d(18px, 20px, 0) scale(1.05);
+          }
+        }
+
+        @keyframes ambientPulse {
+          0%,
+          100% {
+            opacity: 0.55;
+          }
+          50% {
+            opacity: 0.85;
           }
         }
 
         .blob-a {
-          animation: blobFloatA 14s ease-in-out infinite;
+          animation: blobFloatA 18s ease-in-out infinite;
         }
 
         .blob-b {
-          animation: blobFloatB 18s ease-in-out infinite;
+          animation: blobFloatB 22s ease-in-out infinite;
         }
 
         .blob-c {
-          animation: blobFloatC 16s ease-in-out infinite;
+          animation: blobFloatC 20s ease-in-out infinite;
+        }
+
+        .ambient-pulse {
+          animation: ambientPulse 10s ease-in-out infinite;
         }
       `}</style>
 
@@ -888,28 +902,34 @@ export default function FeedPage() {
         className="hidden"
       />
 
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#020817_0%,#04152b_40%,#020817_100%)]" />
-        <div className="absolute rounded-full blob-a -left-24 top-12 h-96 w-96 bg-cyan-400/10 blur-3xl" />
-        <div className="blob-b absolute right-[-6rem] top-[-2rem] h-[28rem] w-[28rem] rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="blob-c absolute bottom-[-6rem] left-1/3 h-[24rem] w-[24rem] rounded-full bg-fuchsia-500/10 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.10),transparent_25%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_22%)]" />
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#020817_0%,#03101f_38%,#020817_100%)]" />
+
+        <div className="absolute inset-0 opacity-70 ambient-pulse bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.09),transparent_24%),radial-gradient(circle_at_85%_14%,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_50%_82%,rgba(168,85,247,0.07),transparent_20%)]" />
+
+        <div className="absolute blob-a -left-24 top-10 h-[24rem] w-[24rem] rounded-full bg-cyan-400/[0.08] blur-[110px]" />
+        <div className="absolute blob-b right-[-7rem] top-[-2rem] h-[26rem] w-[26rem] rounded-full bg-blue-500/[0.08] blur-[120px]" />
+        <div className="absolute blob-c bottom-[-7rem] left-1/3 h-[22rem] w-[22rem] rounded-full bg-fuchsia-500/[0.06] blur-[110px]" />
+
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:120px_120px] opacity-[0.08]" />
+
+        <div className="absolute inset-0 bg-black/10" />
       </div>
 
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#020817]/55 backdrop-blur-2xl">
-        <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
+      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/40 backdrop-blur-3xl">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setIsMenuOpen(true)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-lg text-white transition hover:bg-white/[0.08]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-base text-white transition hover:bg-white/[0.06]"
               aria-label="Open menu"
             >
               ☰
             </button>
 
             <Link href="/feed" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 font-bold text-white shadow-[0_12px_40px_rgba(34,211,238,0.28)] sm:h-12 sm:w-12">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-[15px] text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)] sm:h-11 sm:w-11">
                 F
               </div>
               <div className="hidden sm:block">
@@ -919,8 +939,8 @@ export default function FeedPage() {
             </Link>
           </div>
 
-          <div className="flex-1 hidden lg:block">
-            <div className="max-w-xl mx-auto">
+          <div className="hidden flex-1 lg:block">
+            <div className="mx-auto max-w-xl">
               <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
                 <span className="text-sm text-slate-400">⌕</span>
                 <input
@@ -928,20 +948,20 @@ export default function FeedPage() {
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder="Search posts, creators, communities, topics..."
-                  className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
+                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               onClick={() => setActiveRightPanel("friends")}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg transition ${
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
                 activeRightPanel === "friends"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                  : "border border-white/10 bg-white/[0.05] text-slate-200 hover:bg-white/[0.08]"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
+                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
               }`}
               aria-label="Friends"
               title="Friends"
@@ -952,10 +972,10 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setActiveRightPanel("communities")}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg transition ${
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
                 activeRightPanel === "communities"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                  : "border border-white/10 bg-white/[0.05] text-slate-200 hover:bg-white/[0.08]"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
+                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
               }`}
               aria-label="Communities"
               title="Communities"
@@ -966,10 +986,10 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setActiveRightPanel("messages")}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg transition ${
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
                 activeRightPanel === "messages"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                  : "border border-white/10 bg-white/[0.05] text-slate-200 hover:bg-white/[0.08]"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
+                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
               }`}
               aria-label="Messages"
               title="Messages"
@@ -980,10 +1000,10 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setActiveRightPanel("videos")}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg transition ${
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
                 activeRightPanel === "videos"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                  : "border border-white/10 bg-white/[0.05] text-slate-200 hover:bg-white/[0.08]"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
+                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
               }`}
               aria-label="Videos"
               title="Videos"
@@ -994,13 +1014,13 @@ export default function FeedPage() {
             <div className="relative">
               <Link
                 href="/notifications"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-sm text-slate-200 transition hover:bg-white/[0.08]"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-[13px] text-slate-200 transition hover:bg-white/[0.06]"
               >
                 🔔
               </Link>
 
               {unreadNotificationsCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex min-h-[22px] min-w-[22px] items-center justify-center rounded-full bg-cyan-400 px-1 text-[11px] font-bold text-slate-950 shadow-lg">
+                <span className="absolute -right-1 -top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cyan-400 px-1 text-[10px] font-bold text-slate-950 shadow-lg">
                   {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
                 </span>
               )}
@@ -1008,12 +1028,12 @@ export default function FeedPage() {
 
             <Link
               href="/profile"
-              className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-2 py-2 transition hover:bg-white/[0.08] sm:px-2 sm:pr-3"
+              className="flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:px-2 sm:pr-3"
             >
               <img
                 src={userAvatar}
                 alt={userName}
-                className="object-cover h-9 w-9 rounded-xl ring-1 ring-cyan-400/20"
+                className="h-8 w-8 rounded-xl object-cover ring-1 ring-cyan-400/15"
               />
               <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
                 {userName}
@@ -1023,7 +1043,7 @@ export default function FeedPage() {
         </div>
 
         <div className="px-4 pb-4 sm:px-6 lg:hidden">
-          <div className="mx-auto space-y-3 max-w-7xl">
+          <div className="mx-auto max-w-7xl space-y-3">
             <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
               <span className="text-sm text-slate-400">⌕</span>
               <input
@@ -1031,7 +1051,7 @@ export default function FeedPage() {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Search FaceGrem..."
-                className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
+                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
               />
             </div>
 
@@ -1039,28 +1059,28 @@ export default function FeedPage() {
               <button
                 type="button"
                 onClick={() => setActiveRightPanel("friends")}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.08]"
+                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
               >
                 Friends
               </button>
               <button
                 type="button"
                 onClick={() => setActiveRightPanel("communities")}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.08]"
+                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
               >
                 Groups
               </button>
               <button
                 type="button"
                 onClick={() => setActiveRightPanel("messages")}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.08]"
+                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
               >
                 Chat
               </button>
               <button
                 type="button"
                 onClick={() => setActiveRightPanel("videos")}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.08]"
+                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
               >
                 Videos
               </button>
@@ -1078,7 +1098,7 @@ export default function FeedPage() {
           <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col border-r border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center font-bold text-white h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)]">
                   F
                 </div>
                 <div>
@@ -1178,7 +1198,7 @@ export default function FeedPage() {
                 <img
                   src={userAvatar}
                   alt={userName}
-                  className="object-cover h-14 w-14 rounded-2xl ring-2 ring-cyan-400/20"
+                  className="object-cover h-14 w-14 rounded-2xl ring-1 ring-white/10"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-white truncate">{userName}</p>
@@ -1254,7 +1274,7 @@ export default function FeedPage() {
                         className={`block rounded-2xl px-4 py-3 transition hover:bg-white/[0.08] ${softCard}`}
                       >
                         <p className="font-medium text-white">{community.name}</p>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-slate-400/90">
                           {community.category || "Community"}
                         </p>
                       </Link>
@@ -1266,7 +1286,7 @@ export default function FeedPage() {
         </aside>
 
         <section className="min-w-0 space-y-5 sm:space-y-6">
-          <div className="overflow-hidden rounded-[32px] border border-cyan-400/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.35),rgba(2,8,23,0.18)_55%,rgba(15,23,42,0.32))] p-6 backdrop-blur-2xl shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
+          <div className="overflow-hidden rounded-[32px] border border-white/[0.06] bg-[linear-gradient(135deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015)_38%,rgba(255,255,255,0.025)_100%)] p-6 backdrop-blur-[28px] shadow-[0_24px_80px_rgba(2,8,23,0.14)]">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold text-cyan-200">Welcome back</p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">
@@ -1279,18 +1299,18 @@ export default function FeedPage() {
             </div>
           </div>
 
-          <div className={`overflow-x-auto rounded-[28px] p-3 sm:rounded-[30px] sm:p-4 ${glassCard}`}>
+          <div className="overflow-x-auto rounded-[30px] border border-white/[0.05] bg-white/[0.018] p-3 backdrop-blur-[30px] shadow-[0_18px_50px_rgba(2,8,23,0.14)] sm:rounded-[32px] sm:p-4">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">Stories</p>
-                <p className="text-xs text-slate-400">Quick moments from people around you</p>
+                <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">Stories</p>
+                <p className="text-xs text-slate-400/90">Quick moments from people around you</p>
               </div>
 
               <button
                 type="button"
                 onClick={handleOpenStoryCreator}
                 disabled={storyUploading}
-                className="rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/[0.08] disabled:opacity-70"
+                className="rounded-full border border-white/[0.06] bg-white/[0.025] px-4 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/[0.045] disabled:opacity-70"
               >
                 {storyUploading ? "Uploading..." : "Create story"}
               </button>
@@ -1301,18 +1321,18 @@ export default function FeedPage() {
                 type="button"
                 onClick={handleOpenStoryCreator}
                 disabled={storyUploading}
-                className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-cyan-400/15 bg-white/[0.04] p-1 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-1 disabled:opacity-70 sm:h-52 sm:w-36"
+                className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.022] p-1 text-left backdrop-blur-[24px] transition duration-300 hover:-translate-y-1 disabled:opacity-70 sm:h-52 sm:w-36"
               >
-                <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/60">
+                <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0b1220]/42">
                   <img
                     src={userAvatar}
                     alt={userName}
-                    className="absolute inset-0 object-cover w-full h-full opacity-35"
+                    className="absolute inset-0 h-full w-full object-cover opacity-24"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-[#020817]/20 to-transparent" />
 
                   <div className="relative flex flex-col justify-between h-full p-4">
-                    <div className="flex items-center justify-center w-12 h-12 text-2xl font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/30">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.08] text-2xl font-semibold text-white shadow-[0_10px_26px_rgba(2,8,23,0.16)]">
                       +
                     </div>
 
@@ -1339,25 +1359,21 @@ export default function FeedPage() {
                     key={group.userId}
                     type="button"
                     onClick={() => openStoryViewer(group.userId)}
-                    className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br ${
-                      index % 2 === 0
-                        ? "from-cyan-400/35 via-blue-500/25 to-fuchsia-500/25"
-                        : "from-fuchsia-500/35 via-orange-400/20 to-cyan-500/25"
-                    } p-1 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36`}
+                    className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.022] p-1 text-left backdrop-blur-[24px] transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36"
                   >
-                    <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/55">
+                    <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0b1220]/40">
                       <img
                         src={previewStory.image_url}
                         alt={storyUserName}
-                        className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-80 group-hover:scale-105"
+                        className="absolute inset-0 h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-black/10" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#020817]/88 via-[#020817]/10 to-transparent" />
 
                       <div className="relative flex flex-col justify-between h-full p-4">
                         <img
                           src={storyUserAvatar}
                           alt={storyUserName}
-                          className="object-cover w-12 h-12 border-2 shadow-lg rounded-2xl border-cyan-300/90"
+                          className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/12 shadow-[0_8px_20px_rgba(2,8,23,0.16)]"
                         />
 
                         <div>
@@ -1380,22 +1396,18 @@ export default function FeedPage() {
                 <Link
                   key={profile.id}
                   href={`/profile?id=${profile.id}`}
-                  className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br ${
-                    index % 2 === 0
-                      ? "from-violet-500/30 via-blue-500/20 to-cyan-500/20"
-                      : "from-amber-400/25 via-rose-500/20 to-fuchsia-500/20"
-                  } p-1 backdrop-blur-xl transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36`}
+                  className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.022] p-1 backdrop-blur-[24px] transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36"
                 >
-                  <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/55">
+                  <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0b1220]/40">
                     <img
                       src={
                         profile.avatar_url ||
                         getAvatarUrl(profile.full_name || "FaceGrem User")
                       }
                       alt={profile.full_name}
-                      className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-80 group-hover:scale-105"
+                      className="absolute inset-0 h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-black/10" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#020817]/88 via-[#020817]/10 to-transparent" />
 
                     <div className="relative flex flex-col justify-between h-full p-4">
                       <img
@@ -1404,7 +1416,7 @@ export default function FeedPage() {
                           getAvatarUrl(profile.full_name || "FaceGrem User")
                         }
                         alt={profile.full_name}
-                        className="object-cover w-12 h-12 border-2 shadow-lg rounded-2xl border-cyan-300/90"
+                        className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/12 shadow-[0_8px_20px_rgba(2,8,23,0.16)]"
                       />
 
                       <div>
@@ -1422,21 +1434,21 @@ export default function FeedPage() {
             </div>
           </div>
 
-          <div className={`overflow-hidden rounded-[30px] ${glassCard}`}>
-            <div className="px-4 py-4 border-b border-white/10 sm:px-6">
+          <div className="overflow-hidden rounded-[30px] border border-white/[0.05] bg-white/[0.018] backdrop-blur-[30px] shadow-[0_18px_50px_rgba(2,8,23,0.14)]">
+            <div className="border-b border-white/[0.05] px-4 py-4 sm:px-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-cyan-200">Create post</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">Create post</p>
+                  <p className="mt-1 text-xs text-slate-400/90">
                     Share a thought, photo, story, or video with FaceGrem
                   </p>
                 </div>
 
                 <div className="items-center hidden gap-2 sm:flex">
-                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-slate-300">
+                  <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs text-slate-300">
                     Public post
                   </span>
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
+                  <span className="rounded-full border border-cyan-300/10 bg-cyan-400/[0.08] px-3 py-1.5 text-xs text-cyan-100">
                     Live composer
                   </span>
                 </div>
@@ -1448,14 +1460,14 @@ export default function FeedPage() {
                 <img
                   src={userAvatar}
                   alt={userName}
-                  className="object-cover w-12 h-12 rounded-2xl ring-2 ring-cyan-400/15 sm:h-14 sm:w-14"
+                  className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/[0.08] sm:h-14 sm:w-14"
                 />
 
                 <div className="flex-1 min-w-0">
-                  <div className={`rounded-[24px] p-4 ${softCard}`}>
+                  <div className="rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-[22px]">
                     <div className="flex flex-wrap items-center gap-2 mb-3 sm:gap-3">
                       <p className="font-medium text-white">{userName}</p>
-                      <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] text-slate-300">
+                      <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2.5 py-1 text-[11px] text-slate-300">
                         Posting to everyone
                       </span>
                     </div>
@@ -1465,7 +1477,7 @@ export default function FeedPage() {
                       onChange={(e) => setPostText(e.target.value)}
                       rows={4}
                       placeholder="What’s on your mind today?"
-                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-white placeholder:text-slate-400 outline-none"
+                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-white placeholder:text-slate-400/90 outline-none"
                     />
                   </div>
                 </div>
@@ -1482,8 +1494,8 @@ export default function FeedPage() {
                     }}
                     className={`rounded-full px-4 py-2.5 text-sm font-medium transition sm:px-5 sm:py-3 ${
                       activeComposerAction === action
-                        ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                        : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
+                        ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
+                        : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
                     }`}
                   >
                     {action}
@@ -1492,12 +1504,12 @@ export default function FeedPage() {
               </div>
 
               {(activeComposerAction === "Photo" || activeComposerAction === "Story") && (
-                <div className={`mt-5 rounded-[24px] p-4 ${softCard}`}>
+                <div className="mt-5 rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-[22px]">
                   <div>
                     <p className="text-sm font-medium text-white">
                       {activeComposerAction === "Story" ? "Story image" : "Photo upload"}
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-400/90">
                       {activeComposerAction === "Story"
                         ? "Use the Create story button above to publish a real story"
                         : "Add a strong visual to make your post stand out"}
@@ -1510,7 +1522,7 @@ export default function FeedPage() {
                         type="file"
                         accept="image/*"
                         onChange={handleImageChange}
-                        className="mt-4 block w-full rounded-2xl text-sm text-white file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-4 file:py-2.5 file:text-cyan-200"
+                        className="mt-4 block w-full rounded-2xl text-sm text-white file:mr-4 file:rounded-xl file:border file:border-white/[0.06] file:bg-white/[0.04] file:px-4 file:py-2.5 file:text-slate-200"
                       />
 
                       {imagePreview && (
@@ -1531,7 +1543,7 @@ export default function FeedPage() {
                         type="button"
                         onClick={handleOpenStoryCreator}
                         disabled={storyUploading}
-                        className="px-4 py-3 text-sm font-medium transition border rounded-2xl border-cyan-400/20 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20 disabled:opacity-70"
+                        className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.08] px-4 py-3 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/[0.12] disabled:opacity-70"
                       >
                         {storyUploading ? "Uploading story..." : "Choose story image"}
                       </button>
@@ -1541,12 +1553,12 @@ export default function FeedPage() {
               )}
 
               {(activeComposerAction === "Video" || activeComposerAction === "Live") && (
-                <div className={`mt-5 rounded-[24px] p-4 ${softCard}`}>
+                <div className="mt-5 rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-[22px]">
                   <div>
                     <p className="text-sm font-medium text-white">
                       {activeComposerAction === "Live" ? "Live stream link" : "Video link"}
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-slate-400/90">
                       Paste a YouTube link or direct video URL
                     </p>
                   </div>
@@ -1560,23 +1572,23 @@ export default function FeedPage() {
                         ? "Paste a live stream or video URL"
                         : "Paste a YouTube or video URL"
                     }
-                    className="mt-4 w-full rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-slate-400 outline-none transition focus:border-cyan-400/40"
+                    className="mt-4 w-full rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white placeholder:text-slate-400/90 outline-none transition focus:border-cyan-300/20"
                   />
                 </div>
               )}
 
-              <div className="flex flex-col gap-4 pt-4 mt-5 border-t border-white/10 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-5 flex flex-col gap-4 border-t border-white/[0.05] pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-slate-300">
+                  <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs text-slate-300">
                     Text
                   </span>
                   {imagePreview && (
-                    <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-3 py-1.5 text-xs text-fuchsia-200">
+                    <span className="rounded-full border border-fuchsia-300/10 bg-fuchsia-400/[0.08] px-3 py-1.5 text-xs text-fuchsia-100">
                       Image attached
                     </span>
                   )}
                   {videoUrl.trim() && (
-                    <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
+                    <span className="rounded-full border border-cyan-300/10 bg-cyan-400/[0.08] px-3 py-1.5 text-xs text-cyan-100">
                       Video linked
                     </span>
                   )}
@@ -1592,7 +1604,7 @@ export default function FeedPage() {
                       setImagePreview("");
                       setActiveComposerAction("Photo");
                     }}
-                    className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/[0.08]"
+                    className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/[0.045]"
                   >
                     Clear
                   </button>
@@ -1600,7 +1612,7 @@ export default function FeedPage() {
                   <button
                     onClick={handleCreatePost}
                     disabled={posting}
-                    className="px-6 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70"
+                    className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-6 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/[0.14] disabled:opacity-70"
                   >
                     {posting ? "Posting..." : "Post"}
                   </button>
@@ -1659,7 +1671,10 @@ export default function FeedPage() {
                   .slice(0, 2);
 
                 return (
-                  <article key={post.id} className={`overflow-hidden rounded-[32px] ${glassCard}`}>
+                  <article
+                    key={post.id}
+                    className="overflow-hidden rounded-[32px] border border-white/[0.05] bg-white/[0.018] backdrop-blur-[30px] shadow-[0_18px_50px_rgba(2,8,23,0.14)]"
+                  >
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4">
                         <Link
@@ -1669,7 +1684,7 @@ export default function FeedPage() {
                           <img
                             src={authorAvatar}
                             alt={authorName}
-                            className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
+                            className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/[0.08]"
                           />
 
                           <div className="min-w-0">
@@ -1690,7 +1705,7 @@ export default function FeedPage() {
                             </div>
 
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] text-slate-300">
+                              <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2.5 py-1 text-[11px] text-slate-300">
                                 Public
                               </span>
 
@@ -1712,7 +1727,7 @@ export default function FeedPage() {
                         {post.user_id === userId && (
                           <button
                             onClick={() => handleDeletePost(post.id)}
-                            className="px-4 py-2 text-xs text-red-200 transition border rounded-2xl border-red-400/20 bg-red-500/10 hover:bg-red-500/20"
+                            className="rounded-2xl border border-red-300/10 bg-red-400/[0.07] px-4 py-2 text-xs text-red-100 transition hover:bg-red-400/[0.11]"
                           >
                             Delete
                           </button>
@@ -1721,14 +1736,14 @@ export default function FeedPage() {
 
                       {post.content && (
                         <div className="mt-5">
-                          <p className="text-[15px] leading-8 text-slate-200">{post.content}</p>
+                          <p className="text-[15px] leading-8 text-slate-200/95">{post.content}</p>
                         </div>
                       )}
                     </div>
 
                     {post.image_url && (
-                      <div className="px-3 pb-3 border-y border-white/10 bg-black/20 sm:px-4 sm:pb-4">
-                        <div className="overflow-hidden rounded-[28px]">
+                      <div className="border-y border-white/[0.05] bg-black/10 px-3 pb-3 sm:px-4 sm:pb-4">
+                        <div className="overflow-hidden rounded-[28px] border border-white/[0.05]">
                           <img
                             src={post.image_url}
                             alt="Post"
@@ -1739,8 +1754,8 @@ export default function FeedPage() {
                     )}
 
                     {post.video_url && (
-                      <div className="px-3 pb-3 border-y border-white/10 bg-black/30 sm:px-4 sm:pb-4">
-                        <div className="overflow-hidden rounded-[28px]">
+                      <div className="border-y border-white/[0.05] bg-black/12 px-3 pb-3 sm:px-4 sm:pb-4">
+                        <div className="overflow-hidden rounded-[28px] border border-white/[0.05]">
                           {isYouTubeUrl(post.video_url) ? (
                             <iframe
                               src={getYouTubeEmbedUrl(post.video_url)}
@@ -1760,16 +1775,16 @@ export default function FeedPage() {
                     )}
 
                     <div className="p-5 sm:p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.05] pb-4">
                         <div className="flex items-center gap-3 text-sm">
-                          <div className="flex items-center gap-2 rounded-full bg-white/[0.05] px-3 py-1.5">
+                          <div className="flex items-center gap-2 rounded-full border border-white/[0.05] bg-white/[0.022] px-3 py-1.5">
                             <span className="text-base">❤️</span>
                             <span className="text-slate-200">
                               {likesCount} {likesCount === 1 ? "like" : "likes"}
                             </span>
                           </div>
 
-                          <div className="rounded-full bg-white/[0.05] px-3 py-1.5 text-slate-300">
+                          <div className="rounded-full border border-white/[0.05] bg-white/[0.022] px-3 py-1.5 text-slate-300">
                             {commentsCount} {commentsCount === 1 ? "comment" : "comments"}
                           </div>
                         </div>
@@ -1787,8 +1802,8 @@ export default function FeedPage() {
                           onClick={() => handleToggleLike(post.id, post.user_id)}
                           className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
                             isLiked(post.id)
-                              ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                              : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
+                              ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
+                              : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
                           }`}
                         >
                           {isLiked(post.id) ? "Liked" : "Like"}
@@ -1805,8 +1820,8 @@ export default function FeedPage() {
                           onClick={() => handleToggleSave(post.id)}
                           className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
                             isSaved(post.id)
-                              ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                              : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
+                              ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
+                              : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
                           }`}
                         >
                           {isSaved(post.id) ? "Saved" : "Save"}
@@ -1821,7 +1836,7 @@ export default function FeedPage() {
                       </div>
 
                       {latestComments.length > 0 && (
-                        <div className="pt-4 mt-5 space-y-3 border-t border-white/10">
+                        <div className="mt-5 space-y-3 border-t border-white/[0.05] pt-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                             Recent comments
                           </p>
@@ -1840,12 +1855,12 @@ export default function FeedPage() {
                             return (
                               <div
                                 key={comment.id}
-                                className={`flex items-start gap-3 rounded-2xl px-3 py-3 ${softCard}`}
+                                className="flex items-start gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.02] px-3 py-3 backdrop-blur-[20px]"
                               >
                                 <img
                                   src={commentAuthorAvatar}
                                   alt={commentAuthorName}
-                                  className="object-cover h-9 w-9 rounded-xl"
+                                  className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/[0.08]"
                                 />
 
                                 <div className="flex-1 min-w-0">
@@ -1858,7 +1873,7 @@ export default function FeedPage() {
                                     </span>
                                   </div>
 
-                                  <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-300">
+                                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-300/95">
                                     {comment.content}
                                   </p>
                                 </div>
@@ -1876,12 +1891,12 @@ export default function FeedPage() {
         </section>
 
         <aside className="space-y-5">
-          <div className={`rounded-[28px] p-5 ${glassCard}`}>
+          <div className="rounded-[30px] border border-white/[0.05] bg-white/[0.018] p-5 backdrop-blur-[30px] shadow-[0_18px_50px_rgba(2,8,23,0.14)]">
             {activeRightPanel === "friends" && (
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-cyan-200">Friends</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">Friends</p>
+                  <p className="mt-1 text-xs text-slate-400/90">
                     Online, suggestions, and your friends
                   </p>
                 </div>
@@ -1892,8 +1907,8 @@ export default function FeedPage() {
                     onClick={() => setActiveFriendsTab("online")}
                     className={`rounded-full px-3 py-2 text-xs font-medium transition ${
                       activeFriendsTab === "online"
-                        ? "bg-cyan-500/20 text-cyan-200"
-                        : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
+                        ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
+                        : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
                     }`}
                   >
                     Online
@@ -1904,8 +1919,8 @@ export default function FeedPage() {
                     onClick={() => setActiveFriendsTab("suggestions")}
                     className={`rounded-full px-3 py-2 text-xs font-medium transition ${
                       activeFriendsTab === "suggestions"
-                        ? "bg-cyan-500/20 text-cyan-200"
-                        : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
+                        ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
+                        : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
                     }`}
                   >
                     Suggestions
@@ -1916,8 +1931,8 @@ export default function FeedPage() {
                     onClick={() => setActiveFriendsTab("your_friends")}
                     className={`rounded-full px-3 py-2 text-xs font-medium transition ${
                       activeFriendsTab === "your_friends"
-                        ? "bg-cyan-500/20 text-cyan-200"
-                        : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
+                        ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
+                        : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
                     }`}
                   >
                     Your Friends
@@ -1930,7 +1945,7 @@ export default function FeedPage() {
                       <p className="text-sm text-slate-400">No online friends to show yet.</p>
                     ) : (
                       onlinePeople.map((person) => (
-                        <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
+                        <div key={person.id} className="rounded-[24px] border border-white/[0.05] bg-white/[0.022] p-4 backdrop-blur-[24px] shadow-[0_10px_28px_rgba(2,8,23,0.10)]">
                           <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
                             <div className="relative">
                               <img
@@ -1939,14 +1954,14 @@ export default function FeedPage() {
                                   getAvatarUrl(person.full_name || "FaceGrem User")
                                 }
                                 alt={person.full_name}
-                                className="object-cover w-12 h-12 rounded-2xl"
+                                className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
                               />
-                              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#07111f] bg-emerald-400" />
+                              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#08111d] bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.35)]" />
                             </div>
 
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white truncate">{person.full_name}</p>
-                              <p className="text-xs truncate text-slate-400">
+                              <p className="truncate text-xs text-slate-400/85">
                                 @{person.username || "member"} • online
                               </p>
                             </div>
@@ -1955,14 +1970,14 @@ export default function FeedPage() {
                           <div className="grid grid-cols-2 gap-2 mt-3">
                             <Link
                               href={`/messages?user=${person.id}`}
-                              className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-lg shadow-cyan-500/20"
+                              className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-4 py-2.5 text-center text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/[0.14]"
                             >
                               Message
                             </Link>
 
                             <Link
                               href={`/profile?id=${person.id}`}
-                              className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/[0.08]"
+                              className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/[0.045]"
                             >
                               View
                             </Link>
@@ -1982,7 +1997,7 @@ export default function FeedPage() {
                         const following = isFollowingUser(person.id);
 
                         return (
-                          <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
+                          <div key={person.id} className="rounded-[24px] border border-white/[0.05] bg-white/[0.022] p-4 backdrop-blur-[24px] shadow-[0_10px_28px_rgba(2,8,23,0.10)]">
                             <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
                               <img
                                 src={
@@ -1990,11 +2005,11 @@ export default function FeedPage() {
                                   getAvatarUrl(person.full_name || "FaceGrem User")
                                 }
                                 alt={person.full_name}
-                                className="object-cover w-12 h-12 rounded-2xl"
+                                className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
                               />
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-white truncate">{person.full_name}</p>
-                                <p className="text-xs truncate text-slate-400">
+                                <p className="truncate text-xs text-slate-400/85">
                                   @{person.username || "member"}
                                 </p>
                               </div>
@@ -2032,7 +2047,7 @@ export default function FeedPage() {
                       <p className="text-sm text-slate-400">You have no friends to show yet.</p>
                     ) : (
                       yourFriends.map((person) => (
-                        <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
+                        <div key={person.id} className="rounded-[24px] border border-white/[0.05] bg-white/[0.022] p-4 backdrop-blur-[24px] shadow-[0_10px_28px_rgba(2,8,23,0.10)]">
                           <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
                             <img
                               src={
@@ -2040,11 +2055,11 @@ export default function FeedPage() {
                                 getAvatarUrl(person.full_name || "FaceGrem User")
                               }
                               alt={person.full_name}
-                              className="object-cover w-12 h-12 rounded-2xl"
+                              className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white truncate">{person.full_name}</p>
-                              <p className="text-xs truncate text-slate-400">
+                              <p className="truncate text-xs text-slate-400/85">
                                 @{person.username || "member"}
                               </p>
                             </div>
@@ -2053,14 +2068,14 @@ export default function FeedPage() {
                           <div className="grid grid-cols-2 gap-2 mt-3">
                             <Link
                               href={`/messages?user=${person.id}`}
-                              className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-lg shadow-cyan-500/20"
+                              className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-4 py-2.5 text-center text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/[0.14]"
                             >
                               Message
                             </Link>
 
                             <Link
                               href={`/profile?id=${person.id}`}
-                              className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/[0.08]"
+                              className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/[0.045]"
                             >
                               View
                             </Link>
@@ -2077,7 +2092,7 @@ export default function FeedPage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-semibold text-cyan-200">Communities</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-400/90">
                     Discover and open communities
                   </p>
                 </div>
@@ -2097,7 +2112,7 @@ export default function FeedPage() {
                         className={`block rounded-2xl p-4 transition hover:bg-white/[0.08] ${softCard}`}
                       >
                         <p className="font-medium text-white">{community.name}</p>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-slate-400/90">
                           {community.category || "Community"} • {memberCount} members
                         </p>
                       </Link>
@@ -2118,7 +2133,7 @@ export default function FeedPage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-semibold text-cyan-200">Messages</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-400/90">
                     Recent activity and quick access
                   </p>
                 </div>
@@ -2155,7 +2170,7 @@ export default function FeedPage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-sm font-semibold text-cyan-200">Videos</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-slate-400/90">
                     Trending and recent videos
                   </p>
                 </div>
@@ -2170,7 +2185,7 @@ export default function FeedPage() {
                       className={`block rounded-2xl p-4 transition hover:bg-white/[0.08] ${softCard}`}
                     >
                       <p className="font-medium text-white">{video.title}</p>
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="mt-1 text-xs text-slate-400/90">
                         {(video.views_count || 0).toLocaleString()} views
                       </p>
                     </Link>
