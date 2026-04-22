@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import MobileBottomNav from "../../components/MobileBottomNav";
@@ -87,6 +87,21 @@ type NotificationRecord = {
   created_at: string;
 };
 
+type StoryRecord = {
+  id: string;
+  user_id: string;
+  image_url: string;
+  caption: string | null;
+  created_at: string;
+  expires_at: string;
+};
+
+type FollowRecord = {
+  id: string;
+  follower_id: string;
+  following_id: string;
+};
+
 const quickActions = ["Photo", "Video", "Live", "Story"] as const;
 const feedTabs = [
   "For You",
@@ -107,6 +122,7 @@ const storyGradients = [
 
 export default function FeedPage() {
   const router = useRouter();
+  const storyInputRef = useRef<HTMLInputElement | null>(null);
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
@@ -120,6 +136,8 @@ export default function FeedPage() {
   const [communityMembers, setCommunityMembers] = useState<CommunityMemberRecord[]>([]);
   const [videos, setVideos] = useState<VideoRecord[]>([]);
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
+  const [stories, setStories] = useState<StoryRecord[]>([]);
+  const [follows, setFollows] = useState<FollowRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [activeComposerAction, setActiveComposerAction] =
@@ -133,6 +151,21 @@ export default function FeedPage() {
   const [imagePreview, setImagePreview] = useState("");
   const [posting, setPosting] = useState(false);
   const [searchText, setSearchText] = useState("");
+
+  const [storyUploading, setStoryUploading] = useState(false);
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
+  const [activeStoryUserId, setActiveStoryUserId] = useState("");
+  const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
+
+  const [activeRightPanel, setActiveRightPanel] = useState<
+    "friends" | "communities" | "messages" | "videos"
+  >("friends");
+  const [activeFriendsTab, setActiveFriendsTab] = useState<
+    "online" | "suggestions" | "your_friends"
+  >("online");
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -204,6 +237,8 @@ export default function FeedPage() {
       setUserId(sessionUserId);
       setUserName(sessionFullName);
 
+      const nowIso = new Date().toISOString();
+
       const [
         { data: profilesData },
         { data: postsData },
@@ -214,6 +249,8 @@ export default function FeedPage() {
         { data: communityMembersData },
         { data: videosData },
         { data: notificationsData },
+        { data: storiesData },
+        { data: followsData },
       ] = await Promise.all([
         supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
         supabase
@@ -248,6 +285,12 @@ export default function FeedPage() {
           )
           .eq("user_id", sessionUserId)
           .order("created_at", { ascending: false }),
+        supabase
+          .from("stories")
+          .select("id, user_id, image_url, caption, created_at, expires_at")
+          .gt("expires_at", nowIso)
+          .order("created_at", { ascending: false }),
+        supabase.from("follows").select("id, follower_id, following_id"),
       ]);
 
       const allProfiles = profilesData || [];
@@ -262,6 +305,8 @@ export default function FeedPage() {
       setCommunityMembers(communityMembersData || []);
       setVideos(videosData || []);
       setNotifications(notificationsData || []);
+      setStories(storiesData || []);
+      setFollows(followsData || []);
       setUserAvatar(
         myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || sessionFullName)
       );
@@ -302,6 +347,27 @@ export default function FeedPage() {
     if (uploadError) throw uploadError;
 
     const { data } = supabase.storage.from("post-images").getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const uploadStoryImage = async (file: File) => {
+    if (!userId) return null;
+
+    const fileExt = file.name.split(".").pop() || "jpg";
+    const filePath = `${userId}/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.${fileExt.toLowerCase()}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("stories")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (uploadError) throw uploadError;
+
+    const { data } = supabase.storage.from("stories").getPublicUrl(filePath);
     return data.publicUrl;
   };
 
@@ -361,6 +427,63 @@ export default function FeedPage() {
     }
 
     setPosting(false);
+  };
+
+  const handleCreateStory = async (file: File) => {
+    if (!userId) return;
+
+    setStoryUploading(true);
+
+    try {
+      const imageUrl = await uploadStoryImage(file);
+
+      if (!imageUrl) {
+        throw new Error("Could not upload story image.");
+      }
+
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+      const { data, error } = await supabase
+        .from("stories")
+        .insert([
+          {
+            user_id: userId,
+            image_url: imageUrl,
+            caption: "",
+            expires_at: expiresAt,
+          },
+        ])
+        .select("id, user_id, image_url, caption, created_at, expires_at");
+
+      if (error) {
+        alert(error.message);
+        setStoryUploading(false);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setStories((prev) => [data[0], ...prev]);
+      }
+
+      alert("Story created successfully.");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Could not create story.");
+    }
+
+    setStoryUploading(false);
+  };
+
+  const handleStoryInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    await handleCreateStory(file);
+    e.target.value = "";
+  };
+
+  const handleOpenStoryCreator = () => {
+    if (storyUploading) return;
+    storyInputRef.current?.click();
   };
 
   const handleToggleLike = async (postId: string, ownerId: string) => {
@@ -455,6 +578,53 @@ export default function FeedPage() {
     setSavedPosts((prev) => prev.filter((saved) => saved.post_id !== postId));
   };
 
+  const isFollowingUser = (targetUserId: string) =>
+    follows.some(
+      (follow) =>
+        follow.follower_id === userId && follow.following_id === targetUserId
+    );
+
+  const handleToggleFollow = async (targetUserId: string) => {
+    const existingFollow = follows.find(
+      (follow) =>
+        follow.follower_id === userId && follow.following_id === targetUserId
+    );
+
+    if (existingFollow) {
+      const { error } = await supabase
+        .from("follows")
+        .delete()
+        .eq("id", existingFollow.id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      setFollows((prev) => prev.filter((follow) => follow.id !== existingFollow.id));
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("follows")
+      .insert([
+        {
+          follower_id: userId,
+          following_id: targetUserId,
+        },
+      ])
+      .select("id, follower_id, following_id");
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      setFollows((prev) => [...prev, data[0]]);
+    }
+  };
+
   const getPostLikesCount = (postId: string) =>
     likes.filter((like) => like.post_id === postId).length;
 
@@ -482,7 +652,7 @@ export default function FeedPage() {
 
     switch (activeFeedTab) {
       case "Following":
-        result = result.filter((post) => post.user_id !== userId);
+        result = result.filter((post) => isFollowingUser(post.user_id));
         break;
       case "Creators":
         result = result.filter((post) => {
@@ -523,34 +693,151 @@ export default function FeedPage() {
       const text = `${post.content} ${author}`.toLowerCase();
       return text.includes(term);
     });
-  }, [activeFeedTab, posts, userId, profiles, searchText]);
+  }, [activeFeedTab, posts, searchText, profiles, follows, userId]);
+
+  const storyGroups = useMemo(() => {
+    const grouped = new Map<string, StoryRecord[]>();
+
+    for (const story of stories) {
+      if (!grouped.has(story.user_id)) {
+        grouped.set(story.user_id, []);
+      }
+      grouped.get(story.user_id)?.push(story);
+    }
+
+    const items = Array.from(grouped.entries()).map(([storyUserId, userStories]) => ({
+      userId: storyUserId,
+      stories: userStories
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        ),
+      latestCreatedAt: userStories
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )[0]?.created_at,
+    }));
+
+    items.sort((a, b) => {
+      if (a.userId === userId) return -1;
+      if (b.userId === userId) return 1;
+      return (
+        new Date(b.latestCreatedAt || 0).getTime() -
+        new Date(a.latestCreatedAt || 0).getTime()
+      );
+    });
+
+    return items;
+  }, [stories, userId]);
 
   const highlightedProfiles = useMemo(() => {
-    return profiles.filter((profile) => profile.id !== userId).slice(0, 6);
-  }, [profiles, userId]);
+    const storyUserIds = new Set(storyGroups.map((group) => group.userId));
+    return profiles
+      .filter((profile) => profile.id !== userId && !storyUserIds.has(profile.id))
+      .slice(0, 6);
+  }, [profiles, userId, storyGroups]);
 
   const suggestedCommunities = useMemo(() => {
-    return communities.filter((community) => !myCommunityIds.includes(community.id)).slice(0, 4);
+    return communities
+      .filter((community) => !myCommunityIds.includes(community.id))
+      .slice(0, 5);
   }, [communities, myCommunityIds]);
 
-  const trendingTopics = useMemo(() => {
-    const topics = [
-      "Faith creators",
-      "Short videos",
-      "Business tips",
-      "Music sessions",
-      "Community stories",
-    ];
+  const latestVideoCards = useMemo(() => videos.slice(0, 4), [videos]);
 
-    return topics.map((topic, index) => ({
-      name: topic,
-      pulse: `${12 + index * 7}k`,
-    }));
-  }, []);
+  const latestActivity = useMemo(() => notifications.slice(0, 5), [notifications]);
 
-  const latestVideoCards = useMemo(() => videos.slice(0, 3), [videos]);
+  const suggestedPeople = useMemo(() => {
+    return profiles
+      .filter((profile) => profile.id !== userId && !isFollowingUser(profile.id))
+      .slice(0, 6);
+  }, [profiles, userId, follows]);
 
-  const latestActivity = useMemo(() => notifications.slice(0, 4), [notifications]);
+  const onlinePeople = useMemo(() => {
+    const followedIds = follows
+      .filter((follow) => follow.follower_id === userId)
+      .map((follow) => follow.following_id);
+
+    return profiles
+      .filter((profile) => followedIds.includes(profile.id))
+      .slice(0, 6);
+  }, [profiles, follows, userId]);
+
+  const yourFriends = useMemo(() => {
+    const relatedIds = new Set<string>();
+
+    follows.forEach((follow) => {
+      if (follow.follower_id === userId) relatedIds.add(follow.following_id);
+      if (follow.following_id === userId) relatedIds.add(follow.follower_id);
+    });
+
+    return profiles.filter((profile) => relatedIds.has(profile.id)).slice(0, 8);
+  }, [profiles, follows, userId]);
+
+  const activeStoryGroup = useMemo(() => {
+    if (!activeStoryUserId) return null;
+    return storyGroups.find((group) => group.userId === activeStoryUserId) || null;
+  }, [activeStoryUserId, storyGroups]);
+
+  const activeStory = useMemo(() => {
+    if (!activeStoryGroup) return null;
+    return activeStoryGroup.stories[activeStoryIndex] || null;
+  }, [activeStoryGroup, activeStoryIndex]);
+
+  const openStoryViewer = (storyUserId: string) => {
+    setActiveStoryUserId(storyUserId);
+    setActiveStoryIndex(0);
+    setStoryViewerOpen(true);
+  };
+
+  const closeStoryViewer = () => {
+    setStoryViewerOpen(false);
+    setActiveStoryUserId("");
+    setActiveStoryIndex(0);
+  };
+
+  const goToNextStory = () => {
+    if (!activeStoryGroup) return;
+
+    if (activeStoryIndex < activeStoryGroup.stories.length - 1) {
+      setActiveStoryIndex((prev) => prev + 1);
+      return;
+    }
+
+    const currentGroupIndex = storyGroups.findIndex(
+      (group) => group.userId === activeStoryGroup.userId
+    );
+
+    if (currentGroupIndex >= 0 && currentGroupIndex < storyGroups.length - 1) {
+      setActiveStoryUserId(storyGroups[currentGroupIndex + 1].userId);
+      setActiveStoryIndex(0);
+      return;
+    }
+
+    closeStoryViewer();
+  };
+
+  const goToPreviousStory = () => {
+    if (!activeStoryGroup) return;
+
+    if (activeStoryIndex > 0) {
+      setActiveStoryIndex((prev) => prev - 1);
+      return;
+    }
+
+    const currentGroupIndex = storyGroups.findIndex(
+      (group) => group.userId === activeStoryGroup.userId
+    );
+
+    if (currentGroupIndex > 0) {
+      const prevGroup = storyGroups[currentGroupIndex - 1];
+      setActiveStoryUserId(prevGroup.userId);
+      setActiveStoryIndex(prevGroup.stories.length - 1);
+    }
+  };
 
   if (loading) {
     return (
@@ -562,6 +849,14 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-[#020817] pb-24 text-white xl:pb-0">
+      <input
+        ref={storyInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleStoryInputChange}
+        className="hidden"
+      />
+
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_25%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_22%),linear-gradient(to_bottom,#020817,#07111f_45%,#020817)]" />
         <div className="absolute rounded-full -left-20 top-24 h-72 w-72 bg-cyan-400/10 blur-3xl" />
@@ -571,6 +866,15 @@ export default function FeedPage() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#020817]/75 backdrop-blur-2xl">
         <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(true)}
+              className="inline-flex items-center justify-center text-lg text-white transition border h-11 w-11 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+
             <Link href="/feed" className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 font-bold text-white shadow-[0_12px_40px_rgba(34,211,238,0.28)] sm:h-12 sm:w-12">
                 F
@@ -598,12 +902,53 @@ export default function FeedPage() {
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
-            <Link
-              href="/messages"
-              className="hidden rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 md:inline-flex"
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("friends")}
+              className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                activeRightPanel === "friends"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                  : "hidden border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 md:inline-flex"
+              }`}
+            >
+              Friends
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("communities")}
+              className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                activeRightPanel === "communities"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                  : "hidden border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 md:inline-flex"
+              }`}
+            >
+              Communities
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("messages")}
+              className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                activeRightPanel === "messages"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                  : "hidden border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 md:inline-flex"
+              }`}
             >
               Messages
-            </Link>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("videos")}
+              className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                activeRightPanel === "videos"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                  : "hidden border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 md:inline-flex"
+              }`}
+            >
+              Videos
+            </button>
 
             <div className="relative">
               <Link
@@ -650,141 +995,214 @@ export default function FeedPage() {
             </div>
 
             <div className="grid grid-cols-4 gap-2">
-              <Link
-                href="/feed"
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("friends")}
                 className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                Feed
-              </Link>
-              <Link
-                href="/videos"
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
-              >
-                Videos
-              </Link>
-              <Link
-                href="/communities"
+                Friends
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("communities")}
                 className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
                 Groups
-              </Link>
-              <Link
-                href="/messages"
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("messages")}
                 className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
                 Chat
-              </Link>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("videos")}
+                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+              >
+                Videos
+              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
+      {isMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsMenuOpen(false)}
+          />
+
+          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col border-r border-white/10 bg-[#07111f] p-5 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center font-bold text-white h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600">
+                  F
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">FaceGrem</h2>
+                  <p className="text-xs text-slate-400">Navigation</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(false)}
+                className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                aria-label="Close menu"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-2">
+              <Link
+                href="/feed"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+              >
+                🏠 Home Feed
+              </Link>
+
+              <Link
+                href="/videos"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+              >
+                🎬 Videos
+              </Link>
+
+              <Link
+                href="/communities"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+              >
+                👥 Communities
+              </Link>
+
+              <Link
+                href="/messages"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+              >
+                💬 Messages
+              </Link>
+
+              <Link
+                href="/saved"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+              >
+                🔖 Saved
+              </Link>
+
+              <Link
+                href="/profile"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+              >
+                👤 Profile
+              </Link>
+            </div>
+
+            <div className="pt-5 mt-8 border-t border-white/10">
+              <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                More
+              </p>
+
+              <div className="space-y-2">
+                <button className="block w-full px-4 py-3 text-left text-white transition rounded-2xl hover:bg-white/10">
+                  ⚙️ Settings
+                </button>
+
+                <button className="block w-full px-4 py-3 text-left text-white transition rounded-2xl hover:bg-white/10">
+                  🌐 Language
+                </button>
+
+                <button className="block w-full px-4 py-3 text-left text-white transition rounded-2xl hover:bg-white/10">
+                  🔒 Privacy
+                </button>
+
+                <button className="block w-full px-4 py-3 text-left text-white transition rounded-2xl hover:bg-white/10">
+                  ❓ Help
+                </button>
+              </div>
+            </div>
+          </aside>
+        </>
+      )}
+
+      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
         <aside className="hidden xl:block">
           <div className="sticky top-[104px] space-y-4">
-            <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.12),rgba(15,23,42,0.94)_45%,rgba(30,41,59,0.94))] p-4 shadow-[0_20px_60px_rgba(6,182,212,0.10)] backdrop-blur-xl">
-              <Link href="/profile" className="flex items-center gap-3">
+            <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.10),rgba(15,23,42,0.94)_45%,rgba(30,41,59,0.94))] p-4 shadow-[0_20px_60px_rgba(6,182,212,0.10)] backdrop-blur-xl">
+              <button
+                type="button"
+                onClick={() => setIsProfileCardOpen(!isProfileCardOpen)}
+                className="flex items-center w-full gap-3 text-left"
+              >
                 <img
                   src={userAvatar}
                   alt={userName}
                   className="object-cover h-14 w-14 rounded-2xl ring-2 ring-cyan-400/20"
                 />
-                <div className="min-w-0">
-                  <p className="font-semibold text-white truncate">{userName}</p>
-                  <p className="text-sm truncate text-slate-400">Welcome back to FaceGrem</p>
-                </div>
-              </Link>
 
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Saved</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{savedPosts.length}</p>
-                </div>
-                <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Alerts</p>
-                  <p className="mt-1 text-sm font-semibold text-white">
-                    {unreadNotificationsCount}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-white truncate">{userName}</p>
+                  <p className="text-sm truncate text-slate-400">
+                    Tap to view quick details
                   </p>
                 </div>
-                <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Groups</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{myCommunityIds.length}</p>
+
+                <div className="text-xl text-white">
+                  {isProfileCardOpen ? "−" : "+"}
                 </div>
-              </div>
-            </div>
+              </button>
 
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-3 backdrop-blur-xl">
-              <p className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
-                Navigate
-              </p>
+              {isProfileCardOpen && (
+                <div className="pt-4 mt-4 space-y-3 border-t border-white/10">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
+                      <p className="text-[11px] text-slate-400">Saved</p>
+                      <p className="mt-1 text-sm font-semibold text-white">
+                        {savedPosts.length}
+                      </p>
+                    </div>
 
-              <div className="space-y-1.5">
-                <Link
-                  href="/feed"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">🏠</span>
-                    Home feed
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
+                    <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
+                      <p className="text-[11px] text-slate-400">Alerts</p>
+                      <p className="mt-1 text-sm font-semibold text-white">
+                        {unreadNotificationsCount}
+                      </p>
+                    </div>
 
-                <Link
-                  href="/videos"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">🎬</span>
-                    Watch videos
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
+                    <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
+                      <p className="text-[11px] text-slate-400">Groups</p>
+                      <p className="mt-1 text-sm font-semibold text-white">
+                        {myCommunityIds.length}
+                      </p>
+                    </div>
+                  </div>
 
-                <Link
-                  href="/communities"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">👥</span>
-                    Communities
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href="/profile"
+                      className="px-4 py-3 text-sm text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                    >
+                      Open Profile
+                    </Link>
 
-                <Link
-                  href="/messages"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">💬</span>
-                    Messages
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
-
-                <Link
-                  href="/saved"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">🔖</span>
-                    Saved posts
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
-
-                <Link
-                  href="/profile"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">👤</span>
-                    Your profile
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
-              </div>
+                    <Link
+                      href="/saved"
+                      className="px-4 py-3 text-sm text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                    >
+                      Saved Posts
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
@@ -828,32 +1246,15 @@ export default function FeedPage() {
 
         <section className="min-w-0 space-y-5 sm:space-y-6">
           <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(8,47,73,0.95),rgba(15,23,42,0.95)_55%,rgba(30,41,59,0.95))] p-6 shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-2xl">
-                <p className="text-sm font-semibold text-cyan-200">Welcome back</p>
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  Good to see you, {userName.split(" ")[0]}.
-                </h2>
-                <p className="max-w-xl mt-3 text-sm leading-7 text-slate-300">
-                  Discover what people are sharing right now across FaceGrem — moments,
-                  ideas, videos, conversations, and communities.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Posts</p>
-                  <p className="mt-2 text-2xl font-bold text-white">{posts.length}</p>
-                </div>
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Videos</p>
-                  <p className="mt-2 text-2xl font-bold text-white">{videos.length}</p>
-                </div>
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Communities</p>
-                  <p className="mt-2 text-2xl font-bold text-white">{communities.length}</p>
-                </div>
-              </div>
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold text-cyan-200">Welcome back</p>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">
+                Good to see you, {userName.split(" ")[0]}.
+              </h2>
+              <p className="max-w-xl mt-4 text-sm leading-8 text-slate-300 sm:text-base">
+                Discover what people are sharing right now across FaceGrem —
+                moments, ideas, videos, conversations, and communities.
+              </p>
             </div>
           </div>
 
@@ -866,16 +1267,20 @@ export default function FeedPage() {
 
               <button
                 type="button"
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-medium text-slate-300 transition hover:bg-white/10 sm:px-4 sm:text-xs"
+                onClick={handleOpenStoryCreator}
+                disabled={storyUploading}
+                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-medium text-slate-300 transition hover:bg-white/10 disabled:opacity-70 sm:px-4 sm:text-xs"
               >
-                See all
+                {storyUploading ? "Uploading..." : "Create story"}
               </button>
             </div>
 
             <div className="flex gap-3 min-w-max sm:gap-4">
               <button
                 type="button"
-                className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[26px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(34,211,238,0.18),rgba(59,130,246,0.3))] p-1 text-left shadow-[0_20px_45px_rgba(34,211,238,0.12)] transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36 sm:rounded-[30px]"
+                onClick={handleOpenStoryCreator}
+                disabled={storyUploading}
+                className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[26px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(34,211,238,0.18),rgba(59,130,246,0.3))] p-1 text-left shadow-[0_20px_45px_rgba(34,211,238,0.12)] transition duration-300 hover:-translate-y-1 disabled:opacity-70 sm:h-52 sm:w-36 sm:rounded-[30px]"
               >
                 <div className="relative h-full overflow-hidden rounded-[22px] bg-[#0f172a] sm:rounded-[26px]">
                   <img
@@ -891,7 +1296,9 @@ export default function FeedPage() {
                     </div>
 
                     <div>
-                      <p className="text-sm font-semibold text-white">Create story</p>
+                      <p className="text-sm font-semibold text-white">
+                        {storyUploading ? "Uploading..." : "Create story"}
+                      </p>
                       <p className="mt-1 text-[11px] text-white/75 sm:text-xs">
                         Share a quick moment
                       </p>
@@ -900,12 +1307,60 @@ export default function FeedPage() {
                 </div>
               </button>
 
+              {storyGroups.map((group, index) => {
+                const storyProfile = getProfileById(group.userId);
+                const storyUserName = storyProfile?.full_name || "FaceGrem User";
+                const storyUserAvatar =
+                  storyProfile?.avatar_url || getAvatarUrl(storyUserName);
+                const previewStory =
+                  group.stories[group.stories.length - 1] || group.stories[0];
+
+                return (
+                  <button
+                    key={group.userId}
+                    type="button"
+                    onClick={() => openStoryViewer(group.userId)}
+                    className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br ${
+                      storyGradients[index % storyGradients.length]
+                    } p-1 text-left shadow-[0_20px_45px_rgba(15,23,42,0.22)] transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36 sm:rounded-[30px]`}
+                  >
+                    <div className="relative h-full overflow-hidden rounded-[22px] bg-[#0f172a] sm:rounded-[26px]">
+                      <img
+                        src={previewStory.image_url}
+                        alt={storyUserName}
+                        className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-85 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-black/10" />
+
+                      <div className="relative flex flex-col justify-between h-full p-3 sm:p-4">
+                        <img
+                          src={storyUserAvatar}
+                          alt={storyUserName}
+                          className="object-cover w-10 h-10 border-2 shadow-lg rounded-2xl border-cyan-300/90 sm:h-12 sm:w-12"
+                        />
+
+                        <div>
+                          <p className="text-sm font-semibold text-white line-clamp-2">
+                            {storyUserName}
+                          </p>
+                          <p className="mt-1 text-[11px] text-white/75 sm:text-xs">
+                            {group.userId === userId
+                              ? "Your story"
+                              : `@${storyProfile?.username || "member"}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+
               {highlightedProfiles.map((profile, index) => (
                 <Link
                   key={profile.id}
                   href={`/profile?id=${profile.id}`}
                   className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br ${
-                    storyGradients[index % storyGradients.length]
+                    storyGradients[(index + storyGroups.length) % storyGradients.length]
                   } p-1 shadow-[0_20px_45px_rgba(15,23,42,0.22)] transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36 sm:rounded-[30px]`}
                 >
                   <div className="relative h-full overflow-hidden rounded-[22px] bg-[#0f172a] sm:rounded-[26px]">
@@ -998,7 +1453,12 @@ export default function FeedPage() {
                   <button
                     key={action}
                     type="button"
-                    onClick={() => setActiveComposerAction(action)}
+                    onClick={() => {
+                      setActiveComposerAction(action);
+                      if (action === "Story") {
+                        handleOpenStoryCreator();
+                      }
+                    }}
                     className={`rounded-full px-4 py-2.5 text-sm font-medium transition sm:px-5 sm:py-3 ${
                       activeComposerAction === action
                         ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
@@ -1018,24 +1478,43 @@ export default function FeedPage() {
                       {activeComposerAction === "Story" ? "Story image" : "Photo upload"}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      Add a strong visual to make your post stand out
+                      {activeComposerAction === "Story"
+                        ? "Use the Create story button above to publish a real story"
+                        : "Add a strong visual to make your post stand out"}
                     </p>
                   </div>
 
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="mt-4 block w-full rounded-2xl text-sm text-white file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-4 file:py-2.5 file:text-cyan-200"
-                  />
-
-                  {imagePreview && (
-                    <div className="mt-4 overflow-hidden rounded-[20px] border border-white/10 sm:rounded-[24px]">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="object-cover w-full max-h-96"
+                  {activeComposerAction === "Photo" && (
+                    <>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="mt-4 block w-full rounded-2xl text-sm text-white file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-4 file:py-2.5 file:text-cyan-200"
                       />
+
+                      {imagePreview && (
+                        <div className="mt-4 overflow-hidden rounded-[20px] border border-white/10 sm:rounded-[24px]">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="object-cover w-full max-h-96"
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {activeComposerAction === "Story" && (
+                    <div className="flex justify-start mt-4">
+                      <button
+                        type="button"
+                        onClick={handleOpenStoryCreator}
+                        disabled={storyUploading}
+                        className="px-4 py-3 text-sm font-medium transition border rounded-2xl border-cyan-400/20 bg-cyan-500/10 text-cyan-200 hover:bg-cyan-500/20 disabled:opacity-70"
+                      >
+                        {storyUploading ? "Uploading story..." : "Choose story image"}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1046,9 +1525,7 @@ export default function FeedPage() {
                 <div className="mt-4 rounded-[22px] border border-white/10 bg-white/[0.04] p-4 sm:mt-5 sm:rounded-[26px]">
                   <div>
                     <p className="text-sm font-medium text-white">
-                      {activeComposerAction === "Live"
-                        ? "Live stream link"
-                        : "Video link"}
+                      {activeComposerAction === "Live" ? "Live stream link" : "Video link"}
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
                       Paste a YouTube link or direct video URL
@@ -1387,155 +1864,460 @@ export default function FeedPage() {
           )}
         </section>
 
-        <aside className="space-y-5 xl:space-y-5">
+        <aside className="space-y-5">
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-cyan-200">Live activity</p>
-                <p className="mt-1 text-xs text-slate-400">What’s happening around you</p>
-              </div>
-              <Link
-                href="/notifications"
-                className="text-xs transition text-cyan-300 hover:text-cyan-200"
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("friends")}
+                className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                  activeRightPanel === "friends"
+                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                }`}
               >
-                View all
-              </Link>
+                Friends
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("communities")}
+                className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                  activeRightPanel === "communities"
+                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                }`}
+              >
+                Communities
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("messages")}
+                className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                  activeRightPanel === "messages"
+                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                }`}
+              >
+                Messages
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("videos")}
+                className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                  activeRightPanel === "videos"
+                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                }`}
+              >
+                Videos
+              </button>
             </div>
 
-            <div className="mt-4 rounded-2xl border border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.10),rgba(255,255,255,0.04))] px-4 py-4">
-              <p className="text-xs text-slate-400">Unread notifications</p>
-              <p className="mt-1 text-3xl font-bold text-white">{unreadNotificationsCount}</p>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {latestActivity.length === 0 ? (
-                <p className="text-sm text-slate-400">No notifications yet.</p>
-              ) : (
-                latestActivity.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className="px-4 py-3 border rounded-2xl border-white/10 bg-white/5"
+            {activeRightPanel === "friends" && (
+              <div className="mt-5">
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setActiveFriendsTab("online")}
+                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
+                      activeFriendsTab === "online"
+                        ? "bg-cyan-500/20 text-cyan-200"
+                        : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    }`}
                   >
-                    <p className="text-sm leading-6 text-white">
-                      <span className="font-medium">
-                        {notification.actor_name || "Someone"}
-                      </span>{" "}
-                      {notification.type}
-                      {notification.content ? `: ${notification.content}` : ""}
-                    </p>
-                    <p className="mt-2 text-xs text-slate-400">
-                      {new Date(notification.created_at).toLocaleString()}
-                    </p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+                    Online
+                  </button>
 
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-cyan-200">Trending now</p>
-                <p className="mt-1 text-xs text-slate-400">Popular topics across FaceGrem</p>
-              </div>
-              <span className="text-xs text-slate-400">Live</span>
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => setActiveFriendsTab("suggestions")}
+                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
+                      activeFriendsTab === "suggestions"
+                        ? "bg-cyan-500/20 text-cyan-200"
+                        : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    }`}
+                  >
+                    Suggestions
+                  </button>
 
-            <div className="mt-4 space-y-3">
-              {trendingTopics.map((topic, index) => (
-                <div
-                  key={topic.name}
-                  className="flex items-center justify-between px-4 py-3 border rounded-2xl border-white/10 bg-white/5"
-                >
-                  <div>
-                    <p className="text-[11px] text-slate-400">#{index + 1} trending</p>
-                    <p className="mt-1 font-medium text-white">{topic.name}</p>
-                  </div>
-                  <span className="px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-200">
-                    {topic.pulse}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveFriendsTab("your_friends")}
+                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
+                      activeFriendsTab === "your_friends"
+                        ? "bg-cyan-500/20 text-cyan-200"
+                        : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    }`}
+                  >
+                    Your Friends
+                  </button>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-cyan-200">Trending videos</p>
-                <p className="mt-1 text-xs text-slate-400">Watch what people are sharing</p>
+                <div className="space-y-4">
+                  {activeFriendsTab === "online" &&
+                    (onlinePeople.length === 0 ? (
+                      <p className="text-sm text-slate-400">No online friends to show yet.</p>
+                    ) : (
+                      onlinePeople.map((person) => (
+                        <div
+                          key={person.id}
+                          className="p-4 border rounded-2xl border-white/10 bg-white/5"
+                        >
+                          <Link
+                            href={`/profile?id=${person.id}`}
+                            className="flex items-center gap-3"
+                          >
+                            <div className="relative">
+                              <img
+                                src={
+                                  person.avatar_url ||
+                                  getAvatarUrl(person.full_name || "FaceGrem User")
+                                }
+                                alt={person.full_name}
+                                className="object-cover w-12 h-12 rounded-2xl"
+                              />
+                              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#07111f] bg-emerald-400" />
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-white truncate">
+                                {person.full_name}
+                              </p>
+                              <p className="text-xs truncate text-slate-400">
+                                @{person.username || "member"} • online
+                              </p>
+                            </div>
+                          </Link>
+
+                          <div className="grid grid-cols-2 gap-2 mt-3">
+                            <Link
+                              href={`/messages?user=${person.id}`}
+                              className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-lg shadow-cyan-500/20"
+                            >
+                              Message
+                            </Link>
+
+                            <Link
+                              href={`/profile?id=${person.id}`}
+                              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/10"
+                            >
+                              View
+                            </Link>
+                          </div>
+                        </div>
+                      ))
+                    ))}
+
+                  {activeFriendsTab === "suggestions" &&
+                    (suggestedPeople.length === 0 ? (
+                      <p className="text-sm text-slate-400">No people to show yet.</p>
+                    ) : (
+                      suggestedPeople.map((person) => {
+                        const avatar =
+                          person.avatar_url ||
+                          getAvatarUrl(person.full_name || "FaceGrem User");
+                        const following = isFollowingUser(person.id);
+
+                        return (
+                          <div
+                            key={person.id}
+                            className="p-4 border rounded-2xl border-white/10 bg-white/5"
+                          >
+                            <Link
+                              href={`/profile?id=${person.id}`}
+                              className="flex items-center gap-3"
+                            >
+                              <img
+                                src={avatar}
+                                alt={person.full_name}
+                                className="object-cover w-12 h-12 rounded-2xl"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-white truncate">
+                                  {person.full_name}
+                                </p>
+                                <p className="text-xs truncate text-slate-400">
+                                  @{person.username || "member"}
+                                </p>
+                              </div>
+                            </Link>
+
+                            <div className="flex gap-2 mt-3">
+                              <button
+                                onClick={() => handleToggleFollow(person.id)}
+                                className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                                  following
+                                    ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
+                                    : "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                                }`}
+                              >
+                                {following ? "Following" : "Follow"}
+                              </button>
+
+                              <Link
+                                href={`/profile?id=${person.id}`}
+                                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10"
+                              >
+                                View
+                              </Link>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ))}
+
+                  {activeFriendsTab === "your_friends" &&
+                    (yourFriends.length === 0 ? (
+                      <p className="text-sm text-slate-400">You have no friends to show yet.</p>
+                    ) : (
+                      yourFriends.map((person) => (
+                        <div
+                          key={person.id}
+                          className="p-4 border rounded-2xl border-white/10 bg-white/5"
+                        >
+                          <Link
+                            href={`/profile?id=${person.id}`}
+                            className="flex items-center gap-3"
+                          >
+                            <img
+                              src={
+                                person.avatar_url ||
+                                getAvatarUrl(person.full_name || "FaceGrem User")
+                              }
+                              alt={person.full_name}
+                              className="object-cover w-12 h-12 rounded-2xl"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-white truncate">
+                                {person.full_name}
+                              </p>
+                              <p className="text-xs truncate text-slate-400">
+                                @{person.username || "member"}
+                              </p>
+                            </div>
+                          </Link>
+
+                          <div className="grid grid-cols-2 gap-2 mt-3">
+                            <Link
+                              href={`/messages?user=${person.id}`}
+                              className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-lg shadow-cyan-500/20"
+                            >
+                              Message
+                            </Link>
+
+                            <Link
+                              href={`/profile?id=${person.id}`}
+                              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/10"
+                            >
+                              View
+                            </Link>
+                          </div>
+                        </div>
+                      ))
+                    ))}
+                </div>
               </div>
-              <Link
-                href="/videos"
-                className="text-xs transition text-cyan-300 hover:text-cyan-200"
-              >
-                Open videos
-              </Link>
-            </div>
+            )}
 
-            <div className="mt-4 space-y-4">
-              {latestVideoCards.length === 0 ? (
-                <p className="text-sm text-slate-400">No videos published yet.</p>
-              ) : (
-                latestVideoCards.map((video) => (
+            {activeRightPanel === "communities" && (
+              <div className="mt-5 space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-cyan-200">Suggested communities</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Join spaces that match your interests
+                  </p>
+                </div>
+
+                {suggestedCommunities.length === 0 ? (
+                  <p className="text-sm text-slate-400">
+                    You are already in all visible communities.
+                  </p>
+                ) : (
+                  suggestedCommunities.map((community) => {
+                    const memberCount = communityMembers.filter(
+                      (member) => member.community_id === community.id
+                    ).length;
+
+                    return (
+                      <Link
+                        key={community.id}
+                        href={`/communities/${community.id}`}
+                        className="block p-4 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                      >
+                        <p className="font-medium text-white">{community.name}</p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {community.category || "Community"} • {memberCount} members
+                        </p>
+                      </Link>
+                    );
+                  })
+                )}
+
+                <div className="pt-4 border-t border-white/10">
                   <Link
-                    key={video.id}
-                    href="/videos"
-                    className="block p-4 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                    href="/communities"
+                    className="block px-4 py-3 text-sm font-medium text-center text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20"
                   >
-                    <p className="font-medium text-white">{video.title}</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {(video.views_count || 0).toLocaleString()} views
-                    </p>
+                    Open communities page
                   </Link>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-cyan-200">Suggested communities</p>
-                <p className="mt-1 text-xs text-slate-400">Find spaces to join next</p>
+                </div>
               </div>
-              <Link
-                href="/communities"
-                className="text-xs transition text-cyan-300 hover:text-cyan-200"
-              >
-                Discover
-              </Link>
-            </div>
+            )}
 
-            <div className="mt-4 space-y-4">
-              {suggestedCommunities.length === 0 ? (
-                <p className="text-sm text-slate-400">
-                  You are already in all visible communities.
-                </p>
-              ) : (
-                suggestedCommunities.map((community) => {
-                  const memberCount = communityMembers.filter(
-                    (member) => member.community_id === community.id
-                  ).length;
+            {activeRightPanel === "messages" && (
+              <div className="mt-5 space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-cyan-200">Recent activity</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Fast access to message-related activity
+                  </p>
+                </div>
 
-                  return (
+                {latestActivity.length === 0 ? (
+                  <p className="text-sm text-slate-400">No activity yet.</p>
+                ) : (
+                  latestActivity.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className="px-4 py-3 border rounded-2xl border-white/10 bg-white/5"
+                    >
+                      <p className="text-sm leading-6 text-white">
+                        <span className="font-medium">
+                          {notification.actor_name || "Someone"}
+                        </span>{" "}
+                        {notification.type}
+                        {notification.content ? `: ${notification.content}` : ""}
+                      </p>
+                      <p className="mt-2 text-xs text-slate-400">
+                        {new Date(notification.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))
+                )}
+
+                <Link
+                  href="/messages"
+                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20"
+                >
+                  Open messages
+                </Link>
+              </div>
+            )}
+
+            {activeRightPanel === "videos" && (
+              <div className="mt-5 space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-cyan-200">Trending videos</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Watch what people are sharing
+                  </p>
+                </div>
+
+                {latestVideoCards.length === 0 ? (
+                  <p className="text-sm text-slate-400">No videos published yet.</p>
+                ) : (
+                  latestVideoCards.map((video) => (
                     <Link
-                      key={community.id}
-                      href={`/communities/${community.id}`}
+                      key={video.id}
+                      href="/videos"
                       className="block p-4 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
                     >
-                      <p className="font-medium text-white">{community.name}</p>
+                      <p className="font-medium text-white">{video.title}</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {community.category || "Community"} • {memberCount} members
+                        {(video.views_count || 0).toLocaleString()} views
                       </p>
                     </Link>
-                  );
-                })
-              )}
-            </div>
+                  ))
+                )}
+
+                <Link
+                  href="/videos"
+                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20"
+                >
+                  Open videos page
+                </Link>
+              </div>
+            )}
           </div>
         </aside>
       </main>
+
+      {storyViewerOpen && activeStory && activeStoryGroup && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 px-4 backdrop-blur-md">
+          <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-[#07111f] shadow-2xl">
+            <div className="absolute inset-x-0 top-0 z-10 flex gap-1 px-4 pt-4">
+              {activeStoryGroup.stories.map((story, index) => (
+                <div
+                  key={story.id}
+                  className="flex-1 h-1 rounded-full bg-white/20"
+                >
+                  <div
+                    className={`h-1 rounded-full ${
+                      index <= activeStoryIndex ? "bg-white" : "bg-transparent"
+                    }`}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={closeStoryViewer}
+              className="absolute z-20 px-3 py-1 text-sm text-white border rounded-full right-4 top-6 border-white/10 bg-black/30"
+            >
+              ✕
+            </button>
+
+            <div className="relative">
+              <img
+                src={activeStory.image_url}
+                alt={getBestNameForUser(activeStory.user_id)}
+                className="h-[72vh] w-full object-cover"
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+
+              <button
+                type="button"
+                onClick={goToPreviousStory}
+                className="absolute top-0 left-0 w-1/3 h-full"
+                aria-label="Previous story"
+              />
+              <button
+                type="button"
+                onClick={goToNextStory}
+                className="absolute top-0 right-0 w-1/3 h-full"
+                aria-label="Next story"
+              />
+
+              <div className="absolute z-10 flex items-center gap-3 pt-4 left-4 top-6">
+                <img
+                  src={getBestAvatarForUser(activeStory.user_id)}
+                  alt={getBestNameForUser(activeStory.user_id)}
+                  className="object-cover border h-11 w-11 rounded-2xl border-white/20"
+                />
+                <div>
+                  <p className="font-medium text-white">
+                    {getBestNameForUser(activeStory.user_id)}
+                  </p>
+                  <p className="text-xs text-white/75">
+                    {new Date(activeStory.created_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {activeStory.caption && (
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <p className="text-sm leading-7 text-white">{activeStory.caption}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <MobileBottomNav unreadNotificationsCount={unreadNotificationsCount} />
     </div>
