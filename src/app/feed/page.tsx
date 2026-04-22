@@ -103,22 +103,12 @@ type FollowRecord = {
 };
 
 const quickActions = ["Photo", "Video", "Live", "Story"] as const;
-const feedTabs = [
-  "For You",
-  "Following",
-  "Creators",
-  "Videos",
-  "Faith",
-  "Business",
-] as const;
+const feedTabs = ["For You", "Following", "Creators", "Videos", "Faith", "Business"] as const;
 
-const storyGradients = [
-  "from-cyan-400 via-blue-500 to-indigo-600",
-  "from-fuchsia-500 via-pink-500 to-orange-400",
-  "from-emerald-400 via-teal-500 to-cyan-500",
-  "from-amber-400 via-orange-500 to-rose-500",
-  "from-violet-500 via-purple-500 to-blue-500",
-];
+const glassCard =
+  "border border-white/10 bg-white/[0.045] backdrop-blur-2xl shadow-[0_20px_60px_rgba(2,8,23,0.45)]";
+const softCard =
+  "border border-white/10 bg-white/[0.035] backdrop-blur-2xl shadow-[0_14px_40px_rgba(2,8,23,0.30)]";
 
 export default function FeedPage() {
   const router = useRouter();
@@ -230,12 +220,12 @@ export default function FeedPage() {
         return;
       }
 
-      const sessionUserId = session.user.id;
-      const sessionFullName =
+      const currentUserId = session.user.id;
+      const currentUserName =
         session.user.user_metadata?.full_name || "FaceGrem User";
 
-      setUserId(sessionUserId);
-      setUserName(sessionFullName);
+      setUserId(currentUserId);
+      setUserName(currentUserName);
 
       const nowIso = new Date().toISOString();
 
@@ -283,7 +273,7 @@ export default function FeedPage() {
           .select(
             "id, user_id, actor_id, type, post_id, actor_name, content, is_read, created_at"
           )
-          .eq("user_id", sessionUserId)
+          .eq("user_id", currentUserId)
           .order("created_at", { ascending: false }),
         supabase
           .from("stories")
@@ -294,7 +284,7 @@ export default function FeedPage() {
       ]);
 
       const allProfiles = profilesData || [];
-      const myProfile = allProfiles.find((profile) => profile.id === sessionUserId);
+      const myProfile = allProfiles.find((profile) => profile.id === currentUserId);
 
       setProfiles(allProfiles);
       setPosts(postsData || []);
@@ -308,13 +298,171 @@ export default function FeedPage() {
       setStories(storiesData || []);
       setFollows(followsData || []);
       setUserAvatar(
-        myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || sessionFullName)
+        myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || currentUserName)
       );
       setLoading(false);
     };
 
     void loadFeed();
   }, [router]);
+
+  const isFollowingUser = (targetUserId: string) =>
+    follows.some(
+      (follow) =>
+        follow.follower_id === userId && follow.following_id === targetUserId
+    );
+
+  const myCommunityIds = useMemo(() => {
+    return communityMembers
+      .filter((member) => member.user_id === userId)
+      .map((member) => member.community_id);
+  }, [communityMembers, userId]);
+
+  const unreadNotificationsCount = notifications.filter(
+    (notification) => !notification.is_read
+  ).length;
+
+  const suggestedPeople = useMemo(() => {
+    return profiles
+      .filter((profile) => profile.id !== userId && !isFollowingUser(profile.id))
+      .slice(0, 6);
+  }, [profiles, userId, follows]);
+
+  const onlinePeople = useMemo(() => {
+    const followedIds = follows
+      .filter((follow) => follow.follower_id === userId)
+      .map((follow) => follow.following_id);
+
+    return profiles
+      .filter((profile) => followedIds.includes(profile.id))
+      .slice(0, 6);
+  }, [profiles, follows, userId]);
+
+  const yourFriends = useMemo(() => {
+    const relatedIds = new Set<string>();
+
+    follows.forEach((follow) => {
+      if (follow.follower_id === userId) relatedIds.add(follow.following_id);
+      if (follow.following_id === userId) relatedIds.add(follow.follower_id);
+    });
+
+    return profiles.filter((profile) => relatedIds.has(profile.id)).slice(0, 8);
+  }, [profiles, follows, userId]);
+
+  const suggestedCommunities = useMemo(() => {
+    return communities
+      .filter((community) => !myCommunityIds.includes(community.id))
+      .slice(0, 5);
+  }, [communities, myCommunityIds]);
+
+  const latestVideoCards = useMemo(() => videos.slice(0, 4), [videos]);
+  const latestActivity = useMemo(() => notifications.slice(0, 5), [notifications]);
+
+  const filteredPosts = useMemo(() => {
+    let result = [...posts];
+
+    switch (activeFeedTab) {
+      case "Following":
+        result = result.filter((post) => isFollowingUser(post.user_id));
+        break;
+      case "Creators":
+        result = result.filter((post) => {
+          const profile = getProfileById(post.user_id);
+          return !!profile?.username;
+        });
+        break;
+      case "Faith":
+        result = result.filter((post) => {
+          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
+          return (
+            text.includes("faith") ||
+            text.includes("jesus") ||
+            text.includes("church") ||
+            text.includes("gospel")
+          );
+        });
+        break;
+      case "Business":
+        result = result.filter((post) => {
+          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
+          return (
+            text.includes("business") ||
+            text.includes("money") ||
+            text.includes("brand") ||
+            text.includes("market")
+          );
+        });
+        break;
+      case "Videos":
+        result = result.filter((post) => !!post.video_url);
+        break;
+      case "For You":
+      default:
+        break;
+    }
+
+    const term = searchText.trim().toLowerCase();
+    if (!term) return result;
+
+    return result.filter((post) => {
+      const author = getBestNameForUser(post.user_id, post.full_name).toLowerCase();
+      const text = `${post.content} ${author}`.toLowerCase();
+      return text.includes(term);
+    });
+  }, [activeFeedTab, posts, searchText, profiles, follows, userId]);
+
+  const storyGroups = useMemo(() => {
+    const grouped = new Map<string, StoryRecord[]>();
+
+    for (const story of stories) {
+      if (!grouped.has(story.user_id)) grouped.set(story.user_id, []);
+      grouped.get(story.user_id)?.push(story);
+    }
+
+    const items = Array.from(grouped.entries()).map(([storyUserId, userStories]) => ({
+      userId: storyUserId,
+      stories: userStories
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        ),
+      latestCreatedAt: userStories
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )[0]?.created_at,
+    }));
+
+    items.sort((a, b) => {
+      if (a.userId === userId) return -1;
+      if (b.userId === userId) return 1;
+      return (
+        new Date(b.latestCreatedAt || 0).getTime() -
+        new Date(a.latestCreatedAt || 0).getTime()
+      );
+    });
+
+    return items;
+  }, [stories, userId]);
+
+  const highlightedProfiles = useMemo(() => {
+    const storyUserIds = new Set(storyGroups.map((group) => group.userId));
+    return profiles
+      .filter((profile) => profile.id !== userId && !storyUserIds.has(profile.id))
+      .slice(0, 6);
+  }, [profiles, userId, storyGroups]);
+
+  const activeStoryGroup = useMemo(() => {
+    if (!activeStoryUserId) return null;
+    return storyGroups.find((group) => group.userId === activeStoryUserId) || null;
+  }, [activeStoryUserId, storyGroups]);
+
+  const activeStory = useMemo(() => {
+    if (!activeStoryGroup) return null;
+    return activeStoryGroup.stories[activeStoryIndex] || null;
+  }, [activeStoryGroup, activeStoryIndex]);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -464,8 +612,6 @@ export default function FeedPage() {
       if (data && data.length > 0) {
         setStories((prev) => [data[0], ...prev]);
       }
-
-      alert("Story created successfully.");
     } catch (error) {
       alert(error instanceof Error ? error.message : "Could not create story.");
     }
@@ -493,11 +639,9 @@ export default function FeedPage() {
 
     if (existingLike) {
       const { error } = await supabase.from("likes").delete().eq("id", existingLike.id);
-
       if (!error) {
         setLikes((prev) => prev.filter((like) => like.id !== existingLike.id));
       }
-
       return;
     }
 
@@ -542,7 +686,6 @@ export default function FeedPage() {
       if (!error) {
         setSavedPosts((prev) => prev.filter((saved) => saved.id !== existingSaved.id));
       }
-
       return;
     }
 
@@ -577,12 +720,6 @@ export default function FeedPage() {
     setComments((prev) => prev.filter((comment) => comment.post_id !== postId));
     setSavedPosts((prev) => prev.filter((saved) => saved.post_id !== postId));
   };
-
-  const isFollowingUser = (targetUserId: string) =>
-    follows.some(
-      (follow) =>
-        follow.follower_id === userId && follow.following_id === targetUserId
-    );
 
   const handleToggleFollow = async (targetUserId: string) => {
     const existingFollow = follows.find(
@@ -636,156 +773,6 @@ export default function FeedPage() {
 
   const isLiked = (postId: string) =>
     likes.some((like) => like.user_id === userId && like.post_id === postId);
-
-  const unreadNotificationsCount = notifications.filter(
-    (notification) => !notification.is_read
-  ).length;
-
-  const myCommunityIds = useMemo(() => {
-    return communityMembers
-      .filter((member) => member.user_id === userId)
-      .map((member) => member.community_id);
-  }, [communityMembers, userId]);
-
-  const filteredPosts = useMemo(() => {
-    let result = [...posts];
-
-    switch (activeFeedTab) {
-      case "Following":
-        result = result.filter((post) => isFollowingUser(post.user_id));
-        break;
-      case "Creators":
-        result = result.filter((post) => {
-          const profile = getProfileById(post.user_id);
-          return !!profile?.username;
-        });
-        break;
-      case "Faith":
-        result = result.filter((post) => {
-          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
-          return text.includes("faith") || text.includes("jesus") || text.includes("church");
-        });
-        break;
-      case "Business":
-        result = result.filter((post) => {
-          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
-          return (
-            text.includes("business") ||
-            text.includes("market") ||
-            text.includes("brand") ||
-            text.includes("money")
-          );
-        });
-        break;
-      case "Videos":
-        result = result.filter((post) => !!post.video_url);
-        break;
-      case "For You":
-      default:
-        break;
-    }
-
-    const term = searchText.trim().toLowerCase();
-    if (!term) return result;
-
-    return result.filter((post) => {
-      const author = getBestNameForUser(post.user_id, post.full_name).toLowerCase();
-      const text = `${post.content} ${author}`.toLowerCase();
-      return text.includes(term);
-    });
-  }, [activeFeedTab, posts, searchText, profiles, follows, userId]);
-
-  const storyGroups = useMemo(() => {
-    const grouped = new Map<string, StoryRecord[]>();
-
-    for (const story of stories) {
-      if (!grouped.has(story.user_id)) {
-        grouped.set(story.user_id, []);
-      }
-      grouped.get(story.user_id)?.push(story);
-    }
-
-    const items = Array.from(grouped.entries()).map(([storyUserId, userStories]) => ({
-      userId: storyUserId,
-      stories: userStories
-        .slice()
-        .sort(
-          (a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        ),
-      latestCreatedAt: userStories
-        .slice()
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )[0]?.created_at,
-    }));
-
-    items.sort((a, b) => {
-      if (a.userId === userId) return -1;
-      if (b.userId === userId) return 1;
-      return (
-        new Date(b.latestCreatedAt || 0).getTime() -
-        new Date(a.latestCreatedAt || 0).getTime()
-      );
-    });
-
-    return items;
-  }, [stories, userId]);
-
-  const highlightedProfiles = useMemo(() => {
-    const storyUserIds = new Set(storyGroups.map((group) => group.userId));
-    return profiles
-      .filter((profile) => profile.id !== userId && !storyUserIds.has(profile.id))
-      .slice(0, 6);
-  }, [profiles, userId, storyGroups]);
-
-  const suggestedCommunities = useMemo(() => {
-    return communities
-      .filter((community) => !myCommunityIds.includes(community.id))
-      .slice(0, 5);
-  }, [communities, myCommunityIds]);
-
-  const latestVideoCards = useMemo(() => videos.slice(0, 4), [videos]);
-
-  const latestActivity = useMemo(() => notifications.slice(0, 5), [notifications]);
-
-  const suggestedPeople = useMemo(() => {
-    return profiles
-      .filter((profile) => profile.id !== userId && !isFollowingUser(profile.id))
-      .slice(0, 6);
-  }, [profiles, userId, follows]);
-
-  const onlinePeople = useMemo(() => {
-    const followedIds = follows
-      .filter((follow) => follow.follower_id === userId)
-      .map((follow) => follow.following_id);
-
-    return profiles
-      .filter((profile) => followedIds.includes(profile.id))
-      .slice(0, 6);
-  }, [profiles, follows, userId]);
-
-  const yourFriends = useMemo(() => {
-    const relatedIds = new Set<string>();
-
-    follows.forEach((follow) => {
-      if (follow.follower_id === userId) relatedIds.add(follow.following_id);
-      if (follow.following_id === userId) relatedIds.add(follow.follower_id);
-    });
-
-    return profiles.filter((profile) => relatedIds.has(profile.id)).slice(0, 8);
-  }, [profiles, follows, userId]);
-
-  const activeStoryGroup = useMemo(() => {
-    if (!activeStoryUserId) return null;
-    return storyGroups.find((group) => group.userId === activeStoryUserId) || null;
-  }, [activeStoryUserId, storyGroups]);
-
-  const activeStory = useMemo(() => {
-    if (!activeStoryGroup) return null;
-    return activeStoryGroup.stories[activeStoryIndex] || null;
-  }, [activeStoryGroup, activeStoryIndex]);
 
   const openStoryViewer = (storyUserId: string) => {
     setActiveStoryUserId(storyUserId);
@@ -848,7 +835,51 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020817] pb-24 text-white xl:pb-0">
+    <div className="relative min-h-screen overflow-hidden bg-[#020817] pb-24 text-white xl:pb-0">
+      <style jsx>{`
+        @keyframes blobFloatA {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          50% {
+            transform: translate3d(40px, -30px, 0) scale(1.15);
+          }
+        }
+
+        @keyframes blobFloatB {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          50% {
+            transform: translate3d(-35px, 35px, 0) scale(1.1);
+          }
+        }
+
+        @keyframes blobFloatC {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          50% {
+            transform: translate3d(20px, 25px, 0) scale(1.08);
+          }
+        }
+
+        .blob-a {
+          animation: blobFloatA 14s ease-in-out infinite;
+        }
+
+        .blob-b {
+          animation: blobFloatB 18s ease-in-out infinite;
+        }
+
+        .blob-c {
+          animation: blobFloatC 16s ease-in-out infinite;
+        }
+      `}</style>
+
       <input
         ref={storyInputRef}
         type="file"
@@ -858,18 +889,20 @@ export default function FeedPage() {
       />
 
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_25%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_22%),linear-gradient(to_bottom,#020817,#07111f_45%,#020817)]" />
-        <div className="absolute rounded-full -left-20 top-24 h-72 w-72 bg-cyan-400/10 blur-3xl" />
-        <div className="absolute top-0 right-0 rounded-full h-96 w-96 bg-blue-500/10 blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#020817_0%,#04152b_40%,#020817_100%)]" />
+        <div className="absolute rounded-full blob-a -left-24 top-12 h-96 w-96 bg-cyan-400/10 blur-3xl" />
+        <div className="blob-b absolute right-[-6rem] top-[-2rem] h-[28rem] w-[28rem] rounded-full bg-blue-500/10 blur-3xl" />
+        <div className="blob-c absolute bottom-[-6rem] left-1/3 h-[24rem] w-[24rem] rounded-full bg-fuchsia-500/10 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.10),transparent_25%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_22%)]" />
       </div>
 
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#020817]/75 backdrop-blur-2xl">
+      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#020817]/55 backdrop-blur-2xl">
         <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setIsMenuOpen(true)}
-              className="inline-flex items-center justify-center text-lg text-white transition border h-11 w-11 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-lg text-white transition hover:bg-white/[0.08]"
               aria-label="Open menu"
             >
               ☰
@@ -888,7 +921,7 @@ export default function FeedPage() {
 
           <div className="flex-1 hidden lg:block">
             <div className="max-w-xl mx-auto">
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.18)] transition focus-within:border-cyan-400/40">
+              <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
                 <span className="text-sm text-slate-400">⌕</span>
                 <input
                   type="text"
@@ -905,55 +938,63 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setActiveRightPanel("friends")}
-              className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg transition ${
                 activeRightPanel === "friends"
                   ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                  : "hidden border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 md:inline-flex"
+                  : "border border-white/10 bg-white/[0.05] text-slate-200 hover:bg-white/[0.08]"
               }`}
+              aria-label="Friends"
+              title="Friends"
             >
-              Friends
+              👥
             </button>
 
             <button
               type="button"
               onClick={() => setActiveRightPanel("communities")}
-              className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg transition ${
                 activeRightPanel === "communities"
                   ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                  : "hidden border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 md:inline-flex"
+                  : "border border-white/10 bg-white/[0.05] text-slate-200 hover:bg-white/[0.08]"
               }`}
+              aria-label="Communities"
+              title="Communities"
             >
-              Communities
+              🌍
             </button>
 
             <button
               type="button"
               onClick={() => setActiveRightPanel("messages")}
-              className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg transition ${
                 activeRightPanel === "messages"
                   ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                  : "hidden border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 md:inline-flex"
+                  : "border border-white/10 bg-white/[0.05] text-slate-200 hover:bg-white/[0.08]"
               }`}
+              aria-label="Messages"
+              title="Messages"
             >
-              Messages
+              💬
             </button>
 
             <button
               type="button"
               onClick={() => setActiveRightPanel("videos")}
-              className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg transition ${
                 activeRightPanel === "videos"
                   ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                  : "hidden border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10 md:inline-flex"
+                  : "border border-white/10 bg-white/[0.05] text-slate-200 hover:bg-white/[0.08]"
               }`}
+              aria-label="Videos"
+              title="Videos"
             >
-              Videos
+              ▶️
             </button>
 
             <div className="relative">
               <Link
                 href="/notifications"
-                className="inline-flex items-center justify-center text-sm transition border h-11 w-11 rounded-2xl border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-sm text-slate-200 transition hover:bg-white/[0.08]"
               >
                 🔔
               </Link>
@@ -967,7 +1008,7 @@ export default function FeedPage() {
 
             <Link
               href="/profile"
-              className="flex items-center gap-2 px-2 py-2 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 sm:px-2 sm:pr-3"
+              className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] px-2 py-2 transition hover:bg-white/[0.08] sm:px-2 sm:pr-3"
             >
               <img
                 src={userAvatar}
@@ -983,7 +1024,7 @@ export default function FeedPage() {
 
         <div className="px-4 pb-4 sm:px-6 lg:hidden">
           <div className="mx-auto space-y-3 max-w-7xl">
-            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.18)] transition focus-within:border-cyan-400/40">
+            <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
               <span className="text-sm text-slate-400">⌕</span>
               <input
                 type="text"
@@ -998,28 +1039,28 @@ export default function FeedPage() {
               <button
                 type="button"
                 onClick={() => setActiveRightPanel("friends")}
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.08]"
               >
                 Friends
               </button>
               <button
                 type="button"
                 onClick={() => setActiveRightPanel("communities")}
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.08]"
               >
                 Groups
               </button>
               <button
                 type="button"
                 onClick={() => setActiveRightPanel("messages")}
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.08]"
               >
                 Chat
               </button>
               <button
                 type="button"
                 onClick={() => setActiveRightPanel("videos")}
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="rounded-2xl border border-white/10 bg-white/[0.05] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.08]"
               >
                 Videos
               </button>
@@ -1034,8 +1075,7 @@ export default function FeedPage() {
             className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
             onClick={() => setIsMenuOpen(false)}
           />
-
-          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col border-r border-white/10 bg-[#07111f] p-5 shadow-2xl">
+          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col border-r border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex items-center justify-center font-bold text-white h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600">
@@ -1050,7 +1090,7 @@ export default function FeedPage() {
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white transition hover:bg-white/[0.08]"
                 aria-label="Close menu"
               >
                 ✕
@@ -1061,47 +1101,42 @@ export default function FeedPage() {
               <Link
                 href="/feed"
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
                 🏠 Home Feed
               </Link>
-
               <Link
                 href="/videos"
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
                 🎬 Videos
               </Link>
-
               <Link
                 href="/communities"
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
                 👥 Communities
               </Link>
-
               <Link
                 href="/messages"
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
                 💬 Messages
               </Link>
-
               <Link
                 href="/saved"
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
                 🔖 Saved
               </Link>
-
               <Link
                 href="/profile"
                 onClick={() => setIsMenuOpen(false)}
-                className="block px-4 py-3 text-white transition rounded-2xl hover:bg-white/10"
+                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
                 👤 Profile
               </Link>
@@ -1113,19 +1148,16 @@ export default function FeedPage() {
               </p>
 
               <div className="space-y-2">
-                <button className="block w-full px-4 py-3 text-left text-white transition rounded-2xl hover:bg-white/10">
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
                   ⚙️ Settings
                 </button>
-
-                <button className="block w-full px-4 py-3 text-left text-white transition rounded-2xl hover:bg-white/10">
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
                   🌐 Language
                 </button>
-
-                <button className="block w-full px-4 py-3 text-left text-white transition rounded-2xl hover:bg-white/10">
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
                   🔒 Privacy
                 </button>
-
-                <button className="block w-full px-4 py-3 text-left text-white transition rounded-2xl hover:bg-white/10">
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
                   ❓ Help
                 </button>
               </div>
@@ -1137,7 +1169,7 @@ export default function FeedPage() {
       <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
         <aside className="hidden xl:block">
           <div className="sticky top-[104px] space-y-4">
-            <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.10),rgba(15,23,42,0.94)_45%,rgba(30,41,59,0.94))] p-4 shadow-[0_20px_60px_rgba(6,182,212,0.10)] backdrop-blur-xl">
+            <div className={`overflow-hidden rounded-[30px] p-4 ${glassCard}`}>
               <button
                 type="button"
                 onClick={() => setIsProfileCardOpen(!isProfileCardOpen)}
@@ -1148,37 +1180,27 @@ export default function FeedPage() {
                   alt={userName}
                   className="object-cover h-14 w-14 rounded-2xl ring-2 ring-cyan-400/20"
                 />
-
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-white truncate">{userName}</p>
-                  <p className="text-sm truncate text-slate-400">
-                    Tap to view quick details
-                  </p>
+                  <p className="text-sm truncate text-slate-400">Tap to view quick details</p>
                 </div>
-
-                <div className="text-xl text-white">
-                  {isProfileCardOpen ? "−" : "+"}
-                </div>
+                <div className="text-xl text-white">{isProfileCardOpen ? "−" : "+"}</div>
               </button>
 
               {isProfileCardOpen && (
                 <div className="pt-4 mt-4 space-y-3 border-t border-white/10">
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
+                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
                       <p className="text-[11px] text-slate-400">Saved</p>
-                      <p className="mt-1 text-sm font-semibold text-white">
-                        {savedPosts.length}
-                      </p>
+                      <p className="mt-1 text-sm font-semibold text-white">{savedPosts.length}</p>
                     </div>
-
-                    <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
+                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
                       <p className="text-[11px] text-slate-400">Alerts</p>
                       <p className="mt-1 text-sm font-semibold text-white">
                         {unreadNotificationsCount}
                       </p>
                     </div>
-
-                    <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
+                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
                       <p className="text-[11px] text-slate-400">Groups</p>
                       <p className="mt-1 text-sm font-semibold text-white">
                         {myCommunityIds.length}
@@ -1189,14 +1211,13 @@ export default function FeedPage() {
                   <div className="grid grid-cols-2 gap-2">
                     <Link
                       href="/profile"
-                      className="px-4 py-3 text-sm text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                      className={`rounded-2xl px-4 py-3 text-center text-sm text-white transition hover:bg-white/[0.08] ${softCard}`}
                     >
                       Open Profile
                     </Link>
-
                     <Link
                       href="/saved"
-                      className="px-4 py-3 text-sm text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                      className={`rounded-2xl px-4 py-3 text-center text-sm text-white transition hover:bg-white/[0.08] ${softCard}`}
                     >
                       Saved Posts
                     </Link>
@@ -1205,7 +1226,7 @@ export default function FeedPage() {
               )}
             </div>
 
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+            <div className={`rounded-[28px] p-4 ${glassCard}`}>
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-cyan-200">Your communities</p>
                 <Link
@@ -1219,7 +1240,7 @@ export default function FeedPage() {
               <div className="mt-4 space-y-3">
                 {communities.filter((community) => myCommunityIds.includes(community.id))
                   .length === 0 ? (
-                  <p className="text-sm leading-6 text-slate-400">
+                  <p className="text-sm leading-7 text-slate-400">
                     Join communities to keep your favorite spaces close.
                   </p>
                 ) : (
@@ -1230,7 +1251,7 @@ export default function FeedPage() {
                       <Link
                         key={community.id}
                         href={`/communities/${community.id}`}
-                        className="block px-4 py-3 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                        className={`block rounded-2xl px-4 py-3 transition hover:bg-white/[0.08] ${softCard}`}
                       >
                         <p className="font-medium text-white">{community.name}</p>
                         <p className="mt-1 text-xs text-slate-400">
@@ -1245,7 +1266,7 @@ export default function FeedPage() {
         </aside>
 
         <section className="min-w-0 space-y-5 sm:space-y-6">
-          <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(8,47,73,0.95),rgba(15,23,42,0.95)_55%,rgba(30,41,59,0.95))] p-6 shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
+          <div className="overflow-hidden rounded-[32px] border border-cyan-400/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.35),rgba(2,8,23,0.18)_55%,rgba(15,23,42,0.32))] p-6 backdrop-blur-2xl shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold text-cyan-200">Welcome back</p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">
@@ -1258,7 +1279,7 @@ export default function FeedPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-[28px] border border-white/10 bg-white/5 p-3 backdrop-blur-xl sm:rounded-[30px] sm:p-4">
+          <div className={`overflow-x-auto rounded-[28px] p-3 sm:rounded-[30px] sm:p-4 ${glassCard}`}>
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <p className="text-sm font-semibold text-cyan-200">Stories</p>
@@ -1269,7 +1290,7 @@ export default function FeedPage() {
                 type="button"
                 onClick={handleOpenStoryCreator}
                 disabled={storyUploading}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[11px] font-medium text-slate-300 transition hover:bg-white/10 disabled:opacity-70 sm:px-4 sm:text-xs"
+                className="rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/[0.08] disabled:opacity-70"
               >
                 {storyUploading ? "Uploading..." : "Create story"}
               </button>
@@ -1280,18 +1301,18 @@ export default function FeedPage() {
                 type="button"
                 onClick={handleOpenStoryCreator}
                 disabled={storyUploading}
-                className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[26px] border border-cyan-400/20 bg-[linear-gradient(180deg,rgba(34,211,238,0.18),rgba(59,130,246,0.3))] p-1 text-left shadow-[0_20px_45px_rgba(34,211,238,0.12)] transition duration-300 hover:-translate-y-1 disabled:opacity-70 sm:h-52 sm:w-36 sm:rounded-[30px]"
+                className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-cyan-400/15 bg-white/[0.04] p-1 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-1 disabled:opacity-70 sm:h-52 sm:w-36"
               >
-                <div className="relative h-full overflow-hidden rounded-[22px] bg-[#0f172a] sm:rounded-[26px]">
+                <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/60">
                   <img
                     src={userAvatar}
                     alt={userName}
-                    className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-70 group-hover:scale-105"
+                    className="absolute inset-0 object-cover w-full h-full opacity-35"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-[#020817]/15 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-[#020817]/20 to-transparent" />
 
-                  <div className="relative flex flex-col justify-between h-full p-3 sm:p-4">
-                    <div className="flex items-center justify-center w-10 h-10 text-xl font-semibold text-white shadow-lg rounded-2xl bg-cyan-500 shadow-cyan-500/30 sm:h-12 sm:w-12 sm:text-2xl">
+                  <div className="relative flex flex-col justify-between h-full p-4">
+                    <div className="flex items-center justify-center w-12 h-12 text-2xl font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/30">
                       +
                     </div>
 
@@ -1299,9 +1320,7 @@ export default function FeedPage() {
                       <p className="text-sm font-semibold text-white">
                         {storyUploading ? "Uploading..." : "Create story"}
                       </p>
-                      <p className="mt-1 text-[11px] text-white/75 sm:text-xs">
-                        Share a quick moment
-                      </p>
+                      <p className="mt-1 text-xs text-white/75">Share a quick moment</p>
                     </div>
                   </div>
                 </div>
@@ -1320,30 +1339,32 @@ export default function FeedPage() {
                     key={group.userId}
                     type="button"
                     onClick={() => openStoryViewer(group.userId)}
-                    className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br ${
-                      storyGradients[index % storyGradients.length]
-                    } p-1 text-left shadow-[0_20px_45px_rgba(15,23,42,0.22)] transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36 sm:rounded-[30px]`}
+                    className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br ${
+                      index % 2 === 0
+                        ? "from-cyan-400/35 via-blue-500/25 to-fuchsia-500/25"
+                        : "from-fuchsia-500/35 via-orange-400/20 to-cyan-500/25"
+                    } p-1 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36`}
                   >
-                    <div className="relative h-full overflow-hidden rounded-[22px] bg-[#0f172a] sm:rounded-[26px]">
+                    <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/55">
                       <img
                         src={previewStory.image_url}
                         alt={storyUserName}
-                        className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-85 group-hover:scale-105"
+                        className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-80 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-black/10" />
 
-                      <div className="relative flex flex-col justify-between h-full p-3 sm:p-4">
+                      <div className="relative flex flex-col justify-between h-full p-4">
                         <img
                           src={storyUserAvatar}
                           alt={storyUserName}
-                          className="object-cover w-10 h-10 border-2 shadow-lg rounded-2xl border-cyan-300/90 sm:h-12 sm:w-12"
+                          className="object-cover w-12 h-12 border-2 shadow-lg rounded-2xl border-cyan-300/90"
                         />
 
                         <div>
                           <p className="text-sm font-semibold text-white line-clamp-2">
                             {storyUserName}
                           </p>
-                          <p className="mt-1 text-[11px] text-white/75 sm:text-xs">
+                          <p className="mt-1 text-xs text-white/75">
                             {group.userId === userId
                               ? "Your story"
                               : `@${storyProfile?.username || "member"}`}
@@ -1359,36 +1380,38 @@ export default function FeedPage() {
                 <Link
                   key={profile.id}
                   href={`/profile?id=${profile.id}`}
-                  className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[26px] border border-white/10 bg-gradient-to-br ${
-                    storyGradients[(index + storyGroups.length) % storyGradients.length]
-                  } p-1 shadow-[0_20px_45px_rgba(15,23,42,0.22)] transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36 sm:rounded-[30px]`}
+                  className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br ${
+                    index % 2 === 0
+                      ? "from-violet-500/30 via-blue-500/20 to-cyan-500/20"
+                      : "from-amber-400/25 via-rose-500/20 to-fuchsia-500/20"
+                  } p-1 backdrop-blur-xl transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36`}
                 >
-                  <div className="relative h-full overflow-hidden rounded-[22px] bg-[#0f172a] sm:rounded-[26px]">
+                  <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/55">
                     <img
                       src={
                         profile.avatar_url ||
                         getAvatarUrl(profile.full_name || "FaceGrem User")
                       }
                       alt={profile.full_name}
-                      className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-85 group-hover:scale-105"
+                      className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-80 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-black/10" />
 
-                    <div className="relative flex flex-col justify-between h-full p-3 sm:p-4">
+                    <div className="relative flex flex-col justify-between h-full p-4">
                       <img
                         src={
                           profile.avatar_url ||
                           getAvatarUrl(profile.full_name || "FaceGrem User")
                         }
                         alt={profile.full_name}
-                        className="object-cover w-10 h-10 border-2 shadow-lg rounded-2xl border-cyan-300/90 sm:h-12 sm:w-12"
+                        className="object-cover w-12 h-12 border-2 shadow-lg rounded-2xl border-cyan-300/90"
                       />
 
                       <div>
                         <p className="text-sm font-semibold text-white line-clamp-2">
                           {profile.full_name}
                         </p>
-                        <p className="mt-1 text-[11px] text-white/75 sm:text-xs">
+                        <p className="mt-1 text-xs text-white/75">
                           @{profile.username || "member"}
                         </p>
                       </div>
@@ -1399,18 +1422,18 @@ export default function FeedPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.92)_45%,rgba(15,23,42,0.96))] shadow-[0_25px_80px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:rounded-[34px]">
+          <div className={`overflow-hidden rounded-[30px] ${glassCard}`}>
             <div className="px-4 py-4 border-b border-white/10 sm:px-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-cyan-200">Create post</p>
-                  <p className="mt-1 text-xs text-slate-400 sm:block">
+                  <p className="mt-1 text-xs text-slate-400">
                     Share a thought, photo, story, or video with FaceGrem
                   </p>
                 </div>
 
                 <div className="items-center hidden gap-2 sm:flex">
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-slate-300">
                     Public post
                   </span>
                   <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
@@ -1429,10 +1452,10 @@ export default function FeedPage() {
                 />
 
                 <div className="flex-1 min-w-0">
-                  <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-3 sm:rounded-[26px] sm:p-4">
+                  <div className={`rounded-[24px] p-4 ${softCard}`}>
                     <div className="flex flex-wrap items-center gap-2 mb-3 sm:gap-3">
                       <p className="font-medium text-white">{userName}</p>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
+                      <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] text-slate-300">
                         Posting to everyone
                       </span>
                     </div>
@@ -1442,7 +1465,7 @@ export default function FeedPage() {
                       onChange={(e) => setPostText(e.target.value)}
                       rows={4}
                       placeholder="What’s on your mind today?"
-                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-white placeholder:text-slate-400 outline-none sm:leading-8"
+                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-white placeholder:text-slate-400 outline-none"
                     />
                   </div>
                 </div>
@@ -1455,14 +1478,12 @@ export default function FeedPage() {
                     type="button"
                     onClick={() => {
                       setActiveComposerAction(action);
-                      if (action === "Story") {
-                        handleOpenStoryCreator();
-                      }
+                      if (action === "Story") handleOpenStoryCreator();
                     }}
                     className={`rounded-full px-4 py-2.5 text-sm font-medium transition sm:px-5 sm:py-3 ${
                       activeComposerAction === action
                         ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                        : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
                     }`}
                   >
                     {action}
@@ -1470,9 +1491,8 @@ export default function FeedPage() {
                 ))}
               </div>
 
-              {(activeComposerAction === "Photo" ||
-                activeComposerAction === "Story") && (
-                <div className="mt-4 rounded-[22px] border border-white/10 bg-white/[0.04] p-4 sm:mt-5 sm:rounded-[26px]">
+              {(activeComposerAction === "Photo" || activeComposerAction === "Story") && (
+                <div className={`mt-5 rounded-[24px] p-4 ${softCard}`}>
                   <div>
                     <p className="text-sm font-medium text-white">
                       {activeComposerAction === "Story" ? "Story image" : "Photo upload"}
@@ -1494,7 +1514,7 @@ export default function FeedPage() {
                       />
 
                       {imagePreview && (
-                        <div className="mt-4 overflow-hidden rounded-[20px] border border-white/10 sm:rounded-[24px]">
+                        <div className="mt-4 overflow-hidden rounded-[20px] border border-white/10">
                           <img
                             src={imagePreview}
                             alt="Preview"
@@ -1506,7 +1526,7 @@ export default function FeedPage() {
                   )}
 
                   {activeComposerAction === "Story" && (
-                    <div className="flex justify-start mt-4">
+                    <div className="mt-4">
                       <button
                         type="button"
                         onClick={handleOpenStoryCreator}
@@ -1520,9 +1540,8 @@ export default function FeedPage() {
                 </div>
               )}
 
-              {(activeComposerAction === "Video" ||
-                activeComposerAction === "Live") && (
-                <div className="mt-4 rounded-[22px] border border-white/10 bg-white/[0.04] p-4 sm:mt-5 sm:rounded-[26px]">
+              {(activeComposerAction === "Video" || activeComposerAction === "Live") && (
+                <div className={`mt-5 rounded-[24px] p-4 ${softCard}`}>
                   <div>
                     <p className="text-sm font-medium text-white">
                       {activeComposerAction === "Live" ? "Live stream link" : "Video link"}
@@ -1541,14 +1560,14 @@ export default function FeedPage() {
                         ? "Paste a live stream or video URL"
                         : "Paste a YouTube or video URL"
                     }
-                    className="w-full px-4 py-3 mt-4 text-sm text-white transition border outline-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400 focus:border-cyan-400/40"
+                    className="mt-4 w-full rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-white placeholder:text-slate-400 outline-none transition focus:border-cyan-400/40"
                   />
                 </div>
               )}
 
-              <div className="flex flex-col gap-4 pt-4 mt-5 border-t border-white/10 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:pt-5">
+              <div className="flex flex-col gap-4 pt-4 mt-5 border-t border-white/10 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+                  <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs text-slate-300">
                     Text
                   </span>
                   {imagePreview && (
@@ -1573,7 +1592,7 @@ export default function FeedPage() {
                       setImagePreview("");
                       setActiveComposerAction("Photo");
                     }}
-                    className="px-4 py-3 text-sm font-medium transition border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/[0.08]"
                   >
                     Clear
                   </button>
@@ -1581,7 +1600,7 @@ export default function FeedPage() {
                   <button
                     onClick={handleCreatePost}
                     disabled={posting}
-                    className="px-4 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70 sm:px-6"
+                    className="px-6 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70"
                   >
                     {posting ? "Posting..." : "Post"}
                   </button>
@@ -1602,7 +1621,7 @@ export default function FeedPage() {
                 className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                   activeFeedTab === tab
                     ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                    : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
                 }`}
               >
                 {tab}
@@ -1611,7 +1630,7 @@ export default function FeedPage() {
           </div>
 
           {filteredPosts.length === 0 ? (
-            <div className="rounded-[30px] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
+            <div className={`rounded-[30px] p-8 text-center ${glassCard}`}>
               <p className="text-lg font-medium text-white">No posts found here yet.</p>
               <p className="mt-2 text-sm text-slate-400">
                 Try another feed tab or create the first post.
@@ -1640,10 +1659,7 @@ export default function FeedPage() {
                   .slice(0, 2);
 
                 return (
-                  <article
-                    key={post.id}
-                    className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl"
-                  >
+                  <article key={post.id} className={`overflow-hidden rounded-[32px] ${glassCard}`}>
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4">
                         <Link
@@ -1658,9 +1674,7 @@ export default function FeedPage() {
 
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-white truncate">
-                                {authorName}
-                              </p>
+                              <p className="font-semibold text-white truncate">{authorName}</p>
 
                               {authorProfile?.username && (
                                 <span className="text-sm truncate text-slate-400">
@@ -1676,7 +1690,7 @@ export default function FeedPage() {
                             </div>
 
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
+                              <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] text-slate-300">
                                 Public
                               </span>
 
@@ -1707,9 +1721,7 @@ export default function FeedPage() {
 
                       {post.content && (
                         <div className="mt-5">
-                          <p className="text-[15px] leading-8 text-slate-200">
-                            {post.content}
-                          </p>
+                          <p className="text-[15px] leading-8 text-slate-200">{post.content}</p>
                         </div>
                       )}
                     </div>
@@ -1750,16 +1762,15 @@ export default function FeedPage() {
                     <div className="p-5 sm:p-6">
                       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
                         <div className="flex items-center gap-3 text-sm">
-                          <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5">
+                          <div className="flex items-center gap-2 rounded-full bg-white/[0.05] px-3 py-1.5">
                             <span className="text-base">❤️</span>
                             <span className="text-slate-200">
                               {likesCount} {likesCount === 1 ? "like" : "likes"}
                             </span>
                           </div>
 
-                          <div className="rounded-full bg-white/5 px-3 py-1.5 text-slate-300">
-                            {commentsCount}{" "}
-                            {commentsCount === 1 ? "comment" : "comments"}
+                          <div className="rounded-full bg-white/[0.05] px-3 py-1.5 text-slate-300">
+                            {commentsCount} {commentsCount === 1 ? "comment" : "comments"}
                           </div>
                         </div>
 
@@ -1777,7 +1788,7 @@ export default function FeedPage() {
                           className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
                             isLiked(post.id)
                               ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                              : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                              : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
                           }`}
                         >
                           {isLiked(post.id) ? "Liked" : "Like"}
@@ -1785,7 +1796,7 @@ export default function FeedPage() {
 
                         <Link
                           href={`/post/${post.id}`}
-                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                          className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-center text-sm font-medium text-slate-300 transition hover:bg-white/[0.08]"
                         >
                           Comment
                         </Link>
@@ -1795,7 +1806,7 @@ export default function FeedPage() {
                           className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
                             isSaved(post.id)
                               ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                              : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                              : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
                           }`}
                         >
                           {isSaved(post.id) ? "Saved" : "Save"}
@@ -1803,7 +1814,7 @@ export default function FeedPage() {
 
                         <Link
                           href={`/post/${post.id}`}
-                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-white/10 bg-white/5 text-cyan-300 hover:bg-white/10"
+                          className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-center text-sm font-medium text-cyan-300 transition hover:bg-white/[0.08]"
                         >
                           Open
                         </Link>
@@ -1829,7 +1840,7 @@ export default function FeedPage() {
                             return (
                               <div
                                 key={comment.id}
-                                className="flex items-start gap-3 px-3 py-3 border rounded-2xl border-white/10 bg-white/5"
+                                className={`flex items-start gap-3 rounded-2xl px-3 py-3 ${softCard}`}
                               >
                                 <img
                                   src={commentAuthorAvatar}
@@ -1865,67 +1876,24 @@ export default function FeedPage() {
         </section>
 
         <aside className="space-y-5">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("friends")}
-                className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
-                  activeRightPanel === "friends"
-                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                }`}
-              >
-                Friends
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("communities")}
-                className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
-                  activeRightPanel === "communities"
-                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                }`}
-              >
-                Communities
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("messages")}
-                className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
-                  activeRightPanel === "messages"
-                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                }`}
-              >
-                Messages
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("videos")}
-                className={`rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
-                  activeRightPanel === "videos"
-                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                    : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                }`}
-              >
-                Videos
-              </button>
-            </div>
-
+          <div className={`rounded-[28px] p-5 ${glassCard}`}>
             {activeRightPanel === "friends" && (
-              <div className="mt-5">
-                <div className="flex flex-wrap gap-2 mb-4">
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-cyan-200">Friends</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Online, suggestions, and your friends
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
                     onClick={() => setActiveFriendsTab("online")}
                     className={`rounded-full px-3 py-2 text-xs font-medium transition ${
                       activeFriendsTab === "online"
                         ? "bg-cyan-500/20 text-cyan-200"
-                        : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
                     }`}
                   >
                     Online
@@ -1937,7 +1905,7 @@ export default function FeedPage() {
                     className={`rounded-full px-3 py-2 text-xs font-medium transition ${
                       activeFriendsTab === "suggestions"
                         ? "bg-cyan-500/20 text-cyan-200"
-                        : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
                     }`}
                   >
                     Suggestions
@@ -1949,27 +1917,21 @@ export default function FeedPage() {
                     className={`rounded-full px-3 py-2 text-xs font-medium transition ${
                       activeFriendsTab === "your_friends"
                         ? "bg-cyan-500/20 text-cyan-200"
-                        : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                        : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
                     }`}
                   >
                     Your Friends
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  {activeFriendsTab === "online" &&
-                    (onlinePeople.length === 0 ? (
+                {activeFriendsTab === "online" && (
+                  <div className="space-y-4">
+                    {onlinePeople.length === 0 ? (
                       <p className="text-sm text-slate-400">No online friends to show yet.</p>
                     ) : (
                       onlinePeople.map((person) => (
-                        <div
-                          key={person.id}
-                          className="p-4 border rounded-2xl border-white/10 bg-white/5"
-                        >
-                          <Link
-                            href={`/profile?id=${person.id}`}
-                            className="flex items-center gap-3"
-                          >
+                        <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
+                          <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
                             <div className="relative">
                               <img
                                 src={
@@ -1983,9 +1945,7 @@ export default function FeedPage() {
                             </div>
 
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-white truncate">
-                                {person.full_name}
-                              </p>
+                              <p className="font-medium text-white truncate">{person.full_name}</p>
                               <p className="text-xs truncate text-slate-400">
                                 @{person.username || "member"} • online
                               </p>
@@ -2002,43 +1962,38 @@ export default function FeedPage() {
 
                             <Link
                               href={`/profile?id=${person.id}`}
-                              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/10"
+                              className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/[0.08]"
                             >
                               View
                             </Link>
                           </div>
                         </div>
                       ))
-                    ))}
+                    )}
+                  </div>
+                )}
 
-                  {activeFriendsTab === "suggestions" &&
-                    (suggestedPeople.length === 0 ? (
-                      <p className="text-sm text-slate-400">No people to show yet.</p>
+                {activeFriendsTab === "suggestions" && (
+                  <div className="space-y-4">
+                    {suggestedPeople.length === 0 ? (
+                      <p className="text-sm text-slate-400">No suggestions yet.</p>
                     ) : (
                       suggestedPeople.map((person) => {
-                        const avatar =
-                          person.avatar_url ||
-                          getAvatarUrl(person.full_name || "FaceGrem User");
                         const following = isFollowingUser(person.id);
 
                         return (
-                          <div
-                            key={person.id}
-                            className="p-4 border rounded-2xl border-white/10 bg-white/5"
-                          >
-                            <Link
-                              href={`/profile?id=${person.id}`}
-                              className="flex items-center gap-3"
-                            >
+                          <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
+                            <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
                               <img
-                                src={avatar}
+                                src={
+                                  person.avatar_url ||
+                                  getAvatarUrl(person.full_name || "FaceGrem User")
+                                }
                                 alt={person.full_name}
                                 className="object-cover w-12 h-12 rounded-2xl"
                               />
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-white truncate">
-                                  {person.full_name}
-                                </p>
+                                <p className="font-medium text-white truncate">{person.full_name}</p>
                                 <p className="text-xs truncate text-slate-400">
                                   @{person.username || "member"}
                                 </p>
@@ -2059,7 +2014,7 @@ export default function FeedPage() {
 
                               <Link
                                 href={`/profile?id=${person.id}`}
-                                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/10"
+                                className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/[0.08]"
                               >
                                 View
                               </Link>
@@ -2067,21 +2022,18 @@ export default function FeedPage() {
                           </div>
                         );
                       })
-                    ))}
+                    )}
+                  </div>
+                )}
 
-                  {activeFriendsTab === "your_friends" &&
-                    (yourFriends.length === 0 ? (
+                {activeFriendsTab === "your_friends" && (
+                  <div className="space-y-4">
+                    {yourFriends.length === 0 ? (
                       <p className="text-sm text-slate-400">You have no friends to show yet.</p>
                     ) : (
                       yourFriends.map((person) => (
-                        <div
-                          key={person.id}
-                          className="p-4 border rounded-2xl border-white/10 bg-white/5"
-                        >
-                          <Link
-                            href={`/profile?id=${person.id}`}
-                            className="flex items-center gap-3"
-                          >
+                        <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
+                          <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
                             <img
                               src={
                                 person.avatar_url ||
@@ -2091,9 +2043,7 @@ export default function FeedPage() {
                               className="object-cover w-12 h-12 rounded-2xl"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-white truncate">
-                                {person.full_name}
-                              </p>
+                              <p className="font-medium text-white truncate">{person.full_name}</p>
                               <p className="text-xs truncate text-slate-400">
                                 @{person.username || "member"}
                               </p>
@@ -2110,31 +2060,30 @@ export default function FeedPage() {
 
                             <Link
                               href={`/profile?id=${person.id}`}
-                              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/10"
+                              className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/[0.08]"
                             >
                               View
                             </Link>
                           </div>
                         </div>
                       ))
-                    ))}
-                </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
             {activeRightPanel === "communities" && (
-              <div className="mt-5 space-y-4">
+              <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-cyan-200">Suggested communities</p>
+                  <p className="text-sm font-semibold text-cyan-200">Communities</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    Join spaces that match your interests
+                    Discover and open communities
                   </p>
                 </div>
 
                 {suggestedCommunities.length === 0 ? (
-                  <p className="text-sm text-slate-400">
-                    You are already in all visible communities.
-                  </p>
+                  <p className="text-sm text-slate-400">No communities to show yet.</p>
                 ) : (
                   suggestedCommunities.map((community) => {
                     const memberCount = communityMembers.filter(
@@ -2145,7 +2094,7 @@ export default function FeedPage() {
                       <Link
                         key={community.id}
                         href={`/communities/${community.id}`}
-                        className="block p-4 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                        className={`block rounded-2xl p-4 transition hover:bg-white/[0.08] ${softCard}`}
                       >
                         <p className="font-medium text-white">{community.name}</p>
                         <p className="mt-1 text-xs text-slate-400">
@@ -2156,23 +2105,21 @@ export default function FeedPage() {
                   })
                 )}
 
-                <div className="pt-4 border-t border-white/10">
-                  <Link
-                    href="/communities"
-                    className="block px-4 py-3 text-sm font-medium text-center text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20"
-                  >
-                    Open communities page
-                  </Link>
-                </div>
+                <Link
+                  href="/communities"
+                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20"
+                >
+                  Open communities page
+                </Link>
               </div>
             )}
 
             {activeRightPanel === "messages" && (
-              <div className="mt-5 space-y-4">
+              <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-cyan-200">Recent activity</p>
+                  <p className="text-sm font-semibold text-cyan-200">Messages</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    Fast access to message-related activity
+                    Recent activity and quick access
                   </p>
                 </div>
 
@@ -2180,10 +2127,7 @@ export default function FeedPage() {
                   <p className="text-sm text-slate-400">No activity yet.</p>
                 ) : (
                   latestActivity.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className="px-4 py-3 border rounded-2xl border-white/10 bg-white/5"
-                    >
+                    <div key={notification.id} className={`rounded-2xl px-4 py-3 ${softCard}`}>
                       <p className="text-sm leading-6 text-white">
                         <span className="font-medium">
                           {notification.actor_name || "Someone"}
@@ -2208,11 +2152,11 @@ export default function FeedPage() {
             )}
 
             {activeRightPanel === "videos" && (
-              <div className="mt-5 space-y-4">
+              <div className="space-y-4">
                 <div>
-                  <p className="text-sm font-semibold text-cyan-200">Trending videos</p>
+                  <p className="text-sm font-semibold text-cyan-200">Videos</p>
                   <p className="mt-1 text-xs text-slate-400">
-                    Watch what people are sharing
+                    Trending and recent videos
                   </p>
                 </div>
 
@@ -2223,7 +2167,7 @@ export default function FeedPage() {
                     <Link
                       key={video.id}
                       href="/videos"
-                      className="block p-4 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                      className={`block rounded-2xl p-4 transition hover:bg-white/[0.08] ${softCard}`}
                     >
                       <p className="font-medium text-white">{video.title}</p>
                       <p className="mt-1 text-xs text-slate-400">
@@ -2250,10 +2194,7 @@ export default function FeedPage() {
           <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-[#07111f] shadow-2xl">
             <div className="absolute inset-x-0 top-0 z-10 flex gap-1 px-4 pt-4">
               {activeStoryGroup.stories.map((story, index) => (
-                <div
-                  key={story.id}
-                  className="flex-1 h-1 rounded-full bg-white/20"
-                >
+                <div key={story.id} className="flex-1 h-1 rounded-full bg-white/20">
                   <div
                     className={`h-1 rounded-full ${
                       index <= activeStoryIndex ? "bg-white" : "bg-transparent"
