@@ -36,6 +36,7 @@ type MessageRecord = {
   sender_id: string;
   content: string;
   created_at: string;
+  is_read: boolean;
 };
 
 type ConversationDisplayUser = {
@@ -200,7 +201,7 @@ function MessagesPageContent() {
       if (conversationIds.length > 0) {
         const { data: messagesData, error: messagesError } = await supabase
           .from("messages")
-          .select("id, conversation_id, sender_id, content, created_at")
+          .select("id, conversation_id, sender_id, content, created_at, is_read")
           .in("conversation_id", conversationIds)
           .order("created_at", { ascending: true });
 
@@ -275,9 +276,24 @@ function MessagesPageContent() {
           upsertMessage(newMessage);
         }
       )
-      .subscribe((status) => {
-        console.log("messages realtime status:", status);
-      });
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
+          const updatedMessage = payload.new as MessageRecord;
+
+          setMessages((prev) =>
+            prev.map((message) =>
+              message.id === updatedMessage.id ? updatedMessage : message
+            )
+          );
+        }
+      )
+      .subscribe();
 
     const conversationsChannel = supabase
       .channel(`conversations-realtime-${userId}`)
@@ -321,9 +337,7 @@ function MessagesPageContent() {
           }
         }
       )
-      .subscribe((status) => {
-        console.log("conversations realtime status:", status);
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(messagesChannel);
@@ -382,6 +396,37 @@ function MessagesPageContent() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeMessages.length, selectedConversation?.id]);
+
+  useEffect(() => {
+    const markConversationAsRead = async () => {
+      if (!selectedConversation || !userId) return;
+
+      const unreadIncoming = activeMessages.filter(
+        (message) => message.sender_id !== userId && !message.is_read
+      );
+
+      if (unreadIncoming.length === 0) return;
+
+      const unreadIds = unreadIncoming.map((message) => message.id);
+
+      const { error } = await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .in("id", unreadIds);
+
+      if (!error) {
+        setMessages((prev) =>
+          prev.map((message) =>
+            unreadIds.includes(message.id)
+              ? { ...message, is_read: true }
+              : message
+          )
+        );
+      }
+    };
+
+    void markConversationAsRead();
+  }, [selectedConversation?.id, userId, activeMessages]);
 
   const openConversation = (uid: string) => {
     if (!uid) return;
@@ -459,7 +504,7 @@ function MessagesPageContent() {
             content: trimmed,
           },
         ])
-        .select("id, conversation_id, sender_id, content, created_at")
+        .select("id, conversation_id, sender_id, content, created_at, is_read")
         .single();
 
       if (error) {
@@ -479,6 +524,17 @@ function MessagesPageContent() {
           .from("conversations")
           .update({ updated_at: data.created_at })
           .eq("id", conversation.id);
+
+        await supabase.from("notifications").insert([
+          {
+            user_id: selectedUserId,
+            actor_id: userId,
+            type: "message",
+            actor_name: userName,
+            content: trimmed,
+            is_read: false,
+          },
+        ]);
       }
 
       setMessageText("");
@@ -652,58 +708,24 @@ function MessagesPageContent() {
               </p>
 
               <div className="space-y-1.5">
-                <Link
-                  href="/feed"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">🏠</span>
-                    Home feed
-                  </span>
+                <Link href="/feed" className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10">
+                  <span className="flex items-center gap-3"><span className="text-base">🏠</span>Home feed</span>
                   <span className="text-slate-500">→</span>
                 </Link>
-
-                <Link
-                  href="/videos"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">🎬</span>
-                    Videos
-                  </span>
+                <Link href="/videos" className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10">
+                  <span className="flex items-center gap-3"><span className="text-base">🎬</span>Videos</span>
                   <span className="text-slate-500">→</span>
                 </Link>
-
-                <Link
-                  href="/communities"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">👥</span>
-                    Communities
-                  </span>
+                <Link href="/communities" className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10">
+                  <span className="flex items-center gap-3"><span className="text-base">👥</span>Communities</span>
                   <span className="text-slate-500">→</span>
                 </Link>
-
-                <Link
-                  href="/messages"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">💬</span>
-                    Messages
-                  </span>
+                <Link href="/messages" className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10">
+                  <span className="flex items-center gap-3"><span className="text-base">💬</span>Messages</span>
                   <span className="text-slate-500">→</span>
                 </Link>
-
-                <Link
-                  href="/profile"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">👤</span>
-                    Your profile
-                  </span>
+                <Link href="/profile" className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10">
+                  <span className="flex items-center gap-3"><span className="text-base">👤</span>Your profile</span>
                   <span className="text-slate-500">→</span>
                 </Link>
               </div>
