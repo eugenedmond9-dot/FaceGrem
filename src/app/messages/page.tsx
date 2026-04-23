@@ -14,10 +14,18 @@ type ProfileRecord = {
   avatar_url?: string | null;
 };
 
+type ConversationRecord = {
+  id: string;
+  user_one: string;
+  user_two: string;
+  created_at: string;
+  updated_at: string;
+};
+
 type MessageRecord = {
   id: string;
+  conversation_id: string;
   sender_id: string;
-  receiver_id: string;
   content: string;
   created_at: string;
 };
@@ -30,6 +38,7 @@ function MessagesPageContent() {
   const [userName, setUserName] = useState("FaceGrem User");
   const [userAvatar, setUserAvatar] = useState("");
   const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
+  const [conversations, setConversations] = useState<ConversationRecord[]>([]);
   const [messages, setMessages] = useState<MessageRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +52,19 @@ function MessagesPageContent() {
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
       name
     )}&background=0f172a&color=ffffff&bold=true`;
+
+  const getProfileById = (profileId?: string) => {
+    if (!profileId) return undefined;
+    return profiles.find((profile) => profile.id === profileId);
+  };
+
+  const getBestAvatarForUser = (uid?: string) => {
+    const profile = getProfileById(uid);
+    return profile?.avatar_url || getAvatarUrl(profile?.full_name || "FaceGrem User");
+  };
+
+  const getConversationPartnerId = (conversation: ConversationRecord, currentUserId: string) =>
+    conversation.user_one === currentUserId ? conversation.user_two : conversation.user_one;
 
   useEffect(() => {
     const loadMessagesPage = async () => {
@@ -62,20 +84,36 @@ function MessagesPageContent() {
       setUserId(currentUserId);
       setUserName(currentUserName);
 
-      const [{ data: profilesData }, { data: messagesData }] = await Promise.all([
+      const [{ data: profilesData }, { data: conversationsData }] = await Promise.all([
         supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
         supabase
-          .from("messages")
-          .select("id, sender_id, receiver_id, content, created_at")
-          .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
-          .order("created_at", { ascending: true }),
+          .from("conversations")
+          .select("id, user_one, user_two, created_at, updated_at")
+          .or(`user_one.eq.${currentUserId},user_two.eq.${currentUserId}`)
+          .order("updated_at", { ascending: false }),
       ]);
 
       const allProfiles = profilesData || [];
       const myProfile = allProfiles.find((profile) => profile.id === currentUserId);
+      const allConversations = conversationsData || [];
 
       setProfiles(allProfiles);
-      setMessages(messagesData || []);
+      setConversations(allConversations);
+
+      const conversationIds = allConversations.map((conversation) => conversation.id);
+
+      if (conversationIds.length > 0) {
+        const { data: messagesData } = await supabase
+          .from("messages")
+          .select("id, conversation_id, sender_id, content, created_at")
+          .in("conversation_id", conversationIds)
+          .order("created_at", { ascending: true });
+
+        setMessages(messagesData || []);
+      } else {
+        setMessages([]);
+      }
+
       setUserAvatar(
         myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || currentUserName)
       );
@@ -85,71 +123,86 @@ function MessagesPageContent() {
     void loadMessagesPage();
   }, [router]);
 
-  const getProfileById = (profileId?: string) => {
-    if (!profileId) return undefined;
-    return profiles.find((profile) => profile.id === profileId);
-  };
+  const selectedConversation = useMemo(() => {
+    if (!selectedUserId || !userId) return null;
 
-  const getBestNameForUser = (uid?: string) => {
-    const profile = getProfileById(uid);
-    return profile?.full_name || "FaceGrem User";
-  };
-
-  const getBestAvatarForUser = (uid?: string) => {
-    const profile = getProfileById(uid);
-    return profile?.avatar_url || getAvatarUrl(profile?.full_name || "FaceGrem User");
-  };
-
-  const conversationUserIds = useMemo(() => {
-    const ids = new Set<string>();
-
-    for (const message of messages) {
-      if (message.sender_id === userId && message.receiver_id !== userId) {
-        ids.add(message.receiver_id);
-      }
-      if (message.receiver_id === userId && message.sender_id !== userId) {
-        ids.add(message.sender_id);
-      }
-    }
-
-    return Array.from(ids);
-  }, [messages, userId]);
-
-  const filteredConversationUserIds = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return conversationUserIds;
-
-    return conversationUserIds.filter((uid) => {
-      const profile = getProfileById(uid);
-      const haystack = `${profile?.full_name || ""} ${profile?.username || ""} ${profile?.bio || ""}`.toLowerCase();
-      return haystack.includes(term);
-    });
-  }, [conversationUserIds, searchTerm, profiles]);
+    return (
+      conversations.find((conversation) => {
+        const partnerId = getConversationPartnerId(conversation, userId);
+        return partnerId === selectedUserId;
+      }) || null
+    );
+  }, [conversations, selectedUserId, userId]);
 
   const selectedConversationUser = useMemo(() => {
     if (!selectedUserId) return null;
     return getProfileById(selectedUserId) || null;
   }, [selectedUserId, profiles]);
 
+  const filteredConversations = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+
+    return conversations.filter((conversation) => {
+      const partnerId = getConversationPartnerId(conversation, userId);
+      const profile = getProfileById(partnerId);
+
+      if (!term) return true;
+
+      const haystack =
+        `${profile?.full_name || ""} ${profile?.username || ""} ${profile?.bio || ""}`.toLowerCase();
+
+      return haystack.includes(term);
+    });
+  }, [conversations, searchTerm, userId, profiles]);
+
   const activeMessages = useMemo(() => {
-    if (!selectedUserId) return [];
+    if (!selectedConversation) return [];
 
     return messages.filter(
-      (message) =>
-        (message.sender_id === userId && message.receiver_id === selectedUserId) ||
-        (message.sender_id === selectedUserId && message.receiver_id === userId)
+      (message) => message.conversation_id === selectedConversation.id
     );
-  }, [messages, selectedUserId, userId]);
+  }, [messages, selectedConversation]);
+
+  const recentPeople = useMemo(() => {
+    return filteredConversations
+      .slice(0, 5)
+      .map((conversation) => getProfileById(getConversationPartnerId(conversation, userId)))
+      .filter(Boolean) as ProfileRecord[];
+  }, [filteredConversations, profiles, userId]);
 
   const openConversation = (uid: string) => {
     router.push(`/messages?user=${uid}`);
   };
 
-  const unreadLikeCount = 0;
+  const getOrCreateConversation = async (targetUserId: string) => {
+    const existingConversation =
+      conversations.find((conversation) => {
+        const partnerId = getConversationPartnerId(conversation, userId);
+        return partnerId === targetUserId;
+      }) || null;
 
-  const recentPeople = useMemo(() => {
-    return filteredConversationUserIds.slice(0, 5).map((uid) => getProfileById(uid)).filter(Boolean) as ProfileRecord[];
-  }, [filteredConversationUserIds, profiles]);
+    if (existingConversation) {
+      return existingConversation;
+    }
+
+    const { data: newConversation, error } = await supabase
+      .from("conversations")
+      .insert([
+        {
+          user_one: userId,
+          user_two: targetUserId,
+        },
+      ])
+      .select("id, user_one, user_two, created_at, updated_at")
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    setConversations((prev) => [newConversation, ...prev]);
+    return newConversation;
+  };
 
   const handleSendMessage = async (e: FormEvent) => {
     e.preventDefault();
@@ -167,30 +220,55 @@ function MessagesPageContent() {
 
     setSending(true);
 
-    const { data, error } = await supabase
-      .from("messages")
-      .insert([
-        {
-          sender_id: userId,
-          receiver_id: selectedUserId,
-          content: trimmed,
-        },
-      ])
-      .select("id, sender_id, receiver_id, content, created_at");
+    try {
+      const conversation = await getOrCreateConversation(selectedUserId);
 
-    setSending(false);
+      const { data, error } = await supabase
+        .from("messages")
+        .insert([
+          {
+            conversation_id: conversation.id,
+            sender_id: userId,
+            content: trimmed,
+          },
+        ])
+        .select("id, conversation_id, sender_id, content, created_at");
 
-    if (error) {
-      alert(error.message);
-      return;
+      if (error) {
+        throw error;
+      }
+
+      const nowIso = new Date().toISOString();
+
+      await supabase
+        .from("conversations")
+        .update({ updated_at: nowIso })
+        .eq("id", conversation.id);
+
+      setConversations((prev) =>
+        prev
+          .map((item) =>
+            item.id === conversation.id ? { ...item, updated_at: nowIso } : item
+          )
+          .sort(
+            (a, b) =>
+              new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+          )
+      );
+
+      if (data && data.length > 0) {
+        setMessages((prev) => [...prev, data[0]]);
+      }
+
+      setMessageText("");
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Could not send message.");
+    } finally {
+      setSending(false);
     }
-
-    if (data && data.length > 0) {
-      setMessages((prev) => [...prev, data[0]]);
-    }
-
-    setMessageText("");
   };
+
+  const unreadLikeCount = 0;
 
   if (loading) {
     return (
@@ -324,7 +402,7 @@ function MessagesPageContent() {
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
                   <p className="text-[11px] text-slate-400">Chats</p>
                   <p className="mt-1 text-sm font-semibold text-white">
-                    {conversationUserIds.length}
+                    {conversations.length}
                   </p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
@@ -448,7 +526,7 @@ function MessagesPageContent() {
             <div>
               <p className="text-sm font-semibold text-cyan-200">Conversations</p>
               <p className="mt-1 text-xs text-slate-400">
-                {conversationUserIds.length} active chats
+                {conversations.length} active chats
               </p>
             </div>
           </div>
@@ -467,28 +545,25 @@ function MessagesPageContent() {
           </div>
 
           <div className="mt-5 space-y-3">
-            {filteredConversationUserIds.length === 0 ? (
+            {filteredConversations.length === 0 ? (
               <div className="p-4 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-400">
                 No conversations yet.
               </div>
             ) : (
-              filteredConversationUserIds.map((uid) => {
-                const profile = getProfileById(uid);
-                const isActive = selectedUserId === uid;
+              filteredConversations.map((conversation) => {
+                const partnerId = getConversationPartnerId(conversation, userId);
+                const profile = getProfileById(partnerId);
+                const isActive = selectedUserId === partnerId;
 
                 const latestMessage = messages
-                  .filter(
-                    (message) =>
-                      (message.sender_id === userId && message.receiver_id === uid) ||
-                      (message.sender_id === uid && message.receiver_id === userId)
-                  )
+                  .filter((message) => message.conversation_id === conversation.id)
                   .slice(-1)[0];
 
                 return (
                   <button
-                    key={uid}
+                    key={conversation.id}
                     type="button"
-                    onClick={() => openConversation(uid)}
+                    onClick={() => openConversation(partnerId)}
                     className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${
                       isActive
                         ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
@@ -496,7 +571,7 @@ function MessagesPageContent() {
                     }`}
                   >
                     <img
-                      src={getBestAvatarForUser(uid)}
+                      src={getBestAvatarForUser(partnerId)}
                       alt={profile?.full_name || "User"}
                       className="object-cover h-11 w-11 rounded-2xl"
                     />
