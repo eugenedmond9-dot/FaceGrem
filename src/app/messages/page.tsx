@@ -50,6 +50,8 @@ function MessagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const conversationsRef = useRef<ConversationRecord[]>([]);
+  const userIdRef = useRef("");
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
@@ -129,12 +131,20 @@ function MessagesPageContent() {
       const exists = prev.some((item) => item.id === message.id);
       if (exists) return prev;
 
-      return [...prev, message].sort(
+      return [...prev].concat(message).sort(
         (a, b) =>
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       );
     });
   };
+
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
+
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
 
   useEffect(() => {
     const loadMessagesPage = async () => {
@@ -217,10 +227,7 @@ function MessagesPageContent() {
   useEffect(() => {
     if (!userId) return;
 
-    let messagesChannel: RealtimeChannel | null = null;
-    let conversationsChannel: RealtimeChannel | null = null;
-
-    messagesChannel = supabase
+    const messagesChannel = supabase
       .channel(`messages-realtime-${userId}`)
       .on(
         "postgres_changes",
@@ -231,44 +238,48 @@ function MessagesPageContent() {
         },
         async (payload) => {
           const newMessage = payload.new as MessageRecord;
+          const currentUserId = userIdRef.current;
+          const currentConversations = conversationsRef.current;
 
-          const knownConversation = conversations.find(
+          const knownConversation = currentConversations.find(
             (conversation) => conversation.id === newMessage.conversation_id
           );
 
-          if (!knownConversation) {
-            const { data: fetchedConversation, error } = await supabase
-              .from("conversations")
-              .select("id, user_one, user_two, created_at, updated_at")
-              .eq("id", newMessage.conversation_id)
-              .maybeSingle();
-
-            if (!error && fetchedConversation) {
-              const belongsToUser =
-                fetchedConversation.user_one === userId ||
-                fetchedConversation.user_two === userId;
-
-              if (belongsToUser) {
-                upsertConversation(fetchedConversation);
-                upsertMessage(newMessage);
-              }
-            }
-
+          if (knownConversation) {
+            upsertMessage(newMessage);
+            upsertConversation({
+              ...knownConversation,
+              updated_at: newMessage.created_at,
+            });
             return;
           }
 
-          upsertMessage(newMessage);
+          const { data: fetchedConversation, error } = await supabase
+            .from("conversations")
+            .select("id, user_one, user_two, created_at, updated_at")
+            .eq("id", newMessage.conversation_id)
+            .maybeSingle();
 
-          const bumpedConversation: ConversationRecord = {
-            ...knownConversation,
+          if (error || !fetchedConversation) return;
+
+          const belongsToUser =
+            fetchedConversation.user_one === currentUserId ||
+            fetchedConversation.user_two === currentUserId;
+
+          if (!belongsToUser) return;
+
+          upsertConversation({
+            ...fetchedConversation,
             updated_at: newMessage.created_at,
-          };
-          upsertConversation(bumpedConversation);
+          });
+          upsertMessage(newMessage);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("messages realtime status:", status);
+      });
 
-    conversationsChannel = supabase
+    const conversationsChannel = supabase
       .channel(`conversations-realtime-${userId}`)
       .on(
         "postgres_changes",
@@ -279,8 +290,11 @@ function MessagesPageContent() {
         },
         (payload) => {
           const conversation = payload.new as ConversationRecord;
+          const currentUserId = userIdRef.current;
+
           const belongsToUser =
-            conversation.user_one === userId || conversation.user_two === userId;
+            conversation.user_one === currentUserId ||
+            conversation.user_two === currentUserId;
 
           if (belongsToUser) {
             upsertConversation(conversation);
@@ -296,21 +310,26 @@ function MessagesPageContent() {
         },
         (payload) => {
           const conversation = payload.new as ConversationRecord;
+          const currentUserId = userIdRef.current;
+
           const belongsToUser =
-            conversation.user_one === userId || conversation.user_two === userId;
+            conversation.user_one === currentUserId ||
+            conversation.user_two === currentUserId;
 
           if (belongsToUser) {
             upsertConversation(conversation);
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log("conversations realtime status:", status);
+      });
 
     return () => {
-      if (messagesChannel) supabase.removeChannel(messagesChannel);
-      if (conversationsChannel) supabase.removeChannel(conversationsChannel);
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(conversationsChannel);
     };
-  }, [userId, conversations]);
+  }, [userId]);
 
   const selectedConversation = useMemo(() => {
     if (!selectedUserId || !userId) return null;
