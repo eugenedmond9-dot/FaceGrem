@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
+import {
+  FormEvent,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import MobileBottomNav from "../../components/MobileBottomNav";
@@ -33,6 +41,7 @@ type MessageRecord = {
 function MessagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
@@ -63,8 +72,39 @@ function MessagesPageContent() {
     return profile?.avatar_url || getAvatarUrl(profile?.full_name || "FaceGrem User");
   };
 
-  const getConversationPartnerId = (conversation: ConversationRecord, currentUserId: string) =>
-    conversation.user_one === currentUserId ? conversation.user_two : conversation.user_one;
+  const getConversationPartnerId = (
+    conversation: ConversationRecord,
+    currentUserId: string
+  ) => (conversation.user_one === currentUserId ? conversation.user_two : conversation.user_one);
+
+  const sortConversationsByUpdatedAt = (items: ConversationRecord[]) =>
+    [...items].sort(
+      (a, b) =>
+        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+    );
+
+  const upsertConversation = (conversation: ConversationRecord) => {
+    setConversations((prev) => {
+      const exists = prev.some((item) => item.id === conversation.id);
+      const next = exists
+        ? prev.map((item) => (item.id === conversation.id ? conversation : item))
+        : [conversation, ...prev];
+
+      return sortConversationsByUpdatedAt(next);
+    });
+  };
+
+  const upsertMessage = (message: MessageRecord) => {
+    setMessages((prev) => {
+      const exists = prev.some((item) => item.id === message.id);
+      if (exists) return prev;
+
+      return [...prev, message].sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    });
+  };
 
   useEffect(() => {
     const loadMessagesPage = async () => {
@@ -84,30 +124,49 @@ function MessagesPageContent() {
       setUserId(currentUserId);
       setUserName(currentUserName);
 
-      const [{ data: profilesData }, { data: conversationsData }] = await Promise.all([
-        supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
-        supabase
-          .from("conversations")
-          .select("id, user_one, user_two, created_at, updated_at")
-          .or(`user_one.eq.${currentUserId},user_two.eq.${currentUserId}`)
-          .order("updated_at", { ascending: false }),
-      ]);
+      const [{ data: profilesData, error: profilesError }, { data: conversationsData, error: conversationsError }] =
+        await Promise.all([
+          supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
+          supabase
+            .from("conversations")
+            .select("id, user_one, user_two, created_at, updated_at")
+            .or(`user_one.eq.${currentUserId},user_two.eq.${currentUserId}`)
+            .order("updated_at", { ascending: false }),
+        ]);
+
+      if (profilesError) {
+        alert(profilesError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (conversationsError) {
+        alert(conversationsError.message);
+        setLoading(false);
+        return;
+      }
 
       const allProfiles = profilesData || [];
-      const myProfile = allProfiles.find((profile) => profile.id === currentUserId);
       const allConversations = conversationsData || [];
+      const myProfile = allProfiles.find((profile) => profile.id === currentUserId);
 
       setProfiles(allProfiles);
-      setConversations(allConversations);
+      setConversations(sortConversationsByUpdatedAt(allConversations));
 
       const conversationIds = allConversations.map((conversation) => conversation.id);
 
       if (conversationIds.length > 0) {
-        const { data: messagesData } = await supabase
+        const { data: messagesData, error: messagesError } = await supabase
           .from("messages")
           .select("id, conversation_id, sender_id, content, created_at")
           .in("conversation_id", conversationIds)
           .order("created_at", { ascending: true });
+
+        if (messagesError) {
+          alert(messagesError.message);
+          setLoading(false);
+          return;
+        }
 
         setMessages(messagesData || []);
       } else {
@@ -122,6 +181,104 @@ function MessagesPageContent() {
 
     void loadMessagesPage();
   }, [router]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let messagesChannel: RealtimeChannel | null = null;
+    let conversationsChannel: RealtimeChannel | null = null;
+
+    messagesChannel = supabase
+      .channel(`messages-realtime-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        async (payload) => {
+          const newMessage = payload.new as MessageRecord;
+
+          const knownConversation = conversations.find(
+            (conversation) => conversation.id === newMessage.conversation_id
+          );
+
+          if (!knownConversation) {
+            const { data: fetchedConversation, error } = await supabase
+              .from("conversations")
+              .select("id, user_one, user_two, created_at, updated_at")
+              .eq("id", newMessage.conversation_id)
+              .maybeSingle();
+
+            if (!error && fetchedConversation) {
+              const belongsToUser =
+                fetchedConversation.user_one === userId ||
+                fetchedConversation.user_two === userId;
+
+              if (belongsToUser) {
+                upsertConversation(fetchedConversation);
+                upsertMessage(newMessage);
+              }
+            }
+
+            return;
+          }
+
+          upsertMessage(newMessage);
+
+          const bumpedConversation: ConversationRecord = {
+            ...knownConversation,
+            updated_at: newMessage.created_at,
+          };
+          upsertConversation(bumpedConversation);
+        }
+      )
+      .subscribe();
+
+    conversationsChannel = supabase
+      .channel(`conversations-realtime-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "conversations",
+        },
+        (payload) => {
+          const conversation = payload.new as ConversationRecord;
+          const belongsToUser =
+            conversation.user_one === userId || conversation.user_two === userId;
+
+          if (belongsToUser) {
+            upsertConversation(conversation);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "conversations",
+        },
+        (payload) => {
+          const conversation = payload.new as ConversationRecord;
+          const belongsToUser =
+            conversation.user_one === userId || conversation.user_two === userId;
+
+          if (belongsToUser) {
+            upsertConversation(conversation);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (messagesChannel) supabase.removeChannel(messagesChannel);
+      if (conversationsChannel) supabase.removeChannel(conversationsChannel);
+    };
+  }, [userId, conversations]);
 
   const selectedConversation = useMemo(() => {
     if (!selectedUserId || !userId) return null;
@@ -170,6 +327,10 @@ function MessagesPageContent() {
       .filter(Boolean) as ProfileRecord[];
   }, [filteredConversations, profiles, userId]);
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeMessages.length, selectedConversation?.id]);
+
   const openConversation = (uid: string) => {
     router.push(`/messages?user=${uid}`);
   };
@@ -185,7 +346,7 @@ function MessagesPageContent() {
       return existingConversation;
     }
 
-    const { data: newConversation, error } = await supabase
+    const { data: insertedConversation, error: insertError } = await supabase
       .from("conversations")
       .insert([
         {
@@ -196,12 +357,25 @@ function MessagesPageContent() {
       .select("id, user_one, user_two, created_at, updated_at")
       .single();
 
-    if (error) {
-      throw error;
+    if (!insertError && insertedConversation) {
+      upsertConversation(insertedConversation);
+      return insertedConversation;
     }
 
-    setConversations((prev) => [newConversation, ...prev]);
-    return newConversation;
+    const { data: fallbackConversation, error: fallbackError } = await supabase
+      .from("conversations")
+      .select("id, user_one, user_two, created_at, updated_at")
+      .or(
+        `and(user_one.eq.${userId},user_two.eq.${targetUserId}),and(user_one.eq.${targetUserId},user_two.eq.${userId})`
+      )
+      .maybeSingle();
+
+    if (fallbackError || !fallbackConversation) {
+      throw insertError || fallbackError || new Error("Could not create conversation.");
+    }
+
+    upsertConversation(fallbackConversation);
+    return fallbackConversation;
   };
 
   const handleSendMessage = async (e: FormEvent) => {
@@ -232,37 +406,38 @@ function MessagesPageContent() {
             content: trimmed,
           },
         ])
-        .select("id, conversation_id, sender_id, content, created_at");
+        .select("id, conversation_id, sender_id, content, created_at")
+        .single();
 
       if (error) {
         throw error;
       }
 
-      const nowIso = new Date().toISOString();
+      if (data) {
+        upsertMessage(data);
 
-      await supabase
-        .from("conversations")
-        .update({ updated_at: nowIso })
-        .eq("id", conversation.id);
+        const bumpedConversation: ConversationRecord = {
+          ...conversation,
+          updated_at: data.created_at,
+        };
+        upsertConversation(bumpedConversation);
 
-      setConversations((prev) =>
-        prev
-          .map((item) =>
-            item.id === conversation.id ? { ...item, updated_at: nowIso } : item
-          )
-          .sort(
-            (a, b) =>
-              new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-          )
-      );
-
-      if (data && data.length > 0) {
-        setMessages((prev) => [...prev, data[0]]);
+        await supabase
+          .from("conversations")
+          .update({ updated_at: data.created_at })
+          .eq("id", conversation.id);
       }
 
       setMessageText("");
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Could not send message.");
+    } catch (error: any) {
+      console.error("Send message error:", error);
+      alert(
+        error?.message ||
+          error?.details ||
+          error?.hint ||
+          JSON.stringify(error) ||
+          "Could not send message."
+      );
     } finally {
       setSending(false);
     }
@@ -682,6 +857,8 @@ function MessagesPageContent() {
                     );
                   })
                 )}
+
+                <div ref={bottomRef} />
               </div>
 
               <div className="px-4 py-4 border-t border-white/10 sm:px-6">
