@@ -38,6 +38,14 @@ type MessageRecord = {
   created_at: string;
 };
 
+type ConversationDisplayUser = {
+  id: string;
+  full_name: string;
+  username: string;
+  bio: string;
+  avatar_url?: string | null;
+};
+
 function MessagesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -76,6 +84,28 @@ function MessagesPageContent() {
     conversation: ConversationRecord,
     currentUserId: string
   ) => (conversation.user_one === currentUserId ? conversation.user_two : conversation.user_one);
+
+  const getConversationDisplayUser = (uid: string): ConversationDisplayUser => {
+    const profile = getProfileById(uid);
+
+    if (profile) {
+      return {
+        id: profile.id,
+        full_name: profile.full_name || "FaceGrem User",
+        username: profile.username || "",
+        bio: profile.bio || "",
+        avatar_url: profile.avatar_url || null,
+      };
+    }
+
+    return {
+      id: uid,
+      full_name: "FaceGrem User",
+      username: "",
+      bio: "",
+      avatar_url: null,
+    };
+  };
 
   const sortConversationsByUpdatedAt = (items: ConversationRecord[]) =>
     [...items].sort(
@@ -124,15 +154,17 @@ function MessagesPageContent() {
       setUserId(currentUserId);
       setUserName(currentUserName);
 
-      const [{ data: profilesData, error: profilesError }, { data: conversationsData, error: conversationsError }] =
-        await Promise.all([
-          supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
-          supabase
-            .from("conversations")
-            .select("id, user_one, user_two, created_at, updated_at")
-            .or(`user_one.eq.${currentUserId},user_two.eq.${currentUserId}`)
-            .order("updated_at", { ascending: false }),
-        ]);
+      const [
+        { data: profilesData, error: profilesError },
+        { data: conversationsData, error: conversationsError },
+      ] = await Promise.all([
+        supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
+        supabase
+          .from("conversations")
+          .select("id, user_one, user_two, created_at, updated_at")
+          .or(`user_one.eq.${currentUserId},user_two.eq.${currentUserId}`)
+          .order("updated_at", { ascending: false }),
+      ]);
 
       if (profilesError) {
         alert(profilesError.message);
@@ -292,21 +324,21 @@ function MessagesPageContent() {
   }, [conversations, selectedUserId, userId]);
 
   const selectedConversationUser = useMemo(() => {
-    if (!selectedUserId) return null;
-    return getProfileById(selectedUserId) || null;
-  }, [selectedUserId, profiles]);
+    if (!selectedConversation || !selectedUserId) return null;
+    return getConversationDisplayUser(selectedUserId);
+  }, [selectedConversation, selectedUserId, profiles]);
 
   const filteredConversations = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
 
     return conversations.filter((conversation) => {
       const partnerId = getConversationPartnerId(conversation, userId);
-      const profile = getProfileById(partnerId);
+      const profile = getConversationDisplayUser(partnerId);
 
       if (!term) return true;
 
       const haystack =
-        `${profile?.full_name || ""} ${profile?.username || ""} ${profile?.bio || ""}`.toLowerCase();
+        `${profile.full_name || ""} ${profile.username || ""} ${profile.bio || ""}`.toLowerCase();
 
       return haystack.includes(term);
     });
@@ -323,15 +355,17 @@ function MessagesPageContent() {
   const recentPeople = useMemo(() => {
     return filteredConversations
       .slice(0, 5)
-      .map((conversation) => getProfileById(getConversationPartnerId(conversation, userId)))
-      .filter(Boolean) as ProfileRecord[];
-  }, [filteredConversations, profiles, userId]);
+      .map((conversation) =>
+        getConversationDisplayUser(getConversationPartnerId(conversation, userId))
+      );
+  }, [filteredConversations, userId, profiles]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeMessages.length, selectedConversation?.id]);
 
   const openConversation = (uid: string) => {
+    if (!uid) return;
     router.push(`/messages?user=${uid}`);
   };
 
@@ -587,7 +621,7 @@ function MessagesPageContent() {
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
                   <p className="text-[11px] text-slate-400">Focus</p>
                   <p className="mt-1 text-sm font-semibold text-white">
-                    {selectedConversationUser ? "Open" : "Idle"}
+                    {selectedConversation ? "Open" : "Idle"}
                   </p>
                 </div>
               </div>
@@ -727,7 +761,7 @@ function MessagesPageContent() {
             ) : (
               filteredConversations.map((conversation) => {
                 const partnerId = getConversationPartnerId(conversation, userId);
-                const profile = getProfileById(partnerId);
+                const profile = getConversationDisplayUser(partnerId);
                 const isActive = selectedUserId === partnerId;
 
                 const latestMessage = messages
@@ -746,14 +780,12 @@ function MessagesPageContent() {
                     }`}
                   >
                     <img
-                      src={getBestAvatarForUser(partnerId)}
-                      alt={profile?.full_name || "User"}
+                      src={profile.avatar_url || getAvatarUrl(profile.full_name)}
+                      alt={profile.full_name || "User"}
                       className="object-cover h-11 w-11 rounded-2xl"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {profile?.full_name || "FaceGrem User"}
-                      </p>
+                      <p className="font-medium truncate">{profile.full_name}</p>
                       <p
                         className={`mt-1 truncate text-xs ${
                           isActive ? "text-white/80" : "text-slate-400"
@@ -770,7 +802,7 @@ function MessagesPageContent() {
         </aside>
 
         <section className="min-w-0">
-          {!selectedUserId || !selectedConversationUser ? (
+          {!selectedUserId || !selectedConversation ? (
             <div className="flex min-h-[620px] items-center justify-center rounded-[30px] border border-white/10 bg-white/5 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl">
               <div className="max-w-md text-center">
                 <p className="text-sm font-semibold text-cyan-200">Messages</p>
@@ -788,16 +820,19 @@ function MessagesPageContent() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <img
-                      src={getBestAvatarForUser(selectedUserId)}
-                      alt={selectedConversationUser.full_name}
+                      src={
+                        selectedConversationUser?.avatar_url ||
+                        getAvatarUrl(selectedConversationUser?.full_name || "FaceGrem User")
+                      }
+                      alt={selectedConversationUser?.full_name || "FaceGrem User"}
                       className="object-cover w-12 h-12 rounded-2xl"
                     />
                     <div>
                       <p className="font-semibold text-white">
-                        {selectedConversationUser.full_name}
+                        {selectedConversationUser?.full_name || "FaceGrem User"}
                       </p>
                       <p className="text-xs text-slate-400">
-                        {selectedConversationUser.username
+                        {selectedConversationUser?.username
                           ? `@${selectedConversationUser.username}`
                           : "FaceGrem member"}
                       </p>
@@ -830,8 +865,13 @@ function MessagesPageContent() {
                         <div className="flex max-w-[85%] items-end gap-3">
                           {!mine && (
                             <img
-                              src={getBestAvatarForUser(selectedUserId)}
-                              alt={selectedConversationUser.full_name}
+                              src={
+                                selectedConversationUser?.avatar_url ||
+                                getAvatarUrl(
+                                  selectedConversationUser?.full_name || "FaceGrem User"
+                                )
+                              }
+                              alt={selectedConversationUser?.full_name || "FaceGrem User"}
                               className="hidden object-cover h-9 w-9 rounded-xl sm:block"
                             />
                           )}
@@ -868,7 +908,9 @@ function MessagesPageContent() {
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
                       rows={2}
-                      placeholder={`Message ${selectedConversationUser.full_name.split(" ")[0]}...`}
+                      placeholder={`Message ${
+                        selectedConversationUser?.full_name?.split(" ")[0] || "them"
+                      }...`}
                       className="w-full px-4 py-3 text-sm text-white transition border outline-none resize-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400 focus:border-cyan-400/40"
                     />
 
