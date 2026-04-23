@@ -917,7 +917,7 @@ export default function FeedPage() {
       </div>
 
       <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/40 backdrop-blur-3xl">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
+        <div className="mx-auto hidden max-w-7xl items-center gap-3 px-4 py-3 sm:px-6 lg:flex">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -932,7 +932,7 @@ export default function FeedPage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-[15px] text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)] sm:h-11 sm:w-11">
                 F
               </div>
-              <div className="hidden sm:block">
+              <div>
                 <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
                 <p className="text-xs text-slate-400">Your social world, live now</p>
               </div>
@@ -954,7 +954,7 @@ export default function FeedPage() {
             </div>
           </div>
 
-          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          <div className="ml-auto hidden items-center gap-1.5 sm:gap-2 lg:flex">
             <button
               type="button"
               onClick={() => setActiveRightPanel("friends")}
@@ -1042,9 +1042,78 @@ export default function FeedPage() {
           </div>
         </div>
 
-        <div className="px-4 pb-4 sm:px-6 lg:hidden">
-          <div className="mx-auto max-w-7xl space-y-3">
-            <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
+        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:hidden">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsMenuOpen(true)}
+                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-base text-white transition hover:bg-white/[0.06]"
+                  aria-label="Open menu"
+                >
+                  ☰
+                </button>
+
+                <Link href="/feed" className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-[15px] text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)]">
+                    F
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="truncate text-base font-bold tracking-tight text-white">FaceGrem</h1>
+                    <p className="truncate text-[11px] text-slate-400">Social, messages, communities</p>
+                  </div>
+                </Link>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveRightPanel("messages")}
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-2xl text-base transition ${
+                    activeRightPanel === "messages"
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
+                      : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
+                  }`}
+                  aria-label="Messages"
+                  title="Messages"
+                >
+                  💬
+                </button>
+
+                <div className="relative">
+                  <Link
+                    href="/notifications"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-base text-slate-200 transition hover:bg-white/[0.06]"
+                    aria-label="Notifications"
+                    title="Notifications"
+                  >
+                    🔔
+                  </Link>
+
+                  {unreadNotificationsCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cyan-400 px-1 text-[10px] font-bold text-slate-950 shadow-lg">
+                      {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
+                    </span>
+                  )}
+                </div>
+
+                <Link
+                  href="/profile"
+                  className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] transition hover:bg-white/[0.06]"
+                  aria-label="Profile"
+                  title="Profile"
+                >
+                  <img
+                    src={userAvatar}
+                    alt={userName}
+                    className="h-9 w-9 rounded-xl object-cover ring-1 ring-cyan-400/15"
+                  />
+                </Link>
+              </div>
+            </div>
+
+            <div className={`flex items-center gap-3 rounded-[24px] px-4 py-3 ${softCard}`}>
               <span className="text-sm text-slate-400">⌕</span>
               <input
                 type="text"
@@ -1055,35 +1124,53 @@ export default function FeedPage() {
               />
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("friends")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Friends
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("communities")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Groups
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("messages")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Chat
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("videos")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Videos
-              </button>
+            <div className={`rounded-[24px] p-2 ${softCard}`}>
+              <div className="grid grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveRightPanel("friends")}
+                  className={`rounded-2xl px-3 py-3 text-center text-xs font-medium transition ${
+                    activeRightPanel === "friends"
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                      : "bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
+                  }`}
+                >
+                  Friends
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveRightPanel("communities")}
+                  className={`rounded-2xl px-3 py-3 text-center text-xs font-medium transition ${
+                    activeRightPanel === "communities"
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                      : "bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
+                  }`}
+                >
+                  Groups
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveRightPanel("messages")}
+                  className={`rounded-2xl px-3 py-3 text-center text-xs font-medium transition ${
+                    activeRightPanel === "messages"
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                      : "bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
+                  }`}
+                >
+                  Chat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveRightPanel("videos")}
+                  className={`rounded-2xl px-3 py-3 text-center text-xs font-medium transition ${
+                    activeRightPanel === "videos"
+                      ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                      : "bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
+                  }`}
+                >
+                  Videos
+                </button>
+              </div>
             </div>
           </div>
         </div>
