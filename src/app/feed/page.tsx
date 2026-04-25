@@ -953,6 +953,19 @@ export default function FeedPage() {
             </div>
           </div>
 
+          <div className="min-w-0 flex-1 lg:hidden">
+            <div className="flex h-10 items-center gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.025] px-3 backdrop-blur-[24px] shadow-[0_10px_28px_rgba(2,8,23,0.16)]">
+              <span className="text-sm text-slate-400">⌕</span>
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search..."
+                className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-400/90"
+              />
+            </div>
+          </div>
+
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
@@ -1041,51 +1054,6 @@ export default function FeedPage() {
           </div>
         </div>
 
-        <div className="px-4 pb-4 sm:px-6 lg:hidden">
-          <div className="mx-auto max-w-7xl space-y-3">
-            <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
-              <span className="text-sm text-slate-400">⌕</span>
-              <input
-                type="text"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search FaceGrem..."
-                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
-              />
-            </div>
-
-            <div className="grid grid-cols-4 gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("friends")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Friends
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("communities")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Groups
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("messages")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Chat
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("videos")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Videos
-              </button>
-            </div>
-          </div>
-        </div>
       </header>
 
       {isMenuOpen && (
