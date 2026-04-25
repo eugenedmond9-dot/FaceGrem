@@ -957,7 +957,7 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setActiveRightPanel("friends")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
+              className={`hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
                 activeRightPanel === "friends"
                   ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
                   : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
@@ -971,7 +971,7 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setActiveRightPanel("communities")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
+              className={`hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
                 activeRightPanel === "communities"
                   ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
                   : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
@@ -985,7 +985,7 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setActiveRightPanel("messages")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
+              className={`hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
                 activeRightPanel === "messages"
                   ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
                   : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
@@ -999,7 +999,7 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setActiveRightPanel("videos")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
+              className={`hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
                 activeRightPanel === "videos"
                   ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
                   : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
@@ -1027,7 +1027,7 @@ export default function FeedPage() {
 
             <Link
               href="/profile"
-              className="flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:px-2 sm:pr-3"
+              className="hidden sm:flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:px-2 sm:pr-3"
             >
               <img
                 src={userAvatar}
