@@ -137,6 +137,7 @@ const translations = {
     navigation: "Navigation",
     groups: "Groups",
     saved: "Saved",
+    logout: "Log out",
     translatedTo: "Translated to",
     translateTo: "Translate to",
     showOriginal: "Show original",
@@ -211,6 +212,7 @@ const translations = {
     navigation: "Urambazaji",
     groups: "Makundi",
     saved: "Vilivyohifadhiwa",
+    logout: "Toka",
     translatedTo: "Imetafsiriwa kwa",
     translateTo: "Tafsiri kwa",
     showOriginal: "Onyesha asili",
@@ -285,6 +287,7 @@ const translations = {
     navigation: "Navigation",
     groups: "Groupes",
     saved: "Enregistrés",
+    logout: "Se déconnecter",
     translatedTo: "Traduit en",
     translateTo: "Traduire en",
     showOriginal: "Voir l'original",
@@ -359,6 +362,7 @@ const translations = {
     navigation: "Navigation",
     groups: "Amatsinda",
     saved: "Byabitswe",
+    logout: "Sohoka",
     translatedTo: "Byahinduwe mu",
     translateTo: "Hindurira mu",
     showOriginal: "Erekana umwimerere",
@@ -506,6 +510,17 @@ function ProfilePageContent() {
       window.localStorage.setItem("facegrem_language", language);
     }
     setIsLanguageMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    router.push("/");
   };
 
   useEffect(() => {
@@ -916,6 +931,14 @@ function ProfilePageContent() {
                 {profile.full_name || sessionUserName}
               </span>
             </Link>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="hidden rounded-xl border border-red-300/10 bg-red-400/[0.07] px-3 py-2 text-xs font-semibold text-red-100 transition hover:bg-red-400/[0.11] lg:inline-flex"
+            >
+              ↩️ {t.logout}
+            </button>
           </div>
         </div>
       </header>
@@ -926,7 +949,7 @@ function ProfilePageContent() {
             className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
             onClick={() => setIsMenuOpen(false)}
           />
-          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col border-r border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
+          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col overflow-y-auto overscroll-contain border-r border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)]">
@@ -1016,6 +1039,14 @@ function ProfilePageContent() {
                 </button>
                 <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
                   ❓ {t.help}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="block w-full rounded-2xl px-4 py-3 text-left text-red-100 transition hover:bg-red-400/[0.10]"
+                >
+                  ↩️ {t.logout}
                 </button>
               </div>
             </div>
@@ -1378,6 +1409,13 @@ function ProfilePageContent() {
               <Link href="/videos" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.openVideos}</Link>
               <Link href="/communities" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.exploreCommunities}</Link>
               <Link href="/messages" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.openMessages}</Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="block w-full rounded-2xl border border-red-300/10 bg-red-400/[0.07] px-4 py-3 text-left text-sm text-red-100 transition hover:bg-red-400/[0.11]"
+              >
+                ↩️ {t.logout}
+              </button>
             </div>
           </div>
         </aside>
