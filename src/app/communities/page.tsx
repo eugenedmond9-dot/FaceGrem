@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import MobileBottomNav from "../../components/MobileBottomNav";
 
 type CommunityRecord = {
   id: string;
@@ -42,8 +41,131 @@ type PostRecord = {
   community_id?: string | null;
 };
 
+
+type NotificationRecord = {
+  id: string;
+  user_id: string;
+  actor_id: string | null;
+  type: string;
+  post_id: string | null;
+  actor_name: string | null;
+  content: string | null;
+  is_read: boolean | null;
+  created_at: string;
+};
+
+type TranslationLanguage = "en" | "sw" | "fr" | "rw";
+
+const languageLabels: Record<TranslationLanguage, string> = {
+  en: "English",
+  sw: "Swahili",
+  fr: "French",
+  rw: "Kinyarwanda",
+};
+
+const uiTranslations = {
+  en: {
+    navigation: "Navigation",
+    homeFeed: "Home Feed",
+    videos: "Videos",
+    communities: "Communities",
+    groups: "Groups",
+    messages: "Messages",
+    saved: "Saved",
+    profile: "Profile",
+    settings: "Settings",
+    language: "Language",
+    privacy: "Privacy",
+    help: "Help",
+    logout: "Log out",
+    signingOut: "Signing out...",
+    close: "Close",
+    create: "Create",
+    searchCommunities: "Search communities, topics, categories...",
+    searchCommunityPosts: "Search posts in this community...",
+    communitySpace: "Community space",
+    communitiesTitle: "Communities",
+    join: "Join",
+    leave: "Leave",
+  },
+  sw: {
+    navigation: "Urambazaji",
+    homeFeed: "Mkondo Mkuu",
+    videos: "Video",
+    communities: "Jumuiya",
+    groups: "Makundi",
+    messages: "Ujumbe",
+    saved: "Vilivyohifadhiwa",
+    profile: "Wasifu",
+    settings: "Mipangilio",
+    language: "Lugha",
+    privacy: "Faragha",
+    help: "Msaada",
+    logout: "Ondoka",
+    signingOut: "Inatoka...",
+    close: "Funga",
+    create: "Tengeneza",
+    searchCommunities: "Tafuta jumuiya, mada, makundi...",
+    searchCommunityPosts: "Tafuta machapisho ndani ya jumuiya hii...",
+    communitySpace: "Nafasi ya jumuiya",
+    communitiesTitle: "Jumuiya",
+    join: "Jiunge",
+    leave: "Ondoka",
+  },
+  fr: {
+    navigation: "Navigation",
+    homeFeed: "Fil d’accueil",
+    videos: "Vidéos",
+    communities: "Communautés",
+    groups: "Groupes",
+    messages: "Messages",
+    saved: "Enregistrés",
+    profile: "Profil",
+    settings: "Paramètres",
+    language: "Langue",
+    privacy: "Confidentialité",
+    help: "Aide",
+    logout: "Se déconnecter",
+    signingOut: "Déconnexion...",
+    close: "Fermer",
+    create: "Créer",
+    searchCommunities: "Rechercher des communautés, sujets, catégories...",
+    searchCommunityPosts: "Rechercher des publications dans cette communauté...",
+    communitySpace: "Espace communauté",
+    communitiesTitle: "Communautés",
+    join: "Rejoindre",
+    leave: "Quitter",
+  },
+  rw: {
+    navigation: "Igenzura",
+    homeFeed: "Urupapuro nyamukuru",
+    videos: "Amashusho",
+    communities: "Imiryango",
+    groups: "Amatsinda",
+    messages: "Ubutumwa",
+    saved: "Byabitswe",
+    profile: "Umwirondoro",
+    settings: "Igenamiterere",
+    language: "Ururimi",
+    privacy: "Ubwirinzi bwite",
+    help: "Ubufasha",
+    logout: "Sohoka",
+    signingOut: "Birimo gusohoka...",
+    close: "Funga",
+    create: "Kora",
+    searchCommunities: "Shakisha imiryango, insanganyamatsiko, ibyiciro...",
+    searchCommunityPosts: "Shakisha inyandiko muri uyu muryango...",
+    communitySpace: "Umwanya w’umuryango",
+    communitiesTitle: "Imiryango",
+    join: "Injira",
+    leave: "Sohoka",
+  },
+} as const;
+
+
 export default function CommunitiesPage() {
   const router = useRouter();
+  const languageMenuRef = useRef<HTMLDivElement | null>(null);
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
@@ -53,6 +175,11 @@ export default function CommunitiesPage() {
   const [communityMembers, setCommunityMembers] = useState<CommunityMemberRecord[]>([]);
   const [communityPosts, setCommunityPosts] = useState<PostRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
+  const [selectedLanguage, setSelectedLanguage] = useState<TranslationLanguage>("en");
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creatingCommunity, setCreatingCommunity] = useState(false);
@@ -60,6 +187,8 @@ export default function CommunitiesPage() {
   const [communityCategory, setCommunityCategory] = useState("");
   const [communityDescription, setCommunityDescription] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+
+  const t = uiTranslations[selectedLanguage];
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -104,6 +233,7 @@ export default function CommunitiesPage() {
         { data: communitiesData },
         { data: communityMembersData },
         { data: communityPostsData },
+        { data: notificationsData },
       ] = await Promise.all([
         supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
         supabase
@@ -120,6 +250,11 @@ export default function CommunitiesPage() {
           )
           .not("community_id", "is", null)
           .order("created_at", { ascending: false }),
+        supabase
+          .from("notifications")
+          .select("id, user_id, actor_id, type, post_id, actor_name, content, is_read, created_at")
+          .eq("user_id", currentUserId)
+          .order("created_at", { ascending: false }),
       ]);
 
       const allProfiles = profilesData || [];
@@ -129,6 +264,7 @@ export default function CommunitiesPage() {
       setCommunities(communitiesData || []);
       setCommunityMembers(communityMembersData || []);
       setCommunityPosts(communityPostsData || []);
+      setNotifications(notificationsData || []);
       setUserAvatar(
         myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || currentUserName)
       );
@@ -137,6 +273,74 @@ export default function CommunitiesPage() {
 
     void loadCommunitiesPage();
   }, [router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const storedLanguage = window.localStorage.getItem("facegrem_language");
+    if (
+      storedLanguage === "en" ||
+      storedLanguage === "sw" ||
+      storedLanguage === "fr" ||
+      storedLanguage === "rw"
+    ) {
+      setSelectedLanguage(storedLanguage);
+    }
+
+    const handleStorage = () => {
+      const latest = window.localStorage.getItem("facegrem_language");
+      if (
+        latest === "en" ||
+        latest === "sw" ||
+        latest === "fr" ||
+        latest === "rw"
+      ) {
+        setSelectedLanguage(latest);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        languageMenuRef.current &&
+        !languageMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsLanguageMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLanguageChange = (language: TranslationLanguage) => {
+    setSelectedLanguage(language);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("facegrem_language", language);
+    }
+    setIsLanguageMenuOpen(false);
+  };
+
+  const handleLogout = async () => {
+    setSigningOut(true);
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      setSigningOut(false);
+      return;
+    }
+
+    router.push("/");
+  };
+
+  const unreadNotificationsCount = notifications.filter(
+    (notification) => !notification.is_read
+  ).length;
 
   const myCommunityIds = useMemo(() => {
     return communityMembers
@@ -155,14 +359,6 @@ export default function CommunitiesPage() {
     });
   }, [communities, searchTerm]);
 
-  const trendingCategories = useMemo(() => {
-    return [
-      { name: "Faith", pulse: "12k" },
-      { name: "Business", pulse: "9k" },
-      { name: "Music", pulse: "14k" },
-      { name: "Creators", pulse: "11k" },
-    ];
-  }, []);
 
   const joinedCommunities = useMemo(() => {
     return communities.filter((community) => myCommunityIds.includes(community.id)).slice(0, 4);
@@ -314,108 +510,232 @@ export default function CommunitiesPage() {
         <div className="absolute top-0 right-0 rounded-full h-96 w-96 bg-blue-500/10 blur-3xl" />
       </div>
 
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#020817]/75 backdrop-blur-2xl">
-        <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
+      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/40 backdrop-blur-3xl">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(true)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-base text-white transition hover:bg-white/[0.06]"
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+
             <Link href="/feed" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 font-bold text-white shadow-[0_12px_40px_rgba(34,211,238,0.28)] sm:h-12 sm:w-12">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-[15px] text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)] sm:h-11 sm:w-11">
                 F
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
-                <p className="text-xs text-slate-400">Communities</p>
+                <p className="text-xs text-slate-400">{t.communitiesTitle}</p>
               </div>
             </Link>
           </div>
 
-          <div className="flex-1 hidden lg:block">
-            <div className="max-w-xl mx-auto">
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.18)] transition focus-within:border-cyan-400/40">
+          <div className="min-w-0 flex-1">
+            <div className="mx-auto max-w-xl">
+              <div className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-2.5 shadow-[0_10px_35px_rgba(15,23,42,0.14)] transition focus-within:border-cyan-400/40 sm:px-4 lg:py-3">
                 <span className="text-sm text-slate-400">⌕</span>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search communities, topics, categories..."
-                  className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
+                  placeholder={t.searchCommunities}
+                  className="w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-400 sm:text-sm"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => setShowCreateForm((prev) => !prev)}
-              className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20"
+              className="hidden rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 sm:inline-flex"
             >
-              {showCreateForm ? "Close" : "Create"}
+              {showCreateForm ? t.close : t.create}
             </button>
 
-            <Link
-              href="/feed"
-              className="hidden rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 md:inline-flex"
-            >
-              Feed
-            </Link>
+            <div ref={languageMenuRef} className="relative hidden lg:block">
+              <button
+                type="button"
+                onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
+                className="inline-flex h-9 items-center rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06]"
+                aria-label="Language"
+                title="Language"
+              >
+                🌐 {languageLabels[selectedLanguage]}
+              </button>
+
+              {isLanguageMenuOpen && (
+                <div className="absolute right-0 top-11 z-[90] w-44 rounded-2xl border border-white/[0.08] bg-[#07111f]/95 p-2 shadow-2xl backdrop-blur-2xl">
+                  {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
+                    <button
+                      key={language}
+                      type="button"
+                      onClick={() => handleLanguageChange(language)}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
+                        selectedLanguage === language
+                          ? "bg-cyan-400/[0.14] text-cyan-100"
+                          : "text-white hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      <span>{languageLabels[language]}</span>
+                      {selectedLanguage === language && <span>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <Link
+                href="/notifications"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-[13px] text-slate-200 transition hover:bg-white/[0.06]"
+              >
+                🔔
+              </Link>
+
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cyan-400 px-1 text-[10px] font-bold text-slate-950 shadow-lg">
+                  {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
+                </span>
+              )}
+            </div>
 
             <Link
               href="/profile"
-              className="flex items-center gap-2 px-2 py-2 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 sm:px-2 sm:pr-3"
+              className="hidden items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] md:flex md:px-2 md:pr-3"
             >
               <img
                 src={userAvatar}
                 alt={userName}
-                className="object-cover h-9 w-9 rounded-xl ring-1 ring-cyan-400/20"
+                className="h-8 w-8 rounded-xl object-cover ring-1 ring-cyan-400/15"
               />
               <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
                 {userName}
               </span>
             </Link>
-          </div>
-        </div>
 
-        <div className="px-4 pb-4 sm:px-6 lg:hidden">
-          <div className="mx-auto space-y-3 max-w-7xl">
-            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.18)] transition focus-within:border-cyan-400/40">
-              <span className="text-sm text-slate-400">⌕</span>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search communities..."
-                className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
-              />
-            </div>
-
-            <div className="grid grid-cols-4 gap-2">
-              <Link
-                href="/feed"
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
-              >
-                Feed
-              </Link>
-              <Link
-                href="/videos"
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
-              >
-                Videos
-              </Link>
-              <Link
-                href="/communities"
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
-              >
-                Groups
-              </Link>
-              <Link
-                href="/messages"
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
-              >
-                Chat
-              </Link>
-            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={signingOut}
+              className="hidden rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/[0.06] disabled:opacity-70 lg:inline-flex"
+            >
+              {signingOut ? t.signingOut : t.logout}
+            </button>
           </div>
         </div>
       </header>
+
+      {isMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col overflow-y-auto overscroll-contain border-r border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)]">
+                  F
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white">FaceGrem</h2>
+                  <p className="text-xs text-slate-400">{t.navigation}</p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(false)}
+                className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white transition hover:bg-white/[0.08]"
+                aria-label="Close menu"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-6 space-y-2">
+              <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🏠 {t.homeFeed}</Link>
+              <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🎬 {t.videos}</Link>
+              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">👥 {t.communities}</Link>
+              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🫂 {t.groups}</Link>
+              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">💬 {t.messages}</Link>
+              <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🔖 {t.saved}</Link>
+              <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">👤 {t.profile}</Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreateForm((prev) => !prev);
+                  setIsMenuOpen(false);
+                }}
+                className="mobile-menu-primary-action block w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-3 text-left text-sm font-semibold text-white shadow-lg shadow-cyan-500/20"
+              >
+                {showCreateForm ? t.close : t.create}
+              </button>
+            </div>
+
+            <div className="mt-8 border-t border-white/10 pt-5">
+              <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                More
+              </p>
+
+              <div className="space-y-2">
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
+                  ⚙️ {t.settings}
+                </button>
+
+                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
+                    className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
+                  >
+                    🌐 {t.language}: {languageLabels[selectedLanguage]}
+                  </button>
+
+                  {isLanguageMenuOpen && (
+                    <div className="mt-2 space-y-1 px-2 pb-2">
+                      {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
+                        <button
+                          key={language}
+                          type="button"
+                          onClick={() => handleLanguageChange(language)}
+                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
+                            selectedLanguage === language
+                              ? "bg-cyan-400/[0.14] text-cyan-100"
+                              : "text-white hover:bg-white/[0.06]"
+                          }`}
+                        >
+                          <span>{languageLabels[language]}</span>
+                          {selectedLanguage === language && <span>✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
+                  🔒 {t.privacy}
+                </button>
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
+                  ❓ {t.help}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={signingOut}
+                  className="block w-full rounded-2xl px-4 py-3 text-left text-red-100 transition hover:bg-red-500/10 disabled:opacity-70"
+                >
+                  ↩️ {signingOut ? t.signingOut : t.logout}
+                </button>
+              </div>
+            </div>
+          </aside>
+        </>
+      )}
 
       <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
         <aside className="hidden xl:block">
@@ -446,69 +766,6 @@ export default function CommunitiesPage() {
                   <p className="text-[11px] text-slate-400">Posts</p>
                   <p className="mt-1 text-sm font-semibold text-white">{communityPosts.length}</p>
                 </div>
-              </div>
-            </div>
-
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-3 backdrop-blur-xl">
-              <p className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
-                Navigate
-              </p>
-
-              <div className="space-y-1.5">
-                <Link
-                  href="/feed"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">🏠</span>
-                    Home feed
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
-
-                <Link
-                  href="/videos"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">🎬</span>
-                    Watch videos
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
-
-                <Link
-                  href="/communities"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">👥</span>
-                    Communities
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
-
-                <Link
-                  href="/messages"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">💬</span>
-                    Messages
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
-
-                <Link
-                  href="/profile"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
-                >
-                  <span className="flex items-center gap-3">
-                    <span className="text-base">👤</span>
-                    Your profile
-                  </span>
-                  <span className="text-slate-500">→</span>
-                </Link>
               </div>
             </div>
 
@@ -735,33 +992,6 @@ export default function CommunitiesPage() {
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">Trending categories</p>
-                <p className="mt-1 text-xs text-slate-400">Popular spaces across FaceGrem</p>
-              </div>
-              <span className="text-xs text-slate-400">Live</span>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {trendingCategories.map((item, index) => (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between px-4 py-3 border rounded-2xl border-white/10 bg-white/5"
-                >
-                  <div>
-                    <p className="text-[11px] text-slate-400">#{index + 1} trending</p>
-                    <p className="mt-1 font-medium text-white">{item.name}</p>
-                  </div>
-                  <span className="px-3 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-200">
-                    {item.pulse}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
-            <div className="flex items-center justify-between gap-3">
-              <div>
                 <p className="text-sm font-semibold text-cyan-200">Suggested communities</p>
                 <p className="mt-1 text-xs text-slate-400">Find spaces to join next</p>
               </div>
@@ -874,8 +1104,6 @@ export default function CommunitiesPage() {
           </div>
         </aside>
       </main>
-
-      <MobileBottomNav />
     </div>
   );
 }
