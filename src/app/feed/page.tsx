@@ -118,6 +118,308 @@ const glassCard =
 const softCard =
   "border border-white/[0.05] bg-white/[0.02] backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]";
 
+
+const uiTranslations = {
+  en: {
+    loadingFeed: "Loading FaceGrem feed...",
+    brandTagline: "Your social world, live now",
+    navigation: "Navigation",
+    homeFeed: "Home Feed",
+    videos: "Videos",
+    communities: "Communities",
+    groups: "Groups",
+    messages: "Messages",
+    saved: "Saved",
+    profile: "Profile",
+    settings: "Settings",
+    language: "Language",
+    privacy: "Privacy",
+    help: "Help",
+    yourCommunities: "Your communities",
+    viewAll: "View all",
+    joinCommunitiesText: "Join communities to keep your favorite spaces close.",
+    communityFallback: "Community",
+    quickDetails: "Tap to view quick details",
+    savedStat: "Saved",
+    alertsStat: "Alerts",
+    groupsStat: "Groups",
+    openProfile: "Open Profile",
+    savedPosts: "Saved Posts",
+    welcomeBack: "Welcome back",
+    goodToSeeYou: "Good to see you",
+    discoverText: "Discover what people are sharing right now across FaceGrem — moments, ideas, videos, conversations, and communities.",
+    stories: "Stories",
+    storiesSubtitle: "Quick moments from people around you",
+    createStory: "Create story",
+    uploading: "Uploading...",
+    shareQuickMoment: "Share a quick moment",
+    yourStory: "Your story",
+    createPost: "Create post",
+    createPostSubtitle: "Share a thought, photo, story, or video with FaceGrem",
+    publicPost: "Public post",
+    liveComposer: "Live composer",
+    postingToEveryone: "Posting to everyone",
+    whatsOnMind: "What’s on your mind today?",
+    storyImage: "Story image",
+    photoUpload: "Photo upload",
+    useCreateStory: "Use the Create story button above to publish a real story",
+    addVisual: "Add a strong visual to make your post stand out",
+    uploadingStory: "Uploading story...",
+    chooseStoryImage: "Choose story image",
+    liveStreamLink: "Live stream link",
+    videoLink: "Video link",
+    pasteVideoHelp: "Paste a YouTube link or direct video URL",
+    pasteLivePlaceholder: "Paste a live stream or video URL",
+    pasteVideoPlaceholder: "Paste a YouTube or video URL",
+    textBadge: "Text",
+    imageAttached: "Image attached",
+    videoLinked: "Video linked",
+    clear: "Clear",
+    posting: "Posting...",
+    post: "Post",
+    noPosts: "No posts found here yet.",
+    tryAnotherTab: "Try another feed tab or create the first post.",
+    public: "Public",
+    videoPost: "Video post",
+    photoPost: "Photo post",
+    delete: "Delete",
+    viewDiscussion: "View discussion",
+    like: "Like",
+    liked: "Liked",
+    translateShowOriginal: "Show original",
+    translating: "Translating...",
+    translatedTo: "Translated to",
+    searchPlaceholder: "Search posts, creators, communities, topics...",
+  },
+  sw: {
+    loadingFeed: "Inapakia FaceGrem...",
+    brandTagline: "Dunia yako ya kijamii, moja kwa moja sasa",
+    navigation: "Urambazaji",
+    homeFeed: "Mkondo Mkuu",
+    videos: "Video",
+    communities: "Jumuiya",
+    groups: "Makundi",
+    messages: "Ujumbe",
+    saved: "Vilivyohifadhiwa",
+    profile: "Wasifu",
+    settings: "Mipangilio",
+    language: "Lugha",
+    privacy: "Faragha",
+    help: "Msaada",
+    yourCommunities: "Jumuiya zako",
+    viewAll: "Tazama zote",
+    joinCommunitiesText: "Jiunge na jumuiya ili kuyaweka maeneo unayopenda karibu.",
+    communityFallback: "Jumuiya",
+    quickDetails: "Gusa kuona maelezo ya haraka",
+    savedStat: "Hifadhi",
+    alertsStat: "Arifa",
+    groupsStat: "Makundi",
+    openProfile: "Fungua Wasifu",
+    savedPosts: "Machapisho Yaliyohifadhiwa",
+    welcomeBack: "Karibu tena",
+    goodToSeeYou: "Vizuri kukuona",
+    discoverText: "Gundua watu wanashiriki nini sasa hivi kwenye FaceGrem — matukio, mawazo, video, mazungumzo, na jumuiya.",
+    stories: "Hadithi",
+    storiesSubtitle: "Matukio ya haraka kutoka kwa watu walio karibu nawe",
+    createStory: "Tengeneza hadithi",
+    uploading: "Inapakia...",
+    shareQuickMoment: "Shiriki tukio la haraka",
+    yourStory: "Hadithi yako",
+    createPost: "Tengeneza chapisho",
+    createPostSubtitle: "Shiriki wazo, picha, hadithi, au video kwenye FaceGrem",
+    publicPost: "Chapisho la umma",
+    liveComposer: "Muundaji wa moja kwa moja",
+    postingToEveryone: "Unachapisha kwa kila mtu",
+    whatsOnMind: "Unafikiria nini leo?",
+    storyImage: "Picha ya hadithi",
+    photoUpload: "Pakia picha",
+    useCreateStory: "Tumia kitufe cya Tengeneza hadithi hejuru ushyireho hadithi nyayo",
+    addVisual: "Ongeza taswira nziza kugira ngo chapisho ryawe rigaragare",
+    uploadingStory: "Inapakia hadithi...",
+    chooseStoryImage: "Chagua picha ya hadithi",
+    liveStreamLink: "Kiungo cya mubashara",
+    videoLink: "Kiungo cya video",
+    pasteVideoHelp: "Bandika kiungo cya YouTube cyangwa video ya moja kwa moja",
+    pasteLivePlaceholder: "Bandika kiungo cya mubashara cyangwa video",
+    pasteVideoPlaceholder: "Bandika kiungo cya YouTube cyangwa video",
+    textBadge: "Maandishi",
+    imageAttached: "Picha imeambatishwa",
+    videoLinked: "Video imeunganishwa",
+    clear: "Futa",
+    posting: "Inachapisha...",
+    post: "Chapisha",
+    noPosts: "Hakuna machapisho hapa bado.",
+    tryAnotherTab: "Jaribu kichupo kingine au tengeneza chapisho la kwanza.",
+    public: "Umma",
+    videoPost: "Chapisho la video",
+    photoPost: "Chapisho la picha",
+    delete: "Futa",
+    viewDiscussion: "Tazama mjadala",
+    like: "Penda",
+    liked: "Umeipenda",
+    translateShowOriginal: "Onyesha asili",
+    translating: "Inatafsiri...",
+    translatedTo: "Imetafsiriwa kwa",
+    searchPlaceholder: "Tafuta machapisho, wabunifu, jumuiya, mada...",
+  },
+  fr: {
+    loadingFeed: "Chargement de FaceGrem...",
+    brandTagline: "Votre univers social, en direct",
+    navigation: "Navigation",
+    homeFeed: "Fil d’accueil",
+    videos: "Vidéos",
+    communities: "Communautés",
+    groups: "Groupes",
+    messages: "Messages",
+    saved: "Enregistrés",
+    profile: "Profil",
+    settings: "Paramètres",
+    language: "Langue",
+    privacy: "Confidentialité",
+    help: "Aide",
+    yourCommunities: "Vos communautés",
+    viewAll: "Voir tout",
+    joinCommunitiesText: "Rejoignez des communautés pour garder vos espaces préférés proches.",
+    communityFallback: "Communauté",
+    quickDetails: "Touchez pour voir des détails rapides",
+    savedStat: "Enregistré",
+    alertsStat: "Alertes",
+    groupsStat: "Groupes",
+    openProfile: "Ouvrir le profil",
+    savedPosts: "Publications enregistrées",
+    welcomeBack: "Bon retour",
+    goodToSeeYou: "Heureux de vous revoir",
+    discoverText: "Découvrez ce que les gens partagent en ce moment sur FaceGrem — moments, idées, vidéos, conversations et communautés.",
+    stories: "Stories",
+    storiesSubtitle: "Moments rapides des personnes autour de vous",
+    createStory: "Créer une story",
+    uploading: "Téléchargement...",
+    shareQuickMoment: "Partagez un moment rapide",
+    yourStory: "Votre story",
+    createPost: "Créer une publication",
+    createPostSubtitle: "Partagez une pensée, une photo, une story ou une vidéo sur FaceGrem",
+    publicPost: "Publication publique",
+    liveComposer: "Éditeur en direct",
+    postingToEveryone: "Publication pour tout le monde",
+    whatsOnMind: "À quoi pensez-vous aujourd’hui ?",
+    storyImage: "Image de story",
+    photoUpload: "Téléverser une photo",
+    useCreateStory: "Utilisez le bouton Créer une story ci-dessus pour publier une vraie story",
+    addVisual: "Ajoutez un visuel fort pour faire ressortir votre publication",
+    uploadingStory: "Téléchargement de la story...",
+    chooseStoryImage: "Choisir l’image de la story",
+    liveStreamLink: "Lien de diffusion en direct",
+    videoLink: "Lien vidéo",
+    pasteVideoHelp: "Collez un lien YouTube ou une URL vidéo directe",
+    pasteLivePlaceholder: "Collez un lien live ou vidéo",
+    pasteVideoPlaceholder: "Collez un lien YouTube ou vidéo",
+    textBadge: "Texte",
+    imageAttached: "Image jointe",
+    videoLinked: "Vidéo liée",
+    clear: "Effacer",
+    posting: "Publication...",
+    post: "Publier",
+    noPosts: "Aucune publication ici pour le moment.",
+    tryAnotherTab: "Essayez un autre onglet ou créez la première publication.",
+    public: "Public",
+    videoPost: "Publication vidéo",
+    photoPost: "Publication photo",
+    delete: "Supprimer",
+    viewDiscussion: "Voir la discussion",
+    like: "J’aime",
+    liked: "Aimé",
+    translateShowOriginal: "Afficher l’original",
+    translating: "Traduction...",
+    translatedTo: "Traduit en",
+    searchPlaceholder: "Rechercher des publications, créateurs, communautés, sujets...",
+  },
+  rw: {
+    loadingFeed: "FaceGrem iri gufungura...",
+    brandTagline: "Isi yawe y’imbuga nkoranyambaga, aka kanya",
+    navigation: "Igenzura",
+    homeFeed: "Urupapuro nyamukuru",
+    videos: "Amashusho",
+    communities: "Imiryango",
+    groups: "Amatsinda",
+    messages: "Ubutumwa",
+    saved: "Byabitswe",
+    profile: "Umwirondoro",
+    settings: "Igenamiterere",
+    language: "Ururimi",
+    privacy: "Ubwirinzi bwite",
+    help: "Ubufasha",
+    yourCommunities: "Imiryango yawe",
+    viewAll: "Reba byose",
+    joinCommunitiesText: "Injira mu miryango kugira ngo ahantu ukunda habe hafi yawe.",
+    communityFallback: "Umuryango",
+    quickDetails: "Kanda urebe ibisobanuro byihuse",
+    savedStat: "Byabitswe",
+    alertsStat: "Amamenyesha",
+    groupsStat: "Amatsinda",
+    openProfile: "Fungura umwirondoro",
+    savedPosts: "Ibyanditswe byabitswe",
+    welcomeBack: "Murakaza neza nanone",
+    goodToSeeYou: "Byiza kongera kukubona",
+    discoverText: "Reba ibyo abantu basangiza ubu kuri FaceGrem — ibihe, ibitekerezo, amashusho, ibiganiro n’imiryango.",
+    stories: "Inkuru",
+    storiesSubtitle: "Ibihe byihuse by’abantu bakwegereye",
+    createStory: "Kora inkuru",
+    uploading: "Birimo koherezwa...",
+    shareQuickMoment: "Sangiza akanya kihuse",
+    yourStory: "Inkuru yawe",
+    createPost: "Kora inyandiko",
+    createPostSubtitle: "Sangiza igitekerezo, ifoto, inkuru cyangwa amashusho kuri FaceGrem",
+    publicPost: "Inyandiko ya bose",
+    liveComposer: "Gukora aka kanya",
+    postingToEveryone: "Ubiherereza bose",
+    whatsOnMind: "Uri gutekereza iki uyu munsi?",
+    storyImage: "Ifoto y’inkuru",
+    photoUpload: "Ohereza ifoto",
+    useCreateStory: "Koresha buto ya Kora inkuru iri hejuru ushyireho inkuru nyayo",
+    addVisual: "Ongeraho ishusho nziza kugira ngo inyandiko yawe igaragare",
+    uploadingStory: "Inkuru irimo koherezwa...",
+    chooseStoryImage: "Hitamo ifoto y’inkuru",
+    liveStreamLink: "Ihuza rya live",
+    videoLink: "Ihuza ry’amashusho",
+    pasteVideoHelp: "Shyiramo link ya YouTube cyangwa video y’umwimerere",
+    pasteLivePlaceholder: "Shyiramo link ya live cyangwa video",
+    pasteVideoPlaceholder: "Shyiramo link ya YouTube cyangwa video",
+    textBadge: "Inyandiko",
+    imageAttached: "Ifoto yometseho",
+    videoLinked: "Video yometseho",
+    clear: "Siba",
+    posting: "Birimo gutangazwa...",
+    post: "Tangaza",
+    noPosts: "Nta nyandiko zirimo hano ubu.",
+    tryAnotherTab: "Gerageza indi tab cyangwa ukore inyandiko ya mbere.",
+    public: "Rubanda",
+    videoPost: "Inyandiko ya video",
+    photoPost: "Inyandiko y’ifoto",
+    delete: "Siba",
+    viewDiscussion: "Reba ikiganiro",
+    like: "Kunda",
+    liked: "Wakunze",
+    translateShowOriginal: "Erekana umwimerere",
+    translating: "Birimo guhindurwa...",
+    translatedTo: "Byahinduwe mu",
+    searchPlaceholder: "Shakisha inyandiko, abahanzi, imiryango, insanganyamatsiko...",
+  },
+} as const;
+
+const quickActionLabels: Record<TranslationLanguage, Record<typeof quickActions[number], string>> = {
+  en: { Photo: "Photo", Video: "Video", Live: "Live", Story: "Story" },
+  sw: { Photo: "Picha", Video: "Video", Live: "Mubashara", Story: "Hadithi" },
+  fr: { Photo: "Photo", Video: "Vidéo", Live: "Direct", Story: "Story" },
+  rw: { Photo: "Ifoto", Video: "Video", Live: "Live", Story: "Inkuru" },
+};
+
+const feedTabLabels: Record<TranslationLanguage, Record<typeof feedTabs[number], string>> = {
+  en: { "For You": "For You", Following: "Following", Creators: "Creators", Videos: "Videos", Faith: "Faith", Business: "Business" },
+  sw: { "For You": "Kwa Ajili Yako", Following: "Unaowafuata", Creators: "Waundaji", Videos: "Video", Faith: "Imani", Business: "Biashara" },
+  fr: { "For You": "Pour vous", Following: "Abonnements", Creators: "Créateurs", Videos: "Vidéos", Faith: "Foi", Business: "Business" },
+  rw: { "For You": "Bikubereye", Following: "Ukurikira", Creators: "Abahanzi", Videos: "Amashusho", Faith: "Ukwizera", Business: "Ubucuruzi" },
+};
+
 export default function FeedPage() {
   const router = useRouter();
   const storyInputRef = useRef<HTMLInputElement | null>(null);
@@ -172,6 +474,8 @@ export default function FeedPage() {
   const [activeFriendsTab, setActiveFriendsTab] = useState<
     "online" | "suggestions" | "your_friends"
   >("online");
+
+  const t = uiTranslations[selectedLanguage];
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -961,7 +1265,7 @@ export default function FeedPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
-        Loading FaceGrem feed...
+        {t.loadingFeed}
       </div>
     );
   }
@@ -1066,7 +1370,7 @@ export default function FeedPage() {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
-                <p className="text-xs text-slate-400">Your social world, live now</p>
+                <p className="text-xs text-slate-400">{t.brandTagline}</p>
               </div>
             </Link>
           </div>
@@ -1079,7 +1383,7 @@ export default function FeedPage() {
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Search posts, creators, communities, topics..."
+                  placeholder={t.searchPlaceholder}
                   className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
                 />
               </div>
@@ -1165,7 +1469,7 @@ export default function FeedPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">FaceGrem</h2>
-                  <p className="text-xs text-slate-400">Navigation</p>
+                  <p className="text-xs text-slate-400">{t.navigation}</p>
                 </div>
               </div>
 
@@ -1185,49 +1489,49 @@ export default function FeedPage() {
                 onClick={() => setIsMenuOpen(false)}
                 className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
-                🏠 Home Feed
+                🏠 {t.homeFeed}
               </Link>
               <Link
                 href="/videos"
                 onClick={() => setIsMenuOpen(false)}
                 className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
-                🎬 Videos
+                🎬 {t.videos}
               </Link>
               <Link
                 href="/communities"
                 onClick={() => setIsMenuOpen(false)}
                 className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
-                👥 Communities
+                👥 {t.communities}
               </Link>
               <Link
                 href="/groups"
                 onClick={() => setIsMenuOpen(false)}
                 className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
-                🫂 Groups
+                🫂 {t.groups}
               </Link>
               <Link
                 href="/messages"
                 onClick={() => setIsMenuOpen(false)}
                 className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
-                💬 Messages
+                💬 {t.messages}
               </Link>
               <Link
                 href="/saved"
                 onClick={() => setIsMenuOpen(false)}
                 className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
-                🔖 Saved
+                🔖 {t.saved}
               </Link>
               <Link
                 href="/profile"
                 onClick={() => setIsMenuOpen(false)}
                 className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
-                👤 Profile
+                👤 {t.profile}
               </Link>
             </div>
 
@@ -1238,7 +1542,7 @@ export default function FeedPage() {
 
               <div className="space-y-2">
                 <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  ⚙️ Settings
+                  ⚙️ {t.settings}
                 </button>
                 <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-2">
                   <button
@@ -1246,7 +1550,7 @@ export default function FeedPage() {
                     onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
                     className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
                   >
-                    🌐 Language: {languageLabels[selectedLanguage]}
+                    🌐 {t.language}: {languageLabels[selectedLanguage]}
                   </button>
 
                   {isLanguageMenuOpen && (
@@ -1270,10 +1574,10 @@ export default function FeedPage() {
                   )}
                 </div>
                 <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  🔒 Privacy
+                  🔒 {t.privacy}
                 </button>
                 <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  ❓ Help
+                  ❓ {t.help}
                 </button>
               </div>
             </div>
@@ -1297,7 +1601,7 @@ export default function FeedPage() {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-white truncate">{userName}</p>
-                  <p className="text-sm truncate text-slate-400">Tap to view quick details</p>
+                  <p className="text-sm truncate text-slate-400">{t.quickDetails}</p>
                 </div>
                 <div className="text-xl text-white">{isProfileCardOpen ? "−" : "+"}</div>
               </button>
@@ -1306,17 +1610,17 @@ export default function FeedPage() {
                 <div className="pt-4 mt-4 space-y-3 border-t border-white/10">
                   <div className="grid grid-cols-3 gap-2">
                     <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
-                      <p className="text-[11px] text-slate-400">Saved</p>
+                      <p className="text-[11px] text-slate-400">{t.savedStat}</p>
                       <p className="mt-1 text-sm font-semibold text-white">{savedPosts.length}</p>
                     </div>
                     <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
-                      <p className="text-[11px] text-slate-400">Alerts</p>
+                      <p className="text-[11px] text-slate-400">{t.alertsStat}</p>
                       <p className="mt-1 text-sm font-semibold text-white">
                         {unreadNotificationsCount}
                       </p>
                     </div>
                     <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
-                      <p className="text-[11px] text-slate-400">Groups</p>
+                      <p className="text-[11px] text-slate-400">{t.groupsStat}</p>
                       <p className="mt-1 text-sm font-semibold text-white">
                         {myCommunityIds.length}
                       </p>
@@ -1343,12 +1647,12 @@ export default function FeedPage() {
 
             <div className={`rounded-[28px] p-4 ${glassCard}`}>
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-cyan-200">Your communities</p>
+                <p className="text-sm font-semibold text-cyan-200">{t.yourCommunities}</p>
                 <Link
                   href="/communities"
                   className="text-xs transition text-cyan-300 hover:text-cyan-200"
                 >
-                  View all
+                  {t.viewAll}
                 </Link>
               </div>
 
@@ -1356,7 +1660,7 @@ export default function FeedPage() {
                 {communities.filter((community) => myCommunityIds.includes(community.id))
                   .length === 0 ? (
                   <p className="text-sm leading-7 text-slate-400">
-                    Join communities to keep your favorite spaces close.
+                    {t.joinCommunitiesText}
                   </p>
                 ) : (
                   communities
@@ -1370,7 +1674,7 @@ export default function FeedPage() {
                       >
                         <p className="font-medium text-white">{community.name}</p>
                         <p className="mt-1 text-xs text-slate-400/90">
-                          {community.category || "Community"}
+                          {community.category || t.communityFallback}
                         </p>
                       </Link>
                     ))
@@ -1383,13 +1687,12 @@ export default function FeedPage() {
         <section className="min-w-0 space-y-5 sm:space-y-6">
           <div className="overflow-hidden rounded-[32px] border border-white/[0.06] bg-[linear-gradient(135deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015)_38%,rgba(255,255,255,0.025)_100%)] p-6 backdrop-blur-[28px] shadow-[0_24px_80px_rgba(2,8,23,0.14)]">
             <div className="max-w-2xl">
-              <p className="text-sm font-semibold text-cyan-200">Welcome back</p>
+              <p className="text-sm font-semibold text-cyan-200">{t.welcomeBack}</p>
               <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">
-                Good to see you, {userName.split(" ")[0]}.
+                {t.goodToSeeYou}, {userName.split(" ")[0]}.
               </h2>
               <p className="max-w-xl mt-4 text-sm leading-8 text-slate-300 sm:text-base">
-                Discover what people are sharing right now across FaceGrem —
-                moments, ideas, videos, conversations, and communities.
+                {t.discoverText}
               </p>
             </div>
           </div>
@@ -1397,8 +1700,8 @@ export default function FeedPage() {
           <div className="overflow-x-auto rounded-[30px] border border-white/[0.05] bg-white/[0.018] p-3 backdrop-blur-[30px] shadow-[0_18px_50px_rgba(2,8,23,0.14)] sm:rounded-[32px] sm:p-4">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">Stories</p>
-                <p className="text-xs text-slate-400/90">Quick moments from people around you</p>
+                <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">{t.stories}</p>
+                <p className="text-xs text-slate-400/90">{t.storiesSubtitle}</p>
               </div>
 
               <button
@@ -1407,7 +1710,7 @@ export default function FeedPage() {
                 disabled={storyUploading}
                 className="rounded-full border border-white/[0.06] bg-white/[0.025] px-4 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/[0.045] disabled:opacity-70"
               >
-                {storyUploading ? "Uploading..." : "Create story"}
+                {storyUploading ? t.uploading : t.createStory}
               </button>
             </div>
 
@@ -1433,9 +1736,9 @@ export default function FeedPage() {
 
                     <div>
                       <p className="text-sm font-semibold text-white">
-                        {storyUploading ? "Uploading..." : "Create story"}
+                        {storyUploading ? t.uploading : t.createStory}
                       </p>
-                      <p className="mt-1 text-xs text-white/75">Share a quick moment</p>
+                      <p className="mt-1 text-xs text-white/75">{t.shareQuickMoment}</p>
                     </div>
                   </div>
                 </div>
@@ -1477,7 +1780,7 @@ export default function FeedPage() {
                           </p>
                           <p className="mt-1 text-xs text-white/75">
                             {group.userId === userId
-                              ? "Your story"
+                              ? t.yourStory
                               : `@${storyProfile?.username || "member"}`}
                           </p>
                         </div>
@@ -1533,9 +1836,9 @@ export default function FeedPage() {
             <div className="border-b border-white/[0.05] px-4 py-4 sm:px-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">Create post</p>
+                  <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">{t.createPost}</p>
                   <p className="mt-1 text-xs text-slate-400/90">
-                    Share a thought, photo, story, or video with FaceGrem
+                    {t.createPostSubtitle}
                   </p>
                 </div>
 
@@ -1571,7 +1874,7 @@ export default function FeedPage() {
                       value={postText}
                       onChange={(e) => setPostText(e.target.value)}
                       rows={4}
-                      placeholder="What’s on your mind today?"
+                      placeholder={t.whatsOnMind}
                       className="w-full resize-none bg-transparent text-[15px] leading-7 text-white placeholder:text-slate-400/90 outline-none"
                     />
                   </div>
@@ -1581,7 +1884,7 @@ export default function FeedPage() {
               <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-5 sm:gap-3">
                 {quickActions.map((action) => (
                   <button
-                    key={action}
+                    key={quickActionLabels[selectedLanguage][action]}
                     type="button"
                     onClick={() => {
                       setActiveComposerAction(action);
@@ -1593,7 +1896,7 @@ export default function FeedPage() {
                         : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
                     }`}
                   >
-                    {action}
+                    {quickActionLabels[selectedLanguage][action]}
                   </button>
                 ))}
               </div>
@@ -1602,12 +1905,12 @@ export default function FeedPage() {
                 <div className="mt-5 rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-[22px]">
                   <div>
                     <p className="text-sm font-medium text-white">
-                      {activeComposerAction === "Story" ? "Story image" : "Photo upload"}
+                      {activeComposerAction === "Story" ? t.storyImage : t.photoUpload}
                     </p>
                     <p className="mt-1 text-xs text-slate-400/90">
                       {activeComposerAction === "Story"
-                        ? "Use the Create story button above to publish a real story"
-                        : "Add a strong visual to make your post stand out"}
+                        ? t.useCreateStory
+                        : t.addVisual}
                     </p>
                   </div>
 
@@ -1640,7 +1943,7 @@ export default function FeedPage() {
                         disabled={storyUploading}
                         className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.08] px-4 py-3 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/[0.12] disabled:opacity-70"
                       >
-                        {storyUploading ? "Uploading story..." : "Choose story image"}
+                        {storyUploading ? t.uploadingStory : t.chooseStoryImage}
                       </button>
                     </div>
                   )}
@@ -1651,10 +1954,10 @@ export default function FeedPage() {
                 <div className="mt-5 rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-[22px]">
                   <div>
                     <p className="text-sm font-medium text-white">
-                      {activeComposerAction === "Live" ? "Live stream link" : "Video link"}
+                      {activeComposerAction === "Live" ? t.liveStreamLink : t.videoLink}
                     </p>
                     <p className="mt-1 text-xs text-slate-400/90">
-                      Paste a YouTube link or direct video URL
+                      {t.pasteVideoHelp}
                     </p>
                   </div>
 
@@ -1664,8 +1967,8 @@ export default function FeedPage() {
                     onChange={(e) => setVideoUrl(e.target.value)}
                     placeholder={
                       activeComposerAction === "Live"
-                        ? "Paste a live stream or video URL"
-                        : "Paste a YouTube or video URL"
+                        ? t.pasteLivePlaceholder
+                        : t.pasteVideoPlaceholder
                     }
                     className="mt-4 w-full rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white placeholder:text-slate-400/90 outline-none transition focus:border-cyan-300/20"
                   />
@@ -1709,7 +2012,7 @@ export default function FeedPage() {
                     disabled={posting}
                     className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-6 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/[0.14] disabled:opacity-70"
                   >
-                    {posting ? "Posting..." : "Post"}
+                    {posting ? t.posting : t.post}
                   </button>
                 </div>
               </div>
@@ -1719,7 +2022,7 @@ export default function FeedPage() {
           <div className="flex flex-wrap gap-3">
             {feedTabs.map((tab) => (
               <button
-                key={tab}
+                key={feedTabLabels[selectedLanguage][tab]}
                 type="button"
                 onClick={() => {
                   setActiveFeedTab(tab);
@@ -1731,16 +2034,16 @@ export default function FeedPage() {
                     : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
                 }`}
               >
-                {tab}
+                {feedTabLabels[selectedLanguage][tab]}
               </button>
             ))}
           </div>
 
           {filteredPosts.length === 0 ? (
             <div className={`rounded-[30px] p-8 text-center ${glassCard}`}>
-              <p className="text-lg font-medium text-white">No posts found here yet.</p>
+              <p className="text-lg font-medium text-white">{t.noPosts}</p>
               <p className="mt-2 text-sm text-slate-400">
-                Try another feed tab or create the first post.
+                {t.tryAnotherTab}
               </p>
             </div>
           ) : (
@@ -1841,15 +2144,15 @@ export default function FeedPage() {
                               className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/[0.045] disabled:opacity-70"
                             >
                               {translatingPosts[post.id]
-                                ? "Translating..."
+                                ? t.translating
                                 : translatedPosts[post.id]
-                                ? "Show original"
+                                ? t.translateShowOriginal
                                 : `Translate to ${languageLabels[selectedLanguage]}`}
                             </button>
 
                             {translatedPosts[post.id] && (
                               <span className="text-xs text-cyan-200/90">
-                                Translated to {languageLabels[selectedLanguage]}
+                                {t.translatedTo} {languageLabels[selectedLanguage]}
                               </span>
                             )}
                           </div>
@@ -1917,7 +2220,7 @@ export default function FeedPage() {
                           href={`/post/${post.id}`}
                           className="text-sm font-medium transition text-cyan-300 hover:text-cyan-200"
                         >
-                          View discussion
+                          {t.viewDiscussion}
                         </Link>
                       </div>
 
@@ -1930,7 +2233,7 @@ export default function FeedPage() {
                               : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
                           }`}
                         >
-                          {isLiked(post.id) ? "Liked" : "Like"}
+                          {isLiked(post.id) ? t.liked : t.like}
                         </button>
 
                         <Link
@@ -2237,7 +2540,7 @@ export default function FeedPage() {
                       >
                         <p className="font-medium text-white">{community.name}</p>
                         <p className="mt-1 text-xs text-slate-400/90">
-                          {community.category || "Community"} • {memberCount} members
+                          {community.category || t.communityFallback} • {memberCount} members
                         </p>
                       </Link>
                     );
