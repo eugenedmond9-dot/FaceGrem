@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import MobileBottomNav from "../../components/MobileBottomNav";
 
 type ProfileRecord = {
   id: string;
@@ -953,74 +954,14 @@ export default function FeedPage() {
             </div>
           </div>
 
-          <div className="min-w-0 flex-1 lg:hidden">
-            <div className="flex h-10 items-center gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.025] px-3 backdrop-blur-[24px] shadow-[0_10px_28px_rgba(2,8,23,0.16)]">
-              <span className="text-sm text-slate-400">⌕</span>
-              <input
-                type="text"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search..."
-                className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-400/90"
-              />
-            </div>
-          </div>
-
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
-              onClick={() => setActiveRightPanel("friends")}
-              className={`hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
-                activeRightPanel === "friends"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
-                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
-              }`}
-              aria-label="Friends"
-              title="Friends"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-[15px] text-slate-200 transition hover:bg-white/[0.06]"
+              aria-label="Language"
+              title="Language"
             >
-              👥
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveRightPanel("communities")}
-              className={`hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
-                activeRightPanel === "communities"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
-                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
-              }`}
-              aria-label="Communities"
-              title="Communities"
-            >
-              🌍
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveRightPanel("messages")}
-              className={`hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
-                activeRightPanel === "messages"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
-                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
-              }`}
-              aria-label="Messages"
-              title="Messages"
-            >
-              💬
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveRightPanel("videos")}
-              className={`hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
-                activeRightPanel === "videos"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
-                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
-              }`}
-              aria-label="Videos"
-              title="Videos"
-            >
-              ▶️
+              🌐
             </button>
 
             <div className="relative">
@@ -1040,7 +981,7 @@ export default function FeedPage() {
 
             <Link
               href="/profile"
-              className="hidden sm:flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:px-2 sm:pr-3"
+              className="flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:px-2 sm:pr-3"
             >
               <img
                 src={userAvatar}
@@ -1054,6 +995,51 @@ export default function FeedPage() {
           </div>
         </div>
 
+        <div className="px-4 pb-4 sm:px-6 lg:hidden">
+          <div className="mx-auto max-w-7xl space-y-3">
+            <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
+              <span className="text-sm text-slate-400">⌕</span>
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search FaceGrem..."
+                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
+              />
+            </div>
+
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("friends")}
+                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
+              >
+                Friends
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("communities")}
+                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
+              >
+                Groups
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("messages")}
+                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
+              >
+                Chat
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("videos")}
+                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
+              >
+                Videos
+              </button>
+            </div>
+          </div>
+        </div>
       </header>
 
       {isMenuOpen && (
@@ -1105,13 +1091,6 @@ export default function FeedPage() {
                 className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
               >
                 👥 Communities
-              </Link>
-              <Link
-                href="/communities"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
-              >
-                🫂 Groups
               </Link>
               <Link
                 href="/messages"
@@ -2249,6 +2228,7 @@ export default function FeedPage() {
         </div>
       )}
 
+      <MobileBottomNav unreadNotificationsCount={unreadNotificationsCount} />
     </div>
   );
 }
