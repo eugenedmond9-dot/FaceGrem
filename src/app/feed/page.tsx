@@ -135,6 +135,7 @@ const uiTranslations = {
     language: "Language",
     privacy: "Privacy",
     help: "Help",
+    logout: "Log out",
     yourCommunities: "Your communities",
     viewAll: "View all",
     joinCommunitiesText: "Join communities to keep your favorite spaces close.",
@@ -206,6 +207,7 @@ const uiTranslations = {
     language: "Lugha",
     privacy: "Faragha",
     help: "Msaada",
+    logout: "Toka",
     yourCommunities: "Jumuiya zako",
     viewAll: "Tazama zote",
     joinCommunitiesText: "Jiunge na jumuiya ili kuyaweka maeneo unayopenda karibu.",
@@ -277,6 +279,7 @@ const uiTranslations = {
     language: "Langue",
     privacy: "Confidentialité",
     help: "Aide",
+    logout: "Se déconnecter",
     yourCommunities: "Vos communautés",
     viewAll: "Voir tout",
     joinCommunitiesText: "Rejoignez des communautés pour garder vos espaces préférés proches.",
@@ -348,6 +351,7 @@ const uiTranslations = {
     language: "Ururimi",
     privacy: "Ubwirinzi bwite",
     help: "Ubufasha",
+    logout: "Sohoka",
     yourCommunities: "Imiryango yawe",
     viewAll: "Reba byose",
     joinCommunitiesText: "Injira mu miryango kugira ngo ahantu ukunda habe hafi yawe.",
@@ -595,6 +599,17 @@ export default function FeedPage() {
     } finally {
       setTranslatingComments((prev) => ({ ...prev, [commentId]: false }));
     }
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    router.push("/");
   };
 
   const handleLanguageChange = (language: TranslationLanguage) => {
@@ -1438,6 +1453,14 @@ export default function FeedPage() {
               )}
             </div>
 
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="hidden rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06] lg:inline-flex"
+            >
+              ↩️ {t.logout}
+            </button>
+
             <Link
               href="/profile"
               className="hidden items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:flex sm:px-2 sm:pr-3"
@@ -1579,6 +1602,13 @@ export default function FeedPage() {
                 <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
                   ❓ {t.help}
                 </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="block w-full rounded-2xl px-4 py-3 text-left text-rose-100 transition hover:bg-rose-400/[0.10]"
+                >
+                  ↩️ {t.logout}
+                </button>
               </div>
             </div>
           </aside>
@@ -1632,15 +1662,23 @@ export default function FeedPage() {
                       href="/profile"
                       className={`rounded-2xl px-4 py-3 text-center text-sm text-white transition hover:bg-white/[0.08] ${softCard}`}
                     >
-                      Open Profile
+                      {t.openProfile}
                     </Link>
                     <Link
                       href="/saved"
                       className={`rounded-2xl px-4 py-3 text-center text-sm text-white transition hover:bg-white/[0.08] ${softCard}`}
                     >
-                      Saved Posts
+                      {t.savedPosts}
                     </Link>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className={`w-full rounded-2xl px-4 py-3 text-center text-sm text-rose-100 transition hover:bg-rose-400/[0.10] ${softCard}`}
+                  >
+                    ↩️ {t.logout}
+                  </button>
                 </div>
               )}
             </div>
