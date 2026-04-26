@@ -1013,7 +1013,7 @@ export default function FeedPage() {
         className="hidden"
       />
 
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,#020817_0%,#03101f_38%,#020817_100%)]" />
 
         <div className="absolute inset-0 opacity-70 ambient-pulse bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.09),transparent_24%),radial-gradient(circle_at_85%_14%,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_50%_82%,rgba(168,85,247,0.07),transparent_20%)]" />
@@ -1028,7 +1028,7 @@ export default function FeedPage() {
       </div>
 
       <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/40 backdrop-blur-3xl">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
+        <div className="flex items-center gap-3 px-4 py-3 mx-auto max-w-7xl sm:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -1050,8 +1050,8 @@ export default function FeedPage() {
             </Link>
           </div>
 
-          <div className="hidden flex-1 lg:block">
-            <div className="mx-auto max-w-xl">
+          <div className="flex-1 hidden lg:block">
+            <div className="max-w-xl mx-auto">
               <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
                 <span className="text-sm text-slate-400">⌕</span>
                 <input
@@ -1059,7 +1059,7 @@ export default function FeedPage() {
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder="Search posts, creators, communities, topics..."
-                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
+                  className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -1148,7 +1148,7 @@ export default function FeedPage() {
               <img
                 src={userAvatar}
                 alt={userName}
-                className="h-8 w-8 rounded-xl object-cover ring-1 ring-cyan-400/15"
+                className="object-cover w-8 h-8 rounded-xl ring-1 ring-cyan-400/15"
               />
               <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
                 {userName}
@@ -1158,7 +1158,7 @@ export default function FeedPage() {
         </div>
 
         <div className="px-4 pb-4 sm:px-6 lg:hidden">
-          <div className="mx-auto max-w-7xl space-y-3">
+          <div className="mx-auto space-y-3 max-w-7xl">
             <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
               <span className="text-sm text-slate-400">⌕</span>
               <input
@@ -1166,7 +1166,7 @@ export default function FeedPage() {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Search FaceGrem..."
-                className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
+                className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
               />
             </div>
 
@@ -1442,7 +1442,7 @@ export default function FeedPage() {
                   <img
                     src={userAvatar}
                     alt={userName}
-                    className="absolute inset-0 h-full w-full object-cover opacity-24"
+                    className="absolute inset-0 object-cover w-full h-full opacity-24"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-[#020817]/20 to-transparent" />
 
@@ -1480,7 +1480,7 @@ export default function FeedPage() {
                       <img
                         src={previewStory.image_url}
                         alt={storyUserName}
-                        className="absolute inset-0 h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105"
+                        className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-72 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#020817]/88 via-[#020817]/10 to-transparent" />
 
@@ -1520,7 +1520,7 @@ export default function FeedPage() {
                         getAvatarUrl(profile.full_name || "FaceGrem User")
                       }
                       alt={profile.full_name}
-                      className="absolute inset-0 h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105"
+                      className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-72 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#020817]/88 via-[#020817]/10 to-transparent" />
 
@@ -1853,7 +1853,7 @@ export default function FeedPage() {
                         <div className="mt-5">
                           <p className="text-[15px] leading-8 text-slate-200/95">{post.content}</p>
 
-                          <div className="mt-3 flex flex-wrap items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-3 mt-3">
                             <button
                               type="button"
                               onClick={() => handleTogglePostTranslation(post.id, post.content)}
@@ -2017,7 +2017,7 @@ export default function FeedPage() {
                                     </span>
                                   </div>
 
-                                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-300/95">
+                                  <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-300/95">
                                     {comment.content}
                                   </p>
                                 </div>
@@ -2098,14 +2098,14 @@ export default function FeedPage() {
                                   getAvatarUrl(person.full_name || "FaceGrem User")
                                 }
                                 alt={person.full_name}
-                                className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
+                                className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
                               />
                               <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#08111d] bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.35)]" />
                             </div>
 
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white truncate">{person.full_name}</p>
-                              <p className="truncate text-xs text-slate-400/85">
+                              <p className="text-xs truncate text-slate-400/85">
                                 @{person.username || "member"} • online
                               </p>
                             </div>
@@ -2149,11 +2149,11 @@ export default function FeedPage() {
                                   getAvatarUrl(person.full_name || "FaceGrem User")
                                 }
                                 alt={person.full_name}
-                                className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
+                                className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
                               />
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-white truncate">{person.full_name}</p>
-                                <p className="truncate text-xs text-slate-400/85">
+                                <p className="text-xs truncate text-slate-400/85">
                                   @{person.username || "member"}
                                 </p>
                               </div>
@@ -2199,11 +2199,11 @@ export default function FeedPage() {
                                 getAvatarUrl(person.full_name || "FaceGrem User")
                               }
                               alt={person.full_name}
-                              className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
+                              className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white truncate">{person.full_name}</p>
-                              <p className="truncate text-xs text-slate-400/85">
+                              <p className="text-xs truncate text-slate-400/85">
                                 @{person.username || "member"}
                               </p>
                             </div>
@@ -2419,7 +2419,6 @@ export default function FeedPage() {
         </div>
       )}
 
-      <MobileBottomNav unreadNotificationsCount={unreadNotificationsCount} />
     </div>
   );
 }
