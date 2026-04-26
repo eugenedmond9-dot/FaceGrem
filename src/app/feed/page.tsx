@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import MobileBottomNav from "../../components/MobileBottomNav";
 
 type ProfileRecord = {
   id: string;
@@ -102,6 +101,15 @@ type FollowRecord = {
   following_id: string;
 };
 
+type TranslationLanguage = "en" | "sw" | "fr" | "rw";
+
+const languageLabels: Record<TranslationLanguage, string> = {
+  en: "English",
+  sw: "Swahili",
+  fr: "French",
+  rw: "Kinyarwanda",
+};
+
 const quickActions = ["Photo", "Video", "Live", "Story"] as const;
 const feedTabs = ["For You", "Following", "Creators", "Videos", "Faith", "Business"] as const;
 
@@ -129,6 +137,12 @@ export default function FeedPage() {
   const [stories, setStories] = useState<StoryRecord[]>([]);
   const [follows, setFollows] = useState<FollowRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [selectedLanguage, setSelectedLanguage] = useState<TranslationLanguage>("en");
+  const [translatedPosts, setTranslatedPosts] = useState<Record<string, string>>({});
+  const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
+  const [translatingPosts, setTranslatingPosts] = useState<Record<string, boolean>>({});
+  const [translatingComments, setTranslatingComments] = useState<Record<string, boolean>>({});
 
   const [activeComposerAction, setActiveComposerAction] =
     useState<(typeof quickActions)[number]>("Photo");
@@ -207,6 +221,74 @@ export default function FeedPage() {
 
   const isYouTubeUrl = (url: string) => {
     return url.includes("youtube.com") || url.includes("youtu.be");
+  };
+
+  const translateText = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return "";
+
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: trimmed,
+        targetLanguage: selectedLanguage,
+      }),
+    });
+
+    const payload = await response.json();
+
+    if (!response.ok) {
+      throw new Error(payload?.error || "Could not translate text.");
+    }
+
+    return payload.translation as string;
+  };
+
+  const handleTogglePostTranslation = async (postId: string, text: string) => {
+    if (translatedPosts[postId]) {
+      setTranslatedPosts((prev) => {
+        const next = { ...prev };
+        delete next[postId];
+        return next;
+      });
+      return;
+    }
+
+    setTranslatingPosts((prev) => ({ ...prev, [postId]: true }));
+
+    try {
+      const translation = await translateText(text);
+      setTranslatedPosts((prev) => ({ ...prev, [postId]: translation }));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Could not translate post.");
+    } finally {
+      setTranslatingPosts((prev) => ({ ...prev, [postId]: false }));
+    }
+  };
+
+  const handleToggleCommentTranslation = async (commentId: string, text: string) => {
+    if (translatedComments[commentId]) {
+      setTranslatedComments((prev) => {
+        const next = { ...prev };
+        delete next[commentId];
+        return next;
+      });
+      return;
+    }
+
+    setTranslatingComments((prev) => ({ ...prev, [commentId]: true }));
+
+    try {
+      const translation = await translateText(text);
+      setTranslatedComments((prev) => ({ ...prev, [commentId]: translation }));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Could not translate comment.");
+    } finally {
+      setTranslatingComments((prev) => ({ ...prev, [commentId]: false }));
+    }
   };
 
   useEffect(() => {
@@ -305,6 +387,35 @@ export default function FeedPage() {
 
     void loadFeed();
   }, [router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const storedLanguage = window.localStorage.getItem("facegrem_language");
+    if (
+      storedLanguage === "en" ||
+      storedLanguage === "sw" ||
+      storedLanguage === "fr" ||
+      storedLanguage === "rw"
+    ) {
+      setSelectedLanguage(storedLanguage);
+    }
+
+    const handleStorage = () => {
+      const latest = window.localStorage.getItem("facegrem_language");
+      if (
+        latest === "en" ||
+        latest === "sw" ||
+        latest === "fr" ||
+        latest === "rw"
+      ) {
+        setSelectedLanguage(latest);
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   const isFollowingUser = (targetUserId: string) =>
     follows.some(
@@ -957,12 +1068,63 @@ export default function FeedPage() {
           <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-[15px] text-slate-200 transition hover:bg-white/[0.06]"
-              aria-label="Language"
-              title="Language"
+              onClick={() => setActiveRightPanel("friends")}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
+                activeRightPanel === "friends"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
+                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
+              }`}
+              aria-label="Friends"
+              title="Friends"
             >
-              🌐
+              👥
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("communities")}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
+                activeRightPanel === "communities"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
+                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
+              }`}
+              aria-label="Communities"
+              title="Communities"
+            >
+              🌍
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("messages")}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
+                activeRightPanel === "messages"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
+                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
+              }`}
+              aria-label="Messages"
+              title="Messages"
+            >
+              💬
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("videos")}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
+                activeRightPanel === "videos"
+                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
+                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
+              }`}
+              aria-label="Videos"
+              title="Videos"
+            >
+              ▶️
+            </button>
+
+            <div className="hidden items-center rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-xs font-medium text-slate-200 lg:inline-flex">
+              🌐 {languageLabels[selectedLanguage]}
+            </div>
 
             <div className="relative">
               <Link
@@ -1690,6 +1852,35 @@ export default function FeedPage() {
                       {post.content && (
                         <div className="mt-5">
                           <p className="text-[15px] leading-8 text-slate-200/95">{post.content}</p>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePostTranslation(post.id, post.content)}
+                              disabled={translatingPosts[post.id]}
+                              className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/[0.045] disabled:opacity-70"
+                            >
+                              {translatingPosts[post.id]
+                                ? "Translating..."
+                                : translatedPosts[post.id]
+                                ? "Show original"
+                                : `Translate to ${languageLabels[selectedLanguage]}`}
+                            </button>
+
+                            {translatedPosts[post.id] && (
+                              <span className="text-xs text-cyan-200/90">
+                                Translated to {languageLabels[selectedLanguage]}
+                              </span>
+                            )}
+                          </div>
+
+                          {translatedPosts[post.id] && (
+                            <div className="mt-3 rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.06] px-4 py-3">
+                              <p className="text-[15px] leading-8 text-cyan-50">
+                                {translatedPosts[post.id]}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
