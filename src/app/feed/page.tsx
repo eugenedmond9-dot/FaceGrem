@@ -121,6 +121,7 @@ const softCard =
 export default function FeedPage() {
   const router = useRouter();
   const storyInputRef = useRef<HTMLInputElement | null>(null);
+  const languageMenuRef = useRef<HTMLDivElement | null>(null);
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
@@ -139,6 +140,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
 
   const [selectedLanguage, setSelectedLanguage] = useState<TranslationLanguage>("en");
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [translatedPosts, setTranslatedPosts] = useState<Record<string, string>>({});
   const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
   const [translatingPosts, setTranslatingPosts] = useState<Record<string, boolean>>({});
@@ -290,6 +292,25 @@ export default function FeedPage() {
       setTranslatingComments((prev) => ({ ...prev, [commentId]: false }));
     }
   };
+
+  const handleLanguageChange = (language: TranslationLanguage) => {
+    setSelectedLanguage(language);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("facegrem_language", language);
+    }
+    setIsLanguageMenuOpen(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target as Node)) {
+        setIsLanguageMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const loadFeed = async () => {
@@ -1013,7 +1034,7 @@ export default function FeedPage() {
         className="hidden"
       />
 
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(180deg,#020817_0%,#03101f_38%,#020817_100%)]" />
 
         <div className="absolute inset-0 opacity-70 ambient-pulse bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.09),transparent_24%),radial-gradient(circle_at_85%_14%,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_50%_82%,rgba(168,85,247,0.07),transparent_20%)]" />
@@ -1028,7 +1049,7 @@ export default function FeedPage() {
       </div>
 
       <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/40 backdrop-blur-3xl">
-        <div className="flex items-center gap-3 px-4 py-3 mx-auto max-w-7xl sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -1050,8 +1071,8 @@ export default function FeedPage() {
             </Link>
           </div>
 
-          <div className="flex-1 hidden lg:block">
-            <div className="max-w-xl mx-auto">
+          <div className="hidden flex-1 lg:block">
+            <div className="mx-auto max-w-xl">
               <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
                 <span className="text-sm text-slate-400">⌕</span>
                 <input
@@ -1059,71 +1080,43 @@ export default function FeedPage() {
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder="Search posts, creators, communities, topics..."
-                  className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
+                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
                 />
               </div>
             </div>
           </div>
 
-          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveRightPanel("friends")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
-                activeRightPanel === "friends"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
-                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
-              }`}
-              aria-label="Friends"
-              title="Friends"
-            >
-              👥
-            </button>
+          <div className="ml-auto flex items-center gap-2">
+            <div ref={languageMenuRef} className="relative hidden lg:block">
+              <button
+                type="button"
+                onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
+                className="inline-flex h-9 items-center rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06]"
+                aria-label="Language"
+                title="Language"
+              >
+                🌐 {languageLabels[selectedLanguage]}
+              </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveRightPanel("communities")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
-                activeRightPanel === "communities"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
-                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
-              }`}
-              aria-label="Communities"
-              title="Communities"
-            >
-              🌍
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveRightPanel("messages")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
-                activeRightPanel === "messages"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
-                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
-              }`}
-              aria-label="Messages"
-              title="Messages"
-            >
-              💬
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveRightPanel("videos")}
-              className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-[15px] transition ${
-                activeRightPanel === "videos"
-                  ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/15"
-                  : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
-              }`}
-              aria-label="Videos"
-              title="Videos"
-            >
-              ▶️
-            </button>
-
-            <div className="hidden items-center rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-xs font-medium text-slate-200 lg:inline-flex">
-              🌐 {languageLabels[selectedLanguage]}
+              {isLanguageMenuOpen && (
+                <div className="absolute right-0 top-11 z-[90] w-44 rounded-2xl border border-white/[0.08] bg-[#07111f]/95 p-2 shadow-2xl backdrop-blur-2xl">
+                  {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
+                    <button
+                      key={language}
+                      type="button"
+                      onClick={() => handleLanguageChange(language)}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
+                        selectedLanguage === language
+                          ? "bg-cyan-400/[0.14] text-cyan-100"
+                          : "text-white hover:bg-white/[0.06]"
+                      }`}
+                    >
+                      <span>{languageLabels[language]}</span>
+                      {selectedLanguage === language && <span>✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="relative">
@@ -1143,63 +1136,17 @@ export default function FeedPage() {
 
             <Link
               href="/profile"
-              className="flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:px-2 sm:pr-3"
+              className="hidden items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:flex sm:px-2 sm:pr-3"
             >
               <img
                 src={userAvatar}
                 alt={userName}
-                className="object-cover w-8 h-8 rounded-xl ring-1 ring-cyan-400/15"
+                className="h-8 w-8 rounded-xl object-cover ring-1 ring-cyan-400/15"
               />
               <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
                 {userName}
               </span>
             </Link>
-          </div>
-        </div>
-
-        <div className="px-4 pb-4 sm:px-6 lg:hidden">
-          <div className="mx-auto space-y-3 max-w-7xl">
-            <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
-              <span className="text-sm text-slate-400">⌕</span>
-              <input
-                type="text"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search FaceGrem..."
-                className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
-              />
-            </div>
-
-            <div className="grid grid-cols-4 gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("friends")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Friends
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("communities")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Groups
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("messages")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Chat
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("videos")}
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-3 text-center text-xs font-medium text-white transition hover:bg-white/[0.06]"
-              >
-                Videos
-              </button>
-            </div>
           </div>
         </div>
       </header>
@@ -1255,6 +1202,13 @@ export default function FeedPage() {
                 👥 Communities
               </Link>
               <Link
+                href="/groups"
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
+              >
+                🫂 Groups
+              </Link>
+              <Link
                 href="/messages"
                 onClick={() => setIsMenuOpen(false)}
                 className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
@@ -1286,9 +1240,35 @@ export default function FeedPage() {
                 <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
                   ⚙️ Settings
                 </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  🌐 Language
-                </button>
+                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
+                    className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
+                  >
+                    🌐 Language: {languageLabels[selectedLanguage]}
+                  </button>
+
+                  {isLanguageMenuOpen && (
+                    <div className="mt-2 space-y-1 px-2 pb-2">
+                      {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
+                        <button
+                          key={language}
+                          type="button"
+                          onClick={() => handleLanguageChange(language)}
+                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
+                            selectedLanguage === language
+                              ? "bg-cyan-400/[0.14] text-cyan-100"
+                              : "text-white hover:bg-white/[0.06]"
+                          }`}
+                        >
+                          <span>{languageLabels[language]}</span>
+                          {selectedLanguage === language && <span>✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
                   🔒 Privacy
                 </button>
@@ -1442,7 +1422,7 @@ export default function FeedPage() {
                   <img
                     src={userAvatar}
                     alt={userName}
-                    className="absolute inset-0 object-cover w-full h-full opacity-24"
+                    className="absolute inset-0 h-full w-full object-cover opacity-24"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-[#020817]/20 to-transparent" />
 
@@ -1480,7 +1460,7 @@ export default function FeedPage() {
                       <img
                         src={previewStory.image_url}
                         alt={storyUserName}
-                        className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-72 group-hover:scale-105"
+                        className="absolute inset-0 h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#020817]/88 via-[#020817]/10 to-transparent" />
 
@@ -1520,7 +1500,7 @@ export default function FeedPage() {
                         getAvatarUrl(profile.full_name || "FaceGrem User")
                       }
                       alt={profile.full_name}
-                      className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-72 group-hover:scale-105"
+                      className="absolute inset-0 h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#020817]/88 via-[#020817]/10 to-transparent" />
 
@@ -1853,7 +1833,7 @@ export default function FeedPage() {
                         <div className="mt-5">
                           <p className="text-[15px] leading-8 text-slate-200/95">{post.content}</p>
 
-                          <div className="flex flex-wrap items-center gap-3 mt-3">
+                          <div className="mt-3 flex flex-wrap items-center gap-3">
                             <button
                               type="button"
                               onClick={() => handleTogglePostTranslation(post.id, post.content)}
@@ -2017,7 +1997,7 @@ export default function FeedPage() {
                                     </span>
                                   </div>
 
-                                  <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-300/95">
+                                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-300/95">
                                     {comment.content}
                                   </p>
                                 </div>
@@ -2098,14 +2078,14 @@ export default function FeedPage() {
                                   getAvatarUrl(person.full_name || "FaceGrem User")
                                 }
                                 alt={person.full_name}
-                                className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
+                                className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
                               />
                               <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#08111d] bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.35)]" />
                             </div>
 
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white truncate">{person.full_name}</p>
-                              <p className="text-xs truncate text-slate-400/85">
+                              <p className="truncate text-xs text-slate-400/85">
                                 @{person.username || "member"} • online
                               </p>
                             </div>
@@ -2149,11 +2129,11 @@ export default function FeedPage() {
                                   getAvatarUrl(person.full_name || "FaceGrem User")
                                 }
                                 alt={person.full_name}
-                                className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
+                                className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
                               />
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium text-white truncate">{person.full_name}</p>
-                                <p className="text-xs truncate text-slate-400/85">
+                                <p className="truncate text-xs text-slate-400/85">
                                   @{person.username || "member"}
                                 </p>
                               </div>
@@ -2199,11 +2179,11 @@ export default function FeedPage() {
                                 getAvatarUrl(person.full_name || "FaceGrem User")
                               }
                               alt={person.full_name}
-                              className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
+                              className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
                             />
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-white truncate">{person.full_name}</p>
-                              <p className="text-xs truncate text-slate-400/85">
+                              <p className="truncate text-xs text-slate-400/85">
                                 @{person.username || "member"}
                               </p>
                             </div>
