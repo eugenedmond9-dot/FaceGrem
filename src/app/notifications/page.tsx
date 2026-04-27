@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { useLanguage } from "../../components/LanguageProvider";
 import ToastContainer, { ToastItem } from "../../components/ToastContainer";
 
 type NotificationRecord = {
   id: string;
   user_id: string;
   actor_id: string;
-  type: "follow" | "like" | "comment";
+  type: "follow" | "like" | "comment" | "message" | "audio_call" | "video_call" | "call_accepted" | "call_declined";
   post_id: string | null;
   actor_name: string | null;
   content: string | null;
@@ -27,6 +28,7 @@ type ProfileRecord = {
 
 export default function NotificationsPage() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   const [userId, setUserId] = useState("");
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
@@ -139,6 +141,21 @@ export default function NotificationsPage() {
             href = newNotification.post_id
               ? `/post/${newNotification.post_id}`
               : "/notifications";
+          } else if (newNotification.type === "message") {
+            message = `${actorName} sent you a message`;
+            href = `/messages?user=${newNotification.actor_id}`;
+          } else if (newNotification.type === "audio_call") {
+            message = `${actorName} started an audio call`;
+            href = `/messages?user=${newNotification.actor_id}`;
+          } else if (newNotification.type === "video_call") {
+            message = `${actorName} started a video call`;
+            href = `/messages?user=${newNotification.actor_id}`;
+          } else if (newNotification.type === "call_accepted") {
+            message = `${actorName} accepted your call`;
+            href = `/messages?user=${newNotification.actor_id}`;
+          } else if (newNotification.type === "call_declined") {
+            message = `${actorName} declined your call`;
+            href = `/messages?user=${newNotification.actor_id}`;
           }
 
           setToasts((prev) => [
@@ -235,6 +252,26 @@ export default function NotificationsPage() {
       return `${actorName} commented on your post`;
     }
 
+    if (notification.type === "message") {
+      return `${actorName} sent you a message`;
+    }
+
+    if (notification.type === "audio_call") {
+      return `${actorName} started an audio call`;
+    }
+
+    if (notification.type === "video_call") {
+      return `${actorName} started a video call`;
+    }
+
+    if (notification.type === "call_accepted") {
+      return `${actorName} accepted your call`;
+    }
+
+    if (notification.type === "call_declined") {
+      return `${actorName} declined your call`;
+    }
+
     return "New activity";
   };
 
@@ -253,13 +290,13 @@ export default function NotificationsPage() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight">FaceGrem</h1>
-              <p className="text-xs text-slate-400">Notifications</p>
+              <p className="text-xs text-slate-400">{t.notifications}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="px-4 py-2 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-200">
-              Unread: {unreadCount}
+              {"Unread"}: {unreadCount}
             </div>
             <button
               onClick={markAllAsRead}
@@ -279,22 +316,22 @@ export default function NotificationsPage() {
 
       <div className="max-w-4xl px-6 py-10 mx-auto">
         <div className="mb-8 rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_30%),linear-gradient(to_bottom_right,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-6 backdrop-blur-xl">
-          <p className="text-sm font-medium text-cyan-200">Activity</p>
+          <p className="text-sm font-medium text-cyan-200">{"Activity"}</p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight">
-            Your FaceGrem notifications
+            {t.notifications}
           </h2>
           <p className="mt-3 text-sm leading-7 text-slate-300">
-            New follows, likes, and comments now appear in realtime.
+            New follows, likes, comments, messages, and calls now appear in realtime.
           </p>
         </div>
 
         {loading ? (
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-slate-300">
-            Loading notifications...
+            {t.loadingNotifications}
           </div>
         ) : notifications.length === 0 ? (
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-6 text-slate-300">
-            No notifications yet.
+            {"No notifications yet."}
           </div>
         ) : (
           <div className="space-y-4">
@@ -302,6 +339,12 @@ export default function NotificationsPage() {
               const href =
                 notification.type === "follow"
                   ? `/profile?id=${notification.actor_id}`
+                  : notification.type === "message" ||
+                    notification.type === "audio_call" ||
+                    notification.type === "video_call" ||
+                    notification.type === "call_accepted" ||
+                    notification.type === "call_declined"
+                  ? `/messages?user=${notification.actor_id}`
                   : notification.post_id
                   ? `/post/${notification.post_id}`
                   : "/notifications";

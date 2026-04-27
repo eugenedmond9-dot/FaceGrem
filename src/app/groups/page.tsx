@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { useLanguage } from "../../components/LanguageProvider";
 
 type GroupRecord = {
   id: string;
@@ -62,228 +63,7 @@ const languageLabels: Record<TranslationLanguage, string> = {
   rw: "Kinyarwanda",
 };
 
-const uiTranslations = {
-  en: {
-    loadingGroups: "Loading groups...",
-    brandTagline: "Groups",
-    navigation: "Navigation",
-    homeFeed: "Home Feed",
-    videos: "Videos",
-    communities: "Communities",
-    groups: "Groups",
-    messages: "Messages",
-    saved: "Saved",
-    profile: "Profile",
-    settings: "Settings",
-    language: "Language",
-    privacy: "Privacy",
-    help: "Help",
-    logout: "Log out",
-    signingOut: "Signing out...",
-    searchGroups: "Search groups, topics, categories...",
-    close: "Close",
-    create: "Create",
-    createGroup: "Create group",
-    createGroupSubtitle: "Start a group for people who share the same interest",
-    groupBuilder: "Group builder",
-    groupName: "Group name",
-    categoryOptional: "Category (optional)",
-    groupDescription: "Describe your group",
-    creating: "Creating...",
-    createGroupButton: "Create group",
-    yourGroupSpace: "Your group space",
-    joined: "Joined",
-    all: "All",
-    posts: "Posts",
-    discoverBelong: "Discover & belong",
-    heroTitle: "Find groups built around shared interests.",
-    heroText: "Join spaces where people learn, share ideas, post updates, and grow together across FaceGrem.",
-    noGroups: "No groups found here yet.",
-    noGroupsSub: "Try a different search or create the first group.",
-    groupFallback: "Group",
-    open: "Open",
-    leave: "Leave",
-    join: "Join",
-    creator: "Group creator",
-    members: "Members",
-    yourGroups: "Your groups",
-    viewAll: "View all",
-    noJoinedGroups: "Join groups to keep your favorite spaces close.",
-    suggestedGroups: "Suggested groups",
-    suggestedGroupsSub: "Groups you may want to join",
-    quickLinks: "Quick links",
-    moveFast: "Move around FaceGrem fast",
-    backToFeed: "Back to feed",
-    openCommunities: "Open communities",
-    openMessages: "Open messages",
-    visitProfile: "Visit profile",
-  },
-  sw: {
-    loadingGroups: "Inapakia makundi...",
-    brandTagline: "Makundi",
-    navigation: "Urambazaji",
-    homeFeed: "Mkondo Mkuu",
-    videos: "Video",
-    communities: "Jumuiya",
-    groups: "Makundi",
-    messages: "Ujumbe",
-    saved: "Vilivyohifadhiwa",
-    profile: "Wasifu",
-    settings: "Mipangilio",
-    language: "Lugha",
-    privacy: "Faragha",
-    help: "Msaada",
-    logout: "Ondoka",
-    signingOut: "Inatoka...",
-    searchGroups: "Tafuta makundi, mada, kategoria...",
-    close: "Funga",
-    create: "Tengeneza",
-    createGroup: "Tengeneza kundi",
-    createGroupSubtitle: "Anzisha kundi kwa watu wenye nia moja",
-    groupBuilder: "Mtengenezaji wa kundi",
-    groupName: "Jina la kundi",
-    categoryOptional: "Kategoria (si lazima)",
-    groupDescription: "Eleza kundi lako",
-    creating: "Inatengeneza...",
-    createGroupButton: "Tengeneza kundi",
-    yourGroupSpace: "Nafasi yako ya makundi",
-    joined: "Umejiunga",
-    all: "Yote",
-    posts: "Machapisho",
-    discoverBelong: "Gundua & jiunge",
-    heroTitle: "Pata makundi yaliyojengwa kwa maslahi yanayofanana.",
-    heroText: "Jiunge na sehemu ambapo watu hujifunza, hushiriki mawazo, huchapisha, na kukua pamoja FaceGrem.",
-    noGroups: "Hakuna makundi hapa bado.",
-    noGroupsSub: "Jaribu utafutaji mwingine au tengeneza kundi la kwanza.",
-    groupFallback: "Kundi",
-    open: "Fungua",
-    leave: "Ondoka",
-    join: "Jiunge",
-    creator: "Mtengenezaji wa kundi",
-    members: "Wanachama",
-    yourGroups: "Makundi yako",
-    viewAll: "Tazama yote",
-    noJoinedGroups: "Jiunge na makundi ili kuweka maeneo unayopenda karibu.",
-    suggestedGroups: "Makundi yanayopendekezwa",
-    suggestedGroupsSub: "Makundi ambayo unaweza kupenda kujiunga",
-    quickLinks: "Viungo vya haraka",
-    moveFast: "Sogea FaceGrem kwa haraka",
-    backToFeed: "Rudi kwenye feed",
-    openCommunities: "Fungua jumuiya",
-    openMessages: "Fungua ujumbe",
-    visitProfile: "Tembelea wasifu",
-  },
-  fr: {
-    loadingGroups: "Chargement des groupes...",
-    brandTagline: "Groupes",
-    navigation: "Navigation",
-    homeFeed: "Fil d’accueil",
-    videos: "Vidéos",
-    communities: "Communautés",
-    groups: "Groupes",
-    messages: "Messages",
-    saved: "Enregistrés",
-    profile: "Profil",
-    settings: "Paramètres",
-    language: "Langue",
-    privacy: "Confidentialité",
-    help: "Aide",
-    logout: "Se déconnecter",
-    signingOut: "Déconnexion...",
-    searchGroups: "Rechercher des groupes, sujets, catégories...",
-    close: "Fermer",
-    create: "Créer",
-    createGroup: "Créer un groupe",
-    createGroupSubtitle: "Lancez un groupe pour des personnes partageant le même intérêt",
-    groupBuilder: "Créateur de groupe",
-    groupName: "Nom du groupe",
-    categoryOptional: "Catégorie (facultatif)",
-    groupDescription: "Décrivez votre groupe",
-    creating: "Création...",
-    createGroupButton: "Créer le groupe",
-    yourGroupSpace: "Votre espace groupes",
-    joined: "Rejoint",
-    all: "Tout",
-    posts: "Publications",
-    discoverBelong: "Découvrir & appartenir",
-    heroTitle: "Trouvez des groupes créés autour d’intérêts communs.",
-    heroText: "Rejoignez des espaces où les gens apprennent, partagent des idées, publient et grandissent ensemble sur FaceGrem.",
-    noGroups: "Aucun groupe trouvé pour le moment.",
-    noGroupsSub: "Essayez une autre recherche ou créez le premier groupe.",
-    groupFallback: "Groupe",
-    open: "Ouvrir",
-    leave: "Quitter",
-    join: "Rejoindre",
-    creator: "Créateur du groupe",
-    members: "Membres",
-    yourGroups: "Vos groupes",
-    viewAll: "Voir tout",
-    noJoinedGroups: "Rejoignez des groupes pour garder vos espaces préférés proches.",
-    suggestedGroups: "Groupes suggérés",
-    suggestedGroupsSub: "Groupes que vous pourriez rejoindre",
-    quickLinks: "Liens rapides",
-    moveFast: "Naviguez rapidement dans FaceGrem",
-    backToFeed: "Retour au fil",
-    openCommunities: "Ouvrir les communautés",
-    openMessages: "Ouvrir les messages",
-    visitProfile: "Voir le profil",
-  },
-  rw: {
-    loadingGroups: "Amatsinda arimo gufunguka...",
-    brandTagline: "Amatsinda",
-    navigation: "Igenzura",
-    homeFeed: "Urupapuro nyamukuru",
-    videos: "Amashusho",
-    communities: "Imiryango",
-    groups: "Amatsinda",
-    messages: "Ubutumwa",
-    saved: "Byabitswe",
-    profile: "Umwirondoro",
-    settings: "Igenamiterere",
-    language: "Ururimi",
-    privacy: "Ubwirinzi bwite",
-    help: "Ubufasha",
-    logout: "Sohoka",
-    signingOut: "Birimo gusohoka...",
-    searchGroups: "Shakisha amatsinda, insanganyamatsiko, ibyiciro...",
-    close: "Funga",
-    create: "Kora",
-    createGroup: "Kora itsinda",
-    createGroupSubtitle: "Tangira itsinda ry’abantu bafite inyungu imwe",
-    groupBuilder: "Umwubatsi w’itsinda",
-    groupName: "Izina ry’itsinda",
-    categoryOptional: "Icyiciro (si ngombwa)",
-    groupDescription: "Sobanura itsinda ryawe",
-    creating: "Birimo gukora...",
-    createGroupButton: "Kora itsinda",
-    yourGroupSpace: "Umwanya wawe w’amatsinda",
-    joined: "Winjiye",
-    all: "Yose",
-    posts: "Inyandiko",
-    discoverBelong: "Menya & winjire",
-    heroTitle: "Menya amatsinda yubakiye ku byo abantu bahuriyeho.",
-    heroText: "Injira ahantu abantu bigira, basangira ibitekerezo, batangaza amakuru, kandi bakurira hamwe kuri FaceGrem.",
-    noGroups: "Nta matsinda abonetse hano ubu.",
-    noGroupsSub: "Gerageza gushakisha ukundi cyangwa ukore itsinda rya mbere.",
-    groupFallback: "Itsinda",
-    open: "Fungura",
-    leave: "Sohoka",
-    join: "Injira",
-    creator: "Uwakoze itsinda",
-    members: "Abanyamuryango",
-    yourGroups: "Amatsinda yawe",
-    viewAll: "Reba yose",
-    noJoinedGroups: "Injira mu matsinda kugira ngo aho ukunda habe hafi.",
-    suggestedGroups: "Amatsinda agusabwa",
-    suggestedGroupsSub: "Amatsinda ushobora kwinjiramo",
-    quickLinks: "Links zihuse",
-    moveFast: "Genda muri FaceGrem vuba",
-    backToFeed: "Subira kuri feed",
-    openCommunities: "Fungura imiryango",
-    openMessages: "Fungura ubutumwa",
-    visitProfile: "Sura umwirondoro",
-  },
-} as const;
+/* Page text now comes from the shared FaceGrem language provider. */
 
 export default function GroupsPage() {
   const router = useRouter();
@@ -306,12 +86,11 @@ export default function GroupsPage() {
   const [groupDescription, setGroupDescription] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [selectedLanguage, setSelectedLanguage] = useState<TranslationLanguage>("en");
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
-  const t = uiTranslations[selectedLanguage];
+  const { language: selectedLanguage, setLanguage: setSelectedLanguage, t } = useLanguage();
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -396,36 +175,6 @@ export default function GroupsPage() {
 
     void loadGroupsPage();
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const storedLanguage = window.localStorage.getItem("facegrem_language");
-    if (
-      storedLanguage === "en" ||
-      storedLanguage === "sw" ||
-      storedLanguage === "fr" ||
-      storedLanguage === "rw"
-    ) {
-      setSelectedLanguage(storedLanguage);
-    }
-
-    const handleStorage = () => {
-      const latest = window.localStorage.getItem("facegrem_language");
-      if (
-        latest === "en" ||
-        latest === "sw" ||
-        latest === "fr" ||
-        latest === "rw"
-      ) {
-        setSelectedLanguage(latest);
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -442,9 +191,6 @@ export default function GroupsPage() {
 
   const handleLanguageChange = (language: TranslationLanguage) => {
     setSelectedLanguage(language);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("facegrem_language", language);
-    }
     setIsLanguageMenuOpen(false);
   };
 
@@ -797,7 +543,7 @@ export default function GroupsPage() {
 
             <div className="mt-8 border-t border-white/10 pt-5">
               <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                More
+                {t.more}
               </p>
 
               <div className="space-y-2">
@@ -1049,7 +795,7 @@ export default function GroupsPage() {
                         </h3>
 
                         <p className="mt-3 text-sm leading-7 text-slate-300">
-                          {group.description || "No description yet."}
+                          {group.description || t.noBioYet}
                         </p>
                       </div>
 

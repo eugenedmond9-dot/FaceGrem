@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { useLanguage } from "../../components/LanguageProvider";
 
 type ProfileRecord = {
   id: string;
@@ -119,296 +120,7 @@ const softCard =
   "border border-white/[0.05] bg-white/[0.02] backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]";
 
 
-const uiTranslations = {
-  en: {
-    loadingFeed: "Loading FaceGrem feed...",
-    brandTagline: "Your social world, live now",
-    navigation: "Navigation",
-    homeFeed: "Home Feed",
-    videos: "Videos",
-    communities: "Communities",
-    groups: "Groups",
-    messages: "Messages",
-    saved: "Saved",
-    profile: "Profile",
-    settings: "Settings",
-    language: "Language",
-    privacy: "Privacy",
-    help: "Help",
-    logout: "Log out",
-    yourCommunities: "Your communities",
-    viewAll: "View all",
-    joinCommunitiesText: "Join communities to keep your favorite spaces close.",
-    communityFallback: "Community",
-    quickDetails: "Tap to view quick details",
-    savedStat: "Saved",
-    alertsStat: "Alerts",
-    groupsStat: "Groups",
-    openProfile: "Open Profile",
-    savedPosts: "Saved Posts",
-    welcomeBack: "Welcome back",
-    goodToSeeYou: "Good to see you",
-    discoverText: "Discover what people are sharing right now across FaceGrem — moments, ideas, videos, conversations, and communities.",
-    stories: "Stories",
-    storiesSubtitle: "Quick moments from people around you",
-    createStory: "Create story",
-    uploading: "Uploading...",
-    shareQuickMoment: "Share a quick moment",
-    yourStory: "Your story",
-    createPost: "Create post",
-    createPostSubtitle: "Share a thought, photo, story, or video with FaceGrem",
-    publicPost: "Public post",
-    liveComposer: "Live composer",
-    postingToEveryone: "Posting to everyone",
-    whatsOnMind: "What’s on your mind today?",
-    storyImage: "Story image",
-    photoUpload: "Photo upload",
-    useCreateStory: "Use the Create story button above to publish a real story",
-    addVisual: "Add a strong visual to make your post stand out",
-    uploadingStory: "Uploading story...",
-    chooseStoryImage: "Choose story image",
-    liveStreamLink: "Live stream link",
-    videoLink: "Video link",
-    pasteVideoHelp: "Paste a YouTube link or direct video URL",
-    pasteLivePlaceholder: "Paste a live stream or video URL",
-    pasteVideoPlaceholder: "Paste a YouTube or video URL",
-    textBadge: "Text",
-    imageAttached: "Image attached",
-    videoLinked: "Video linked",
-    clear: "Clear",
-    posting: "Posting...",
-    post: "Post",
-    noPosts: "No posts found here yet.",
-    tryAnotherTab: "Try another feed tab or create the first post.",
-    public: "Public",
-    videoPost: "Video post",
-    photoPost: "Photo post",
-    delete: "Delete",
-    viewDiscussion: "View discussion",
-    like: "Like",
-    liked: "Liked",
-    translateShowOriginal: "Show original",
-    translating: "Translating...",
-    translatedTo: "Translated to",
-    searchPlaceholder: "Search posts, creators, communities, topics...",
-  },
-  sw: {
-    loadingFeed: "Inapakia FaceGrem...",
-    brandTagline: "Dunia yako ya kijamii, moja kwa moja sasa",
-    navigation: "Urambazaji",
-    homeFeed: "Mkondo Mkuu",
-    videos: "Video",
-    communities: "Jumuiya",
-    groups: "Makundi",
-    messages: "Ujumbe",
-    saved: "Vilivyohifadhiwa",
-    profile: "Wasifu",
-    settings: "Mipangilio",
-    language: "Lugha",
-    privacy: "Faragha",
-    help: "Msaada",
-    logout: "Toka",
-    yourCommunities: "Jumuiya zako",
-    viewAll: "Tazama zote",
-    joinCommunitiesText: "Jiunge na jumuiya ili kuyaweka maeneo unayopenda karibu.",
-    communityFallback: "Jumuiya",
-    quickDetails: "Gusa kuona maelezo ya haraka",
-    savedStat: "Hifadhi",
-    alertsStat: "Arifa",
-    groupsStat: "Makundi",
-    openProfile: "Fungua Wasifu",
-    savedPosts: "Machapisho Yaliyohifadhiwa",
-    welcomeBack: "Karibu tena",
-    goodToSeeYou: "Vizuri kukuona",
-    discoverText: "Gundua watu wanashiriki nini sasa hivi kwenye FaceGrem — matukio, mawazo, video, mazungumzo, na jumuiya.",
-    stories: "Hadithi",
-    storiesSubtitle: "Matukio ya haraka kutoka kwa watu walio karibu nawe",
-    createStory: "Tengeneza hadithi",
-    uploading: "Inapakia...",
-    shareQuickMoment: "Shiriki tukio la haraka",
-    yourStory: "Hadithi yako",
-    createPost: "Tengeneza chapisho",
-    createPostSubtitle: "Shiriki wazo, picha, hadithi, au video kwenye FaceGrem",
-    publicPost: "Chapisho la umma",
-    liveComposer: "Muundaji wa moja kwa moja",
-    postingToEveryone: "Unachapisha kwa kila mtu",
-    whatsOnMind: "Unafikiria nini leo?",
-    storyImage: "Picha ya hadithi",
-    photoUpload: "Pakia picha",
-    useCreateStory: "Tumia kitufe cya Tengeneza hadithi hejuru ushyireho hadithi nyayo",
-    addVisual: "Ongeza taswira nziza kugira ngo chapisho ryawe rigaragare",
-    uploadingStory: "Inapakia hadithi...",
-    chooseStoryImage: "Chagua picha ya hadithi",
-    liveStreamLink: "Kiungo cya mubashara",
-    videoLink: "Kiungo cya video",
-    pasteVideoHelp: "Bandika kiungo cya YouTube cyangwa video ya moja kwa moja",
-    pasteLivePlaceholder: "Bandika kiungo cya mubashara cyangwa video",
-    pasteVideoPlaceholder: "Bandika kiungo cya YouTube cyangwa video",
-    textBadge: "Maandishi",
-    imageAttached: "Picha imeambatishwa",
-    videoLinked: "Video imeunganishwa",
-    clear: "Futa",
-    posting: "Inachapisha...",
-    post: "Chapisha",
-    noPosts: "Hakuna machapisho hapa bado.",
-    tryAnotherTab: "Jaribu kichupo kingine au tengeneza chapisho la kwanza.",
-    public: "Umma",
-    videoPost: "Chapisho la video",
-    photoPost: "Chapisho la picha",
-    delete: "Futa",
-    viewDiscussion: "Tazama mjadala",
-    like: "Penda",
-    liked: "Umeipenda",
-    translateShowOriginal: "Onyesha asili",
-    translating: "Inatafsiri...",
-    translatedTo: "Imetafsiriwa kwa",
-    searchPlaceholder: "Tafuta machapisho, wabunifu, jumuiya, mada...",
-  },
-  fr: {
-    loadingFeed: "Chargement de FaceGrem...",
-    brandTagline: "Votre univers social, en direct",
-    navigation: "Navigation",
-    homeFeed: "Fil d’accueil",
-    videos: "Vidéos",
-    communities: "Communautés",
-    groups: "Groupes",
-    messages: "Messages",
-    saved: "Enregistrés",
-    profile: "Profil",
-    settings: "Paramètres",
-    language: "Langue",
-    privacy: "Confidentialité",
-    help: "Aide",
-    logout: "Se déconnecter",
-    yourCommunities: "Vos communautés",
-    viewAll: "Voir tout",
-    joinCommunitiesText: "Rejoignez des communautés pour garder vos espaces préférés proches.",
-    communityFallback: "Communauté",
-    quickDetails: "Touchez pour voir des détails rapides",
-    savedStat: "Enregistré",
-    alertsStat: "Alertes",
-    groupsStat: "Groupes",
-    openProfile: "Ouvrir le profil",
-    savedPosts: "Publications enregistrées",
-    welcomeBack: "Bon retour",
-    goodToSeeYou: "Heureux de vous revoir",
-    discoverText: "Découvrez ce que les gens partagent en ce moment sur FaceGrem — moments, idées, vidéos, conversations et communautés.",
-    stories: "Stories",
-    storiesSubtitle: "Moments rapides des personnes autour de vous",
-    createStory: "Créer une story",
-    uploading: "Téléchargement...",
-    shareQuickMoment: "Partagez un moment rapide",
-    yourStory: "Votre story",
-    createPost: "Créer une publication",
-    createPostSubtitle: "Partagez une pensée, une photo, une story ou une vidéo sur FaceGrem",
-    publicPost: "Publication publique",
-    liveComposer: "Éditeur en direct",
-    postingToEveryone: "Publication pour tout le monde",
-    whatsOnMind: "À quoi pensez-vous aujourd’hui ?",
-    storyImage: "Image de story",
-    photoUpload: "Téléverser une photo",
-    useCreateStory: "Utilisez le bouton Créer une story ci-dessus pour publier une vraie story",
-    addVisual: "Ajoutez un visuel fort pour faire ressortir votre publication",
-    uploadingStory: "Téléchargement de la story...",
-    chooseStoryImage: "Choisir l’image de la story",
-    liveStreamLink: "Lien de diffusion en direct",
-    videoLink: "Lien vidéo",
-    pasteVideoHelp: "Collez un lien YouTube ou une URL vidéo directe",
-    pasteLivePlaceholder: "Collez un lien live ou vidéo",
-    pasteVideoPlaceholder: "Collez un lien YouTube ou vidéo",
-    textBadge: "Texte",
-    imageAttached: "Image jointe",
-    videoLinked: "Vidéo liée",
-    clear: "Effacer",
-    posting: "Publication...",
-    post: "Publier",
-    noPosts: "Aucune publication ici pour le moment.",
-    tryAnotherTab: "Essayez un autre onglet ou créez la première publication.",
-    public: "Public",
-    videoPost: "Publication vidéo",
-    photoPost: "Publication photo",
-    delete: "Supprimer",
-    viewDiscussion: "Voir la discussion",
-    like: "J’aime",
-    liked: "Aimé",
-    translateShowOriginal: "Afficher l’original",
-    translating: "Traduction...",
-    translatedTo: "Traduit en",
-    searchPlaceholder: "Rechercher des publications, créateurs, communautés, sujets...",
-  },
-  rw: {
-    loadingFeed: "FaceGrem iri gufungura...",
-    brandTagline: "Isi yawe y’imbuga nkoranyambaga, aka kanya",
-    navigation: "Igenzura",
-    homeFeed: "Urupapuro nyamukuru",
-    videos: "Amashusho",
-    communities: "Imiryango",
-    groups: "Amatsinda",
-    messages: "Ubutumwa",
-    saved: "Byabitswe",
-    profile: "Umwirondoro",
-    settings: "Igenamiterere",
-    language: "Ururimi",
-    privacy: "Ubwirinzi bwite",
-    help: "Ubufasha",
-    logout: "Sohoka",
-    yourCommunities: "Imiryango yawe",
-    viewAll: "Reba byose",
-    joinCommunitiesText: "Injira mu miryango kugira ngo ahantu ukunda habe hafi yawe.",
-    communityFallback: "Umuryango",
-    quickDetails: "Kanda urebe ibisobanuro byihuse",
-    savedStat: "Byabitswe",
-    alertsStat: "Amamenyesha",
-    groupsStat: "Amatsinda",
-    openProfile: "Fungura umwirondoro",
-    savedPosts: "Ibyanditswe byabitswe",
-    welcomeBack: "Murakaza neza nanone",
-    goodToSeeYou: "Byiza kongera kukubona",
-    discoverText: "Reba ibyo abantu basangiza ubu kuri FaceGrem — ibihe, ibitekerezo, amashusho, ibiganiro n’imiryango.",
-    stories: "Inkuru",
-    storiesSubtitle: "Ibihe byihuse by’abantu bakwegereye",
-    createStory: "Kora inkuru",
-    uploading: "Birimo koherezwa...",
-    shareQuickMoment: "Sangiza akanya kihuse",
-    yourStory: "Inkuru yawe",
-    createPost: "Kora inyandiko",
-    createPostSubtitle: "Sangiza igitekerezo, ifoto, inkuru cyangwa amashusho kuri FaceGrem",
-    publicPost: "Inyandiko ya bose",
-    liveComposer: "Gukora aka kanya",
-    postingToEveryone: "Ubiherereza bose",
-    whatsOnMind: "Uri gutekereza iki uyu munsi?",
-    storyImage: "Ifoto y’inkuru",
-    photoUpload: "Ohereza ifoto",
-    useCreateStory: "Koresha buto ya Kora inkuru iri hejuru ushyireho inkuru nyayo",
-    addVisual: "Ongeraho ishusho nziza kugira ngo inyandiko yawe igaragare",
-    uploadingStory: "Inkuru irimo koherezwa...",
-    chooseStoryImage: "Hitamo ifoto y’inkuru",
-    liveStreamLink: "Ihuza rya live",
-    videoLink: "Ihuza ry’amashusho",
-    pasteVideoHelp: "Shyiramo link ya YouTube cyangwa video y’umwimerere",
-    pasteLivePlaceholder: "Shyiramo link ya live cyangwa video",
-    pasteVideoPlaceholder: "Shyiramo link ya YouTube cyangwa video",
-    textBadge: "Inyandiko",
-    imageAttached: "Ifoto yometseho",
-    videoLinked: "Video yometseho",
-    clear: "Siba",
-    posting: "Birimo gutangazwa...",
-    post: "Tangaza",
-    noPosts: "Nta nyandiko zirimo hano ubu.",
-    tryAnotherTab: "Gerageza indi tab cyangwa ukore inyandiko ya mbere.",
-    public: "Rubanda",
-    videoPost: "Inyandiko ya video",
-    photoPost: "Inyandiko y’ifoto",
-    delete: "Siba",
-    viewDiscussion: "Reba ikiganiro",
-    like: "Kunda",
-    liked: "Wakunze",
-    translateShowOriginal: "Erekana umwimerere",
-    translating: "Birimo guhindurwa...",
-    translatedTo: "Byahinduwe mu",
-    searchPlaceholder: "Shakisha inyandiko, abahanzi, imiryango, insanganyamatsiko...",
-  },
-} as const;
+/* Page text now comes from the shared FaceGrem language provider. */
 
 const quickActionLabels: Record<TranslationLanguage, Record<typeof quickActions[number], string>> = {
   en: { Photo: "Photo", Video: "Video", Live: "Live", Story: "Story" },
@@ -445,7 +157,6 @@ export default function FeedPage() {
   const [follows, setFollows] = useState<FollowRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedLanguage, setSelectedLanguage] = useState<TranslationLanguage>("en");
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [translatedPosts, setTranslatedPosts] = useState<Record<string, string>>({});
   const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
@@ -479,7 +190,7 @@ export default function FeedPage() {
     "online" | "suggestions" | "your_friends"
   >("online");
 
-  const t = uiTranslations[selectedLanguage];
+  const { language: selectedLanguage, setLanguage: setSelectedLanguage, t } = useLanguage();
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -614,9 +325,6 @@ export default function FeedPage() {
 
   const handleLanguageChange = (language: TranslationLanguage) => {
     setSelectedLanguage(language);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("facegrem_language", language);
-    }
     setIsLanguageMenuOpen(false);
   };
 
@@ -727,36 +435,6 @@ export default function FeedPage() {
 
     void loadFeed();
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const storedLanguage = window.localStorage.getItem("facegrem_language");
-    if (
-      storedLanguage === "en" ||
-      storedLanguage === "sw" ||
-      storedLanguage === "fr" ||
-      storedLanguage === "rw"
-    ) {
-      setSelectedLanguage(storedLanguage);
-    }
-
-    const handleStorage = () => {
-      const latest = window.localStorage.getItem("facegrem_language");
-      if (
-        latest === "en" ||
-        latest === "sw" ||
-        latest === "fr" ||
-        latest === "rw"
-      ) {
-        setSelectedLanguage(latest);
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
 
   useEffect(() => {
     if (!userId) return;

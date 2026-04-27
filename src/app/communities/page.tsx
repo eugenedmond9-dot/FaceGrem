@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { useLanguage } from "../../components/LanguageProvider";
 
 type CommunityRecord = {
   id: string;
@@ -63,104 +64,7 @@ const languageLabels: Record<TranslationLanguage, string> = {
   rw: "Kinyarwanda",
 };
 
-const uiTranslations = {
-  en: {
-    navigation: "Navigation",
-    homeFeed: "Home Feed",
-    videos: "Videos",
-    communities: "Communities",
-    groups: "Groups",
-    messages: "Messages",
-    saved: "Saved",
-    profile: "Profile",
-    settings: "Settings",
-    language: "Language",
-    privacy: "Privacy",
-    help: "Help",
-    logout: "Log out",
-    signingOut: "Signing out...",
-    close: "Close",
-    create: "Create",
-    searchCommunities: "Search communities, topics, categories...",
-    searchCommunityPosts: "Search posts in this community...",
-    communitySpace: "Community space",
-    communitiesTitle: "Communities",
-    join: "Join",
-    leave: "Leave",
-  },
-  sw: {
-    navigation: "Urambazaji",
-    homeFeed: "Mkondo Mkuu",
-    videos: "Video",
-    communities: "Jumuiya",
-    groups: "Makundi",
-    messages: "Ujumbe",
-    saved: "Vilivyohifadhiwa",
-    profile: "Wasifu",
-    settings: "Mipangilio",
-    language: "Lugha",
-    privacy: "Faragha",
-    help: "Msaada",
-    logout: "Ondoka",
-    signingOut: "Inatoka...",
-    close: "Funga",
-    create: "Tengeneza",
-    searchCommunities: "Tafuta jumuiya, mada, makundi...",
-    searchCommunityPosts: "Tafuta machapisho ndani ya jumuiya hii...",
-    communitySpace: "Nafasi ya jumuiya",
-    communitiesTitle: "Jumuiya",
-    join: "Jiunge",
-    leave: "Ondoka",
-  },
-  fr: {
-    navigation: "Navigation",
-    homeFeed: "Fil d’accueil",
-    videos: "Vidéos",
-    communities: "Communautés",
-    groups: "Groupes",
-    messages: "Messages",
-    saved: "Enregistrés",
-    profile: "Profil",
-    settings: "Paramètres",
-    language: "Langue",
-    privacy: "Confidentialité",
-    help: "Aide",
-    logout: "Se déconnecter",
-    signingOut: "Déconnexion...",
-    close: "Fermer",
-    create: "Créer",
-    searchCommunities: "Rechercher des communautés, sujets, catégories...",
-    searchCommunityPosts: "Rechercher des publications dans cette communauté...",
-    communitySpace: "Espace communauté",
-    communitiesTitle: "Communautés",
-    join: "Rejoindre",
-    leave: "Quitter",
-  },
-  rw: {
-    navigation: "Igenzura",
-    homeFeed: "Urupapuro nyamukuru",
-    videos: "Amashusho",
-    communities: "Imiryango",
-    groups: "Amatsinda",
-    messages: "Ubutumwa",
-    saved: "Byabitswe",
-    profile: "Umwirondoro",
-    settings: "Igenamiterere",
-    language: "Ururimi",
-    privacy: "Ubwirinzi bwite",
-    help: "Ubufasha",
-    logout: "Sohoka",
-    signingOut: "Birimo gusohoka...",
-    close: "Funga",
-    create: "Kora",
-    searchCommunities: "Shakisha imiryango, insanganyamatsiko, ibyiciro...",
-    searchCommunityPosts: "Shakisha inyandiko muri uyu muryango...",
-    communitySpace: "Umwanya w’umuryango",
-    communitiesTitle: "Imiryango",
-    join: "Injira",
-    leave: "Sohoka",
-  },
-} as const;
+/* Page text now comes from the shared FaceGrem language provider. */
 
 
 export default function CommunitiesPage() {
@@ -176,7 +80,6 @@ export default function CommunitiesPage() {
   const [communityPosts, setCommunityPosts] = useState<PostRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
-  const [selectedLanguage, setSelectedLanguage] = useState<TranslationLanguage>("en");
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -188,7 +91,7 @@ export default function CommunitiesPage() {
   const [communityDescription, setCommunityDescription] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const t = uiTranslations[selectedLanguage];
+  const { language: selectedLanguage, setLanguage: setSelectedLanguage, t } = useLanguage();
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -273,36 +176,6 @@ export default function CommunitiesPage() {
 
     void loadCommunitiesPage();
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const storedLanguage = window.localStorage.getItem("facegrem_language");
-    if (
-      storedLanguage === "en" ||
-      storedLanguage === "sw" ||
-      storedLanguage === "fr" ||
-      storedLanguage === "rw"
-    ) {
-      setSelectedLanguage(storedLanguage);
-    }
-
-    const handleStorage = () => {
-      const latest = window.localStorage.getItem("facegrem_language");
-      if (
-        latest === "en" ||
-        latest === "sw" ||
-        latest === "fr" ||
-        latest === "rw"
-      ) {
-        setSelectedLanguage(latest);
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -319,9 +192,6 @@ export default function CommunitiesPage() {
 
   const handleLanguageChange = (language: TranslationLanguage) => {
     setSelectedLanguage(language);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("facegrem_language", language);
-    }
     setIsLanguageMenuOpen(false);
   };
 
@@ -528,7 +398,7 @@ export default function CommunitiesPage() {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
-                <p className="text-xs text-slate-400">{t.communitiesTitle}</p>
+                <p className="text-xs text-slate-400">{t.communities}</p>
               </div>
             </Link>
           </div>
@@ -679,7 +549,7 @@ export default function CommunitiesPage() {
 
             <div className="mt-8 border-t border-white/10 pt-5">
               <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                More
+                {t.more}
               </p>
 
               <div className="space-y-2">
@@ -749,21 +619,21 @@ export default function CommunitiesPage() {
                 />
                 <div className="min-w-0">
                   <p className="font-semibold text-white truncate">{userName}</p>
-                  <p className="text-sm truncate text-slate-400">Your community space</p>
+                  <p className="text-sm truncate text-slate-400">{t.community}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 mt-4">
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Joined</p>
+                  <p className="text-[11px] text-slate-400">{t.joined}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{myCommunityIds.length}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">All</p>
+                  <p className="text-[11px] text-slate-400">{t.all}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{communities.length}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Posts</p>
+                  <p className="text-[11px] text-slate-400">{t.posts}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{communityPosts.length}</p>
                 </div>
               </div>
@@ -771,7 +641,7 @@ export default function CommunitiesPage() {
 
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-cyan-200">Your communities</p>
+                <p className="text-sm font-semibold text-cyan-200">{t.yourCommunities}</p>
                 <Link
                   href="/communities"
                   className="text-xs transition text-cyan-300 hover:text-cyan-200"
@@ -794,7 +664,7 @@ export default function CommunitiesPage() {
                     >
                       <p className="font-medium text-white">{community.name}</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {community.category || "Community"}
+                        {community.category || t.communityFallback}
                       </p>
                     </Link>
                   ))
@@ -820,7 +690,7 @@ export default function CommunitiesPage() {
 
               <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Joined</p>
+                  <p className="text-xs text-slate-400">{t.joined}</p>
                   <p className="mt-2 text-2xl font-bold text-white">{myCommunityIds.length}</p>
                 </div>
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
@@ -828,7 +698,7 @@ export default function CommunitiesPage() {
                   <p className="mt-2 text-2xl font-bold text-white">{communities.length}</p>
                 </div>
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Posts</p>
+                  <p className="text-xs text-slate-400">{t.posts}</p>
                   <p className="mt-2 text-2xl font-bold text-white">{communityPosts.length}</p>
                 </div>
               </div>
@@ -921,7 +791,7 @@ export default function CommunitiesPage() {
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
-                              {community.category || "Community"}
+                              {community.category || t.communityFallback}
                             </span>
                             <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
                               {joined ? "Joined" : "Open"}
@@ -933,7 +803,7 @@ export default function CommunitiesPage() {
                           </h3>
 
                           <p className="mt-3 text-sm leading-7 text-slate-300">
-                            {community.description || "No description yet."}
+                            {community.description || t.noBioYet}
                           </p>
                         </div>
                       </div>
@@ -946,17 +816,17 @@ export default function CommunitiesPage() {
                         />
                         <div className="min-w-0">
                           <p className="font-medium text-white truncate">{creatorName}</p>
-                          <p className="text-xs text-slate-400">Community creator</p>
+                          <p className="text-xs text-slate-400">{t.creator}</p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 mt-5">
                         <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                          <p className="text-xs text-slate-400">Members</p>
+                          <p className="text-xs text-slate-400">{t.members}</p>
                           <p className="mt-2 text-xl font-bold text-white">{memberCount}</p>
                         </div>
                         <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                          <p className="text-xs text-slate-400">Posts</p>
+                          <p className="text-xs text-slate-400">{t.posts}</p>
                           <p className="mt-2 text-xl font-bold text-white">{postCount}</p>
                         </div>
                       </div>
@@ -1020,7 +890,7 @@ export default function CommunitiesPage() {
                     >
                       <p className="font-medium text-white">{community.name}</p>
                       <p className="mt-1 text-xs text-slate-400">
-                        {community.category || "Community"} • {memberCount} members
+                        {community.category || t.communityFallback} • {memberCount} members
                       </p>
                     </Link>
                   );

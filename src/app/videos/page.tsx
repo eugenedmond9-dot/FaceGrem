@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { useLanguage } from "../../components/LanguageProvider";
 
 type VideoRecord = {
   id: string;
@@ -55,240 +56,7 @@ const videoTabs = [
   "Business",
 ] as const;
 
-const uiTranslations = {
-  en: {
-    loadingVideos: "Loading videos...",
-    brandTagline: "Video world",
-    searchVideos: "Search videos, creators, categories...",
-    searchMobile: "Search videos...",
-    upload: "Upload",
-    close: "Close",
-    navigation: "Navigation",
-    homeFeed: "Home Feed",
-    videos: "Videos",
-    videoHub: "Video hub",
-    communities: "Communities",
-    groups: "Groups",
-    messages: "Messages",
-    saved: "Saved",
-    profile: "Profile",
-    settings: "Settings",
-    language: "Language",
-    privacy: "Privacy",
-    help: "Help",
-    logout: "Log out",
-    signingOut: "Signing out...",
-    creatorDashboard: "Creator dashboard",
-    tabs: "Tabs",
-    focus: "Focus",
-    trendingCreators: "Trending creators",
-    creatorsEmpty: "More creators will appear here as your community grows.",
-    creator: "creator",
-    watchNow: "Watch now",
-    heroTitle: "Discover videos that match your world.",
-    heroText: "Explore creators, faith content, music, business clips, and trending stories from across FaceGrem.",
-    creators: "Creators",
-    tab: "Tab",
-    uploadVideo: "Upload video",
-    uploadSubtitle: "Publish a new video link to FaceGrem",
-    creatorTools: "Creator tools",
-    videoTitle: "Video title",
-    categoryOptional: "Category (optional)",
-    videoDescription: "Video description",
-    videoUrlPlaceholder: "YouTube or video URL",
-    thumbnailPlaceholder: "Thumbnail URL (optional)",
-    uploading: "Uploading...",
-    publishVideo: "Publish video",
-    noVideos: "No videos found here yet.",
-    noVideosSub: "Try another tab or upload the first video.",
-    videoFallback: "Video",
-    views: "views",
-    viewCreator: "View creator",
-    creatorSpotlight: "Creator spotlight",
-    discoverPeople: "Discover people to follow",
-    noCreators: "No creators to show yet.",
-    quickLinks: "Quick links",
-    moveFast: "Move around FaceGrem fast",
-    backToFeed: "Back to feed",
-    exploreCommunities: "Explore communities",
-    openMessages: "Open messages",
-    visitProfile: "Visit profile",
-  },
-  sw: {
-    loadingVideos: "Inapakia video...",
-    brandTagline: "Dunia ya video",
-    searchVideos: "Tafuta video, wabunifu, makundi...",
-    searchMobile: "Tafuta video...",
-    upload: "Pakia",
-    close: "Funga",
-    navigation: "Urambazaji",
-    homeFeed: "Mkondo Mkuu",
-    videos: "Video",
-    videoHub: "Kituo cha video",
-    communities: "Jumuiya",
-    groups: "Makundi",
-    messages: "Ujumbe",
-    saved: "Vilivyohifadhiwa",
-    profile: "Wasifu",
-    settings: "Mipangilio",
-    language: "Lugha",
-    privacy: "Faragha",
-    help: "Msaada",
-    logout: "Ondoka",
-    signingOut: "Inatoka...",
-    creatorDashboard: "Dashibodi ya mbunifu",
-    tabs: "Vichupo",
-    focus: "Umakini",
-    trendingCreators: "Wabunifu maarufu",
-    creatorsEmpty: "Wabunifu zaidi wataonekana hapa jumuiya yako ikikua.",
-    creator: "mbunifu",
-    watchNow: "Tazama sasa",
-    heroTitle: "Gundua video zinazolingana na dunia yako.",
-    heroText: "Chunguza wabunifu, maudhui ya imani, muziki, biashara, na hadithi zinazovuma FaceGrem.",
-    creators: "Wabunifu",
-    tab: "Kichupo",
-    uploadVideo: "Pakia video",
-    uploadSubtitle: "Chapisha kiungo kipya cha video kwenye FaceGrem",
-    creatorTools: "Zana za mbunifu",
-    videoTitle: "Kichwa cha video",
-    categoryOptional: "Kategoria (si lazima)",
-    videoDescription: "Maelezo ya video",
-    videoUrlPlaceholder: "Kiungo cha YouTube au video",
-    thumbnailPlaceholder: "Kiungo cha picha ndogo (si lazima)",
-    uploading: "Inapakia...",
-    publishVideo: "Chapisha video",
-    noVideos: "Hakuna video hapa bado.",
-    noVideosSub: "Jaribu kichupo kingine au pakia video ya kwanza.",
-    videoFallback: "Video",
-    views: "watazamaji",
-    viewCreator: "Tazama mbunifu",
-    creatorSpotlight: "Mbunifu maalum",
-    discoverPeople: "Gundua watu wa kufuata",
-    noCreators: "Hakuna wabunifu wa kuonyesha bado.",
-    quickLinks: "Viungo vya haraka",
-    moveFast: "Sogea FaceGrem kwa haraka",
-    backToFeed: "Rudi kwenye feed",
-    exploreCommunities: "Chunguza jumuiya",
-    openMessages: "Fungua ujumbe",
-    visitProfile: "Tembelea wasifu",
-  },
-  fr: {
-    loadingVideos: "Chargement des vidéos...",
-    brandTagline: "Univers vidéo",
-    searchVideos: "Rechercher des vidéos, créateurs, catégories...",
-    searchMobile: "Rechercher des vidéos...",
-    upload: "Téléverser",
-    close: "Fermer",
-    navigation: "Navigation",
-    homeFeed: "Fil d’accueil",
-    videos: "Vidéos",
-    videoHub: "Hub vidéo",
-    communities: "Communautés",
-    groups: "Groupes",
-    messages: "Messages",
-    saved: "Enregistrés",
-    profile: "Profil",
-    settings: "Paramètres",
-    language: "Langue",
-    privacy: "Confidentialité",
-    help: "Aide",
-    logout: "Se déconnecter",
-    signingOut: "Déconnexion...",
-    creatorDashboard: "Tableau créateur",
-    tabs: "Onglets",
-    focus: "Focus",
-    trendingCreators: "Créateurs tendance",
-    creatorsEmpty: "Plus de créateurs apparaîtront ici quand votre communauté grandira.",
-    creator: "créateur",
-    watchNow: "Regarder maintenant",
-    heroTitle: "Découvrez les vidéos qui correspondent à votre univers.",
-    heroText: "Explorez les créateurs, la foi, la musique, les clips business et les tendances sur FaceGrem.",
-    creators: "Créateurs",
-    tab: "Onglet",
-    uploadVideo: "Téléverser une vidéo",
-    uploadSubtitle: "Publiez un nouveau lien vidéo sur FaceGrem",
-    creatorTools: "Outils créateur",
-    videoTitle: "Titre de la vidéo",
-    categoryOptional: "Catégorie (facultatif)",
-    videoDescription: "Description de la vidéo",
-    videoUrlPlaceholder: "URL YouTube ou vidéo",
-    thumbnailPlaceholder: "URL miniature (facultatif)",
-    uploading: "Téléversement...",
-    publishVideo: "Publier la vidéo",
-    noVideos: "Aucune vidéo trouvée pour le moment.",
-    noVideosSub: "Essayez un autre onglet ou téléversez la première vidéo.",
-    videoFallback: "Vidéo",
-    views: "vues",
-    viewCreator: "Voir le créateur",
-    creatorSpotlight: "Créateur à découvrir",
-    discoverPeople: "Découvrez des personnes à suivre",
-    noCreators: "Aucun créateur à afficher pour le moment.",
-    quickLinks: "Liens rapides",
-    moveFast: "Naviguez rapidement dans FaceGrem",
-    backToFeed: "Retour au fil",
-    exploreCommunities: "Explorer les communautés",
-    openMessages: "Ouvrir les messages",
-    visitProfile: "Voir le profil",
-  },
-  rw: {
-    loadingVideos: "Amashusho arimo gufunguka...",
-    brandTagline: "Isi y’amashusho",
-    searchVideos: "Shakisha amashusho, abahanzi, ibyiciro...",
-    searchMobile: "Shakisha amashusho...",
-    upload: "Ohereza",
-    close: "Funga",
-    navigation: "Igenzura",
-    homeFeed: "Urupapuro nyamukuru",
-    videos: "Amashusho",
-    videoHub: "Ahari amashusho",
-    communities: "Imiryango",
-    groups: "Amatsinda",
-    messages: "Ubutumwa",
-    saved: "Byabitswe",
-    profile: "Umwirondoro",
-    settings: "Igenamiterere",
-    language: "Ururimi",
-    privacy: "Ubwirinzi bwite",
-    help: "Ubufasha",
-    logout: "Sohoka",
-    signingOut: "Birimo gusohoka...",
-    creatorDashboard: "Dashibodi y’umuhanzi",
-    tabs: "Amatab",
-    focus: "Icyerekezo",
-    trendingCreators: "Abahanzi bari kuvugwa",
-    creatorsEmpty: "Abahanzi benshi bazagaragara hano uko umuryango wawe ukura.",
-    creator: "umuhanzi",
-    watchNow: "Reba ubu",
-    heroTitle: "Menya amashusho ahuye n’isi yawe.",
-    heroText: "Shakisha abahanzi, ukwizera, umuziki, ubucuruzi n’ibiri kuvugwa kuri FaceGrem.",
-    creators: "Abahanzi",
-    tab: "Tab",
-    uploadVideo: "Ohereza amashusho",
-    uploadSubtitle: "Tangaza link nshya y’amashusho kuri FaceGrem",
-    creatorTools: "Ibikoresho by’umuhanzi",
-    videoTitle: "Umutwe w’amashusho",
-    categoryOptional: "Icyiciro (si ngombwa)",
-    videoDescription: "Ibisobanuro by’amashusho",
-    videoUrlPlaceholder: "Link ya YouTube cyangwa video",
-    thumbnailPlaceholder: "Link y’ifoto nto (si ngombwa)",
-    uploading: "Birimo koherezwa...",
-    publishVideo: "Tangaza amashusho",
-    noVideos: "Nta mashusho abonetse hano ubu.",
-    noVideosSub: "Gerageza indi tab cyangwa wohereze video ya mbere.",
-    videoFallback: "Amashusho",
-    views: "abarebye",
-    viewCreator: "Reba umuhanzi",
-    creatorSpotlight: "Umuhanzi wihariye",
-    discoverPeople: "Menya abantu wakurikira",
-    noCreators: "Nta bahanzi bo kwerekana ubu.",
-    quickLinks: "Links zihuse",
-    moveFast: "Genda muri FaceGrem vuba",
-    backToFeed: "Subira kuri feed",
-    exploreCommunities: "Shakisha imiryango",
-    openMessages: "Fungura ubutumwa",
-    visitProfile: "Sura umwirondoro",
-  },
-} as const;
+/* Page text now comes from the shared FaceGrem language provider. */
 
 const videoTabLabels: Record<TranslationLanguage, Record<typeof videoTabs[number], string>> = {
   en: { "For You": "For You", Following: "Following", Creators: "Creators", Music: "Music", Faith: "Faith", Business: "Business" },
@@ -308,7 +76,6 @@ export default function VideosPage() {
   const [videos, setVideos] = useState<VideoRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
-  const [selectedLanguage, setSelectedLanguage] = useState<TranslationLanguage>("en");
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -326,7 +93,7 @@ export default function VideosPage() {
   const [videoUrl, setVideoUrl] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
 
-  const t = uiTranslations[selectedLanguage];
+  const { language: selectedLanguage, setLanguage: setSelectedLanguage, t } = useLanguage();
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -423,36 +190,6 @@ export default function VideosPage() {
 
     void loadVideosPage();
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const storedLanguage = window.localStorage.getItem("facegrem_language");
-    if (
-      storedLanguage === "en" ||
-      storedLanguage === "sw" ||
-      storedLanguage === "fr" ||
-      storedLanguage === "rw"
-    ) {
-      setSelectedLanguage(storedLanguage);
-    }
-
-    const handleStorage = () => {
-      const latest = window.localStorage.getItem("facegrem_language");
-      if (
-        latest === "en" ||
-        latest === "sw" ||
-        latest === "fr" ||
-        latest === "rw"
-      ) {
-        setSelectedLanguage(latest);
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -469,9 +206,6 @@ export default function VideosPage() {
 
   const handleLanguageChange = (language: TranslationLanguage) => {
     setSelectedLanguage(language);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("facegrem_language", language);
-    }
     setIsLanguageMenuOpen(false);
   };
 
@@ -860,7 +594,7 @@ export default function VideosPage() {
                   <p className="mt-1 text-sm font-semibold text-white">{videos.length}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">{t.tabs}</p>
+                  <p className="text-[11px] text-slate-400">{"Tab"s}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{videoTabs.length}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
@@ -878,7 +612,7 @@ export default function VideosPage() {
               <div className="mt-4 space-y-3">
                 {trendingCreators.length === 0 ? (
                   <p className="text-sm leading-6 text-slate-400">
-                    {t.creatorsEmpty}
+                    {"More creators will appear here as your community grows."}
                   </p>
                 ) : (
                   trendingCreators.map((profile) => (
@@ -915,10 +649,10 @@ export default function VideosPage() {
               <div className="max-w-2xl">
                 <p className="text-sm font-semibold text-cyan-200">{t.watchNow}</p>
                 <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  {t.heroTitle}
+                  {"Discover videos that match your world."}
                 </h2>
                 <p className="max-w-xl mt-3 text-sm leading-7 text-slate-300">
-                  {t.heroText}
+                  {"Explore creators, faith content, music, business clips, and trending stories from across FaceGrem."}
                 </p>
               </div>
 
@@ -932,7 +666,7 @@ export default function VideosPage() {
                   <p className="mt-2 text-2xl font-bold text-white">{profiles.length}</p>
                 </div>
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">{t.tab}</p>
+                  <p className="text-xs text-slate-400">{"Tab"}</p>
                   <p className="mt-2 text-xl font-bold text-white">{activeTab}</p>
                 </div>
               </div>
@@ -966,12 +700,12 @@ export default function VideosPage() {
                   <div>
                     <p className="text-sm font-semibold text-cyan-200">{t.uploadVideo}</p>
                     <p className="mt-1 text-xs text-slate-400">
-                      {t.uploadSubtitle}
+                      {"Publish a new video link to FaceGrem"}
                     </p>
                   </div>
 
                   <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
-                    {t.creatorTools}
+                    {"Creator tools"}
                   </span>
                 </div>
               </div>
@@ -1007,14 +741,14 @@ export default function VideosPage() {
                     type="text"
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder={t.videoUrlPlaceholder}
+                    placeholder={"YouTube or video URL"}
                     className="w-full px-4 py-3 text-sm text-white transition border outline-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400 focus:border-cyan-400/40"
                   />
                   <input
                     type="text"
                     value={thumbnailUrl}
                     onChange={(e) => setThumbnailUrl(e.target.value)}
-                    placeholder={t.thumbnailPlaceholder}
+                    placeholder={"Thumbnail URL (optional)"}
                     className="w-full px-4 py-3 text-sm text-white transition border outline-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400 focus:border-cyan-400/40"
                   />
                 </div>
@@ -1082,7 +816,7 @@ export default function VideosPage() {
 
                             <div className="flex items-center gap-2 mt-1">
                               <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
-                                {video.category || t.videoFallback}
+                                {video.category || t.video}
                               </span>
 
                               <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
@@ -1134,7 +868,7 @@ export default function VideosPage() {
                           </div>
 
                           <div className="rounded-full bg-white/5 px-3 py-1.5 text-slate-300">
-                            {video.category || t.videoFallback}
+                            {video.category || t.video}
                           </div>
                         </div>
 
@@ -1142,7 +876,7 @@ export default function VideosPage() {
                           href={`/profile?id=${video.user_id}`}
                           className="text-sm font-medium transition text-cyan-300 hover:text-cyan-200"
                         >
-                          {t.viewCreator}
+                          {"View creator"}
                         </Link>
                       </div>
                     </div>
@@ -1158,13 +892,13 @@ export default function VideosPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-cyan-200">{t.creatorSpotlight}</p>
-                <p className="mt-1 text-xs text-slate-400">{t.discoverPeople}</p>
+                <p className="mt-1 text-xs text-slate-400">{"Discover people to follow"}</p>
               </div>
             </div>
 
             <div className="mt-4 space-y-4">
               {trendingCreators.length === 0 ? (
-                <p className="text-sm text-slate-400">{t.noCreators}</p>
+                <p className="text-sm text-slate-400">{"No creators to show yet."}</p>
               ) : (
                 trendingCreators.map((profile) => (
                   <Link
@@ -1195,8 +929,8 @@ export default function VideosPage() {
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">{t.quickLinks}</p>
-                <p className="mt-1 text-xs text-slate-400">{t.moveFast}</p>
+                <p className="text-sm font-semibold text-cyan-200">{"Quick links"}</p>
+                <p className="mt-1 text-xs text-slate-400">{t.brandTagline}</p>
               </div>
             </div>
 
@@ -1205,25 +939,25 @@ export default function VideosPage() {
                 href="/feed"
                 className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                {t.backToFeed}
+                {t.homeFeed}
               </Link>
               <Link
                 href="/communities"
                 className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                {t.exploreCommunities}
+                {t.communities}
               </Link>
               <Link
                 href="/messages"
                 className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                {t.openMessages}
+                {t.messages}
               </Link>
               <Link
                 href="/profile"
                 className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                {t.visitProfile}
+                {t.profile}
               </Link>
             </div>
           </div>

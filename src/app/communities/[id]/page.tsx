@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { useLanguage } from "../../../components/LanguageProvider";
 
 type CommunityRecord = {
   id: string;
@@ -63,104 +64,7 @@ const languageLabels: Record<TranslationLanguage, string> = {
   rw: "Kinyarwanda",
 };
 
-const uiTranslations = {
-  en: {
-    navigation: "Navigation",
-    homeFeed: "Home Feed",
-    videos: "Videos",
-    communities: "Communities",
-    groups: "Groups",
-    messages: "Messages",
-    saved: "Saved",
-    profile: "Profile",
-    settings: "Settings",
-    language: "Language",
-    privacy: "Privacy",
-    help: "Help",
-    logout: "Log out",
-    signingOut: "Signing out...",
-    close: "Close",
-    create: "Create",
-    searchCommunities: "Search communities, topics, categories...",
-    searchCommunityPosts: "Search posts in this community...",
-    communitySpace: "Community space",
-    communitiesTitle: "Communities",
-    join: "Join",
-    leave: "Leave",
-  },
-  sw: {
-    navigation: "Urambazaji",
-    homeFeed: "Mkondo Mkuu",
-    videos: "Video",
-    communities: "Jumuiya",
-    groups: "Makundi",
-    messages: "Ujumbe",
-    saved: "Vilivyohifadhiwa",
-    profile: "Wasifu",
-    settings: "Mipangilio",
-    language: "Lugha",
-    privacy: "Faragha",
-    help: "Msaada",
-    logout: "Ondoka",
-    signingOut: "Inatoka...",
-    close: "Funga",
-    create: "Tengeneza",
-    searchCommunities: "Tafuta jumuiya, mada, makundi...",
-    searchCommunityPosts: "Tafuta machapisho ndani ya jumuiya hii...",
-    communitySpace: "Nafasi ya jumuiya",
-    communitiesTitle: "Jumuiya",
-    join: "Jiunge",
-    leave: "Ondoka",
-  },
-  fr: {
-    navigation: "Navigation",
-    homeFeed: "Fil d’accueil",
-    videos: "Vidéos",
-    communities: "Communautés",
-    groups: "Groupes",
-    messages: "Messages",
-    saved: "Enregistrés",
-    profile: "Profil",
-    settings: "Paramètres",
-    language: "Langue",
-    privacy: "Confidentialité",
-    help: "Aide",
-    logout: "Se déconnecter",
-    signingOut: "Déconnexion...",
-    close: "Fermer",
-    create: "Créer",
-    searchCommunities: "Rechercher des communautés, sujets, catégories...",
-    searchCommunityPosts: "Rechercher des publications dans cette communauté...",
-    communitySpace: "Espace communauté",
-    communitiesTitle: "Communautés",
-    join: "Rejoindre",
-    leave: "Quitter",
-  },
-  rw: {
-    navigation: "Igenzura",
-    homeFeed: "Urupapuro nyamukuru",
-    videos: "Amashusho",
-    communities: "Imiryango",
-    groups: "Amatsinda",
-    messages: "Ubutumwa",
-    saved: "Byabitswe",
-    profile: "Umwirondoro",
-    settings: "Igenamiterere",
-    language: "Ururimi",
-    privacy: "Ubwirinzi bwite",
-    help: "Ubufasha",
-    logout: "Sohoka",
-    signingOut: "Birimo gusohoka...",
-    close: "Funga",
-    create: "Kora",
-    searchCommunities: "Shakisha imiryango, insanganyamatsiko, ibyiciro...",
-    searchCommunityPosts: "Shakisha inyandiko muri uyu muryango...",
-    communitySpace: "Umwanya w’umuryango",
-    communitiesTitle: "Imiryango",
-    join: "Injira",
-    leave: "Sohoka",
-  },
-} as const;
+/* Page text now comes from the shared FaceGrem language provider. */
 
 
 type LikeRecord = {
@@ -196,7 +100,6 @@ export default function CommunityDetailPage() {
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
-  const [selectedLanguage, setSelectedLanguage] = useState<TranslationLanguage>("en");
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -208,7 +111,7 @@ export default function CommunityDetailPage() {
   const [posting, setPosting] = useState(false);
   const [searchText, setSearchText] = useState("");
 
-  const t = uiTranslations[selectedLanguage];
+  const { language: selectedLanguage, setLanguage: setSelectedLanguage, t } = useLanguage();
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -343,36 +246,6 @@ export default function CommunityDetailPage() {
 
     void loadCommunity();
   }, [communityId, router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const storedLanguage = window.localStorage.getItem("facegrem_language");
-    if (
-      storedLanguage === "en" ||
-      storedLanguage === "sw" ||
-      storedLanguage === "fr" ||
-      storedLanguage === "rw"
-    ) {
-      setSelectedLanguage(storedLanguage);
-    }
-
-    const handleStorage = () => {
-      const latest = window.localStorage.getItem("facegrem_language");
-      if (
-        latest === "en" ||
-        latest === "sw" ||
-        latest === "fr" ||
-        latest === "rw"
-      ) {
-        setSelectedLanguage(latest);
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -389,9 +262,6 @@ export default function CommunityDetailPage() {
 
   const handleLanguageChange = (language: TranslationLanguage) => {
     setSelectedLanguage(language);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("facegrem_language", language);
-    }
     setIsLanguageMenuOpen(false);
   };
 
@@ -669,7 +539,7 @@ export default function CommunityDetailPage() {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
-                <p className="text-xs text-slate-400">{t.communitySpace}</p>
+                <p className="text-xs text-slate-400">{t.community}</p>
               </div>
             </Link>
           </div>
@@ -682,7 +552,7 @@ export default function CommunityDetailPage() {
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder={t.searchCommunityPosts}
+                  placeholder={t.searchPlaceholder}
                   className="w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-400 sm:text-sm"
                 />
               </div>
@@ -828,7 +698,7 @@ export default function CommunityDetailPage() {
 
             <div className="mt-8 border-t border-white/10 pt-5">
               <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                More
+                {t.more}
               </p>
 
               <div className="space-y-2">
@@ -899,24 +769,24 @@ export default function CommunityDetailPage() {
                 <div className="min-w-0">
                   <p className="font-semibold text-white truncate">{community.name}</p>
                   <p className="text-sm truncate text-slate-400">
-                    {community.category || "Community"}
+                    {community.category || t.communityFallback}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 mt-4">
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Members</p>
+                  <p className="text-[11px] text-slate-400">{t.members}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{membersCount}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Posts</p>
+                  <p className="text-[11px] text-slate-400">{t.posts}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{posts.length}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
                   <p className="text-[11px] text-slate-400">Status</p>
                   <p className="mt-1 text-sm font-semibold text-white">
-                    {isMember ? "Joined" : "Open"}
+                    {isMember ? t.joined : t.open}
                   </p>
                 </div>
               </div>
@@ -924,13 +794,13 @@ export default function CommunityDetailPage() {
 
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-cyan-200">About community</p>
+                <p className="text-sm font-semibold text-cyan-200">{t.about}</p>
               </div>
 
               <div className="mt-4 space-y-4">
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
                   <p className="text-sm leading-7 text-slate-300">
-                    {community.description || "No description yet."}
+                    {community.description || t.noBioYet}
                   </p>
                 </div>
 
@@ -942,7 +812,7 @@ export default function CommunityDetailPage() {
                   />
                   <div className="min-w-0">
                     <p className="font-medium text-white truncate">{creatorName}</p>
-                    <p className="text-xs text-slate-400">Community creator</p>
+                    <p className="text-xs text-slate-400">{t.creator}</p>
                   </div>
                 </div>
               </div>
@@ -954,7 +824,7 @@ export default function CommunityDetailPage() {
           <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(8,47,73,0.95),rgba(15,23,42,0.95)_55%,rgba(30,41,59,0.95))] p-6 shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
-                <p className="text-sm font-semibold text-cyan-200">Inside community</p>
+                <p className="text-sm font-semibold text-cyan-200">{t.community}</p>
                 <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
                   {community.name}
                 </h2>
@@ -966,17 +836,17 @@ export default function CommunityDetailPage() {
 
               <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Members</p>
+                  <p className="text-xs text-slate-400">{t.members}</p>
                   <p className="mt-2 text-2xl font-bold text-white">{membersCount}</p>
                 </div>
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Posts</p>
+                  <p className="text-xs text-slate-400">{t.posts}</p>
                   <p className="mt-2 text-2xl font-bold text-white">{posts.length}</p>
                 </div>
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
                   <p className="text-xs text-slate-400">Status</p>
                   <p className="mt-2 text-xl font-bold text-white">
-                    {isMember ? "Joined" : "Open"}
+                    {isMember ? t.joined : t.open}
                   </p>
                 </div>
               </div>
@@ -1361,7 +1231,7 @@ export default function CommunityDetailPage() {
               />
               <div className="min-w-0">
                 <p className="font-medium text-white truncate">{creatorName}</p>
-                <p className="text-xs truncate text-slate-400">Community creator</p>
+                <p className="text-xs truncate text-slate-400">{t.creator}</p>
               </div>
             </div>
           </div>

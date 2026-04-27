@@ -12,6 +12,7 @@ import {
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
+import { useLanguage } from "../../components/LanguageProvider";
 
 type ProfileRecord = {
   id: string;
@@ -86,280 +87,7 @@ const languageLabels: Record<TranslationLanguage, string> = {
   rw: "Kinyarwanda",
 };
 
-const uiTranslations = {
-  en: {
-    loadingMessages: "Loading messages...",
-    brandTagline: "Messages",
-    navigation: "Navigation",
-    homeFeed: "Home Feed",
-    videos: "Videos",
-    communities: "Communities",
-    groups: "Groups",
-    messages: "Messages",
-    saved: "Saved",
-    profile: "Profile",
-    settings: "Settings",
-    language: "Language",
-    privacy: "Privacy",
-    help: "Help",
-    logout: "Log out",
-    signingOut: "Signing out...",
-    searchConversations: "Search conversations...",
-    searchPeople: "Search people",
-    privateChats: "Private chats",
-    chats: "Chats",
-    focus: "Focus",
-    open: "Open",
-    idle: "Idle",
-    peopleToMessage: "People to message",
-    peopleEmpty: "Start chatting with people from their profile pages.",
-    conversations: "Conversations",
-    activeChats: "active chats",
-    noConversations: "No conversations yet.",
-    openConversation: "Open conversation",
-    selectConversation: "Select a conversation",
-    selectConversationHelp: "Open a chat from the left to read messages and start the conversation.",
-    openProfile: "Open profile",
-    member: "member",
-    noMessages: "No messages yet. Start the conversation.",
-    message: "Message",
-    writeFirst: "Write a message first.",
-    selectFirst: "Select a conversation first.",
-    sending: "Sending...",
-    send: "Send",
-    audioCall: "Audio call",
-    videoCall: "Video call",
-    endCall: "End call",
-    callPreview: "Call preview",
-    callPermission: "Allow microphone/camera permission to start the preview.",
-    voiceRecord: "Voice",
-    recording: "Recording...",
-    sendVoice: "Send voice",
-    stop: "Stop",
-    voiceMessage: "Voice message",
-    voiceUploadError: "Could not send voice message.",
-    incomingAudioCall: "Incoming audio call",
-    incomingVideoCall: "Incoming video call",
-    isCallingYou: "is calling you",
-    accept: "Accept",
-    decline: "Decline",
-    callDeclined: "Call declined",
-    callStarted: "Call started",
-    connecting: "Connecting...",
-    connected: "Connected",
-    online: "online",
-    remoteVideo: "Remote video",
-    localPreview: "Your preview",
-    callEnded: "Call ended",
-    callFailed: "Call failed",
-    recordingTip: "Speak clearly near your microphone. Use your browser or system mic settings if your voice is not captured.",
-    micActive: "Microphone active",
-  },
-  sw: {
-    loadingMessages: "Inapakia ujumbe...",
-    brandTagline: "Ujumbe",
-    navigation: "Urambazaji",
-    homeFeed: "Mkondo Mkuu",
-    videos: "Video",
-    communities: "Jumuiya",
-    groups: "Makundi",
-    messages: "Ujumbe",
-    saved: "Vilivyohifadhiwa",
-    profile: "Wasifu",
-    settings: "Mipangilio",
-    language: "Lugha",
-    privacy: "Faragha",
-    help: "Msaada",
-    logout: "Ondoka",
-    signingOut: "Inatoka...",
-    searchConversations: "Tafuta mazungumzo...",
-    searchPeople: "Tafuta watu",
-    privateChats: "Mazungumzo binafsi",
-    chats: "Mazungumzo",
-    focus: "Umakini",
-    open: "Imefunguliwa",
-    idle: "Kimya",
-    peopleToMessage: "Watu wa kuwatumia ujumbe",
-    peopleEmpty: "Anza kuzungumza na watu kutoka kwenye ukurasa wao wa wasifu.",
-    conversations: "Mazungumzo",
-    activeChats: "mazungumzo hai",
-    noConversations: "Hakuna mazungumzo bado.",
-    openConversation: "Fungua mazungumzo",
-    selectConversation: "Chagua mazungumzo",
-    selectConversationHelp: "Fungua chat upande wa kushoto kusoma ujumbe na kuanza mazungumzo.",
-    openProfile: "Fungua wasifu",
-    member: "mwanachama",
-    noMessages: "Hakuna ujumbe bado. Anza mazungumzo.",
-    message: "Tuma ujumbe",
-    writeFirst: "Andika ujumbe kwanza.",
-    selectFirst: "Chagua mazungumzo kwanza.",
-    sending: "Inatuma...",
-    send: "Tuma",
-    audioCall: "Simu ya sauti",
-    videoCall: "Simu ya video",
-    endCall: "Maliza simu",
-    callPreview: "Muonekano wa simu",
-    callPermission: "Ruhusu kipaza sauti/kamera ili kuanza muonekano.",
-    voiceRecord: "Sauti",
-    recording: "Inarekodi...",
-    sendVoice: "Tuma sauti",
-    stop: "Simamisha",
-    voiceMessage: "Ujumbe wa sauti",
-    voiceUploadError: "Imeshindikana kutuma ujumbe wa sauti.",
-    incomingAudioCall: "Simu ya sauti inaingia",
-    incomingVideoCall: "Simu ya video inaingia",
-    isCallingYou: "anakupigia",
-    accept: "Kubali",
-    decline: "Kataa",
-    callDeclined: "Simu imekataliwa",
-    callStarted: "Simu imeanza",
-    connecting: "Inaunganisha...",
-    connected: "Imeunganishwa",
-    online: "mtandaoni",
-    remoteVideo: "Video ya upande mwingine",
-    localPreview: "Muonekano wako",
-    callEnded: "Simu imeisha",
-    callFailed: "Simu imeshindikana",
-    recordingTip: "Ongea karibu na kipaza sauti. Tumia mipangilio ya mic ya browser au mfumo kama sauti yako haishikwi.",
-    micActive: "Kipaza sauti kinafanya kazi",
-  },
-  fr: {
-    loadingMessages: "Chargement des messages...",
-    brandTagline: "Messages",
-    navigation: "Navigation",
-    homeFeed: "Fil d’accueil",
-    videos: "Vidéos",
-    communities: "Communautés",
-    groups: "Groupes",
-    messages: "Messages",
-    saved: "Enregistrés",
-    profile: "Profil",
-    settings: "Paramètres",
-    language: "Langue",
-    privacy: "Confidentialité",
-    help: "Aide",
-    logout: "Se déconnecter",
-    signingOut: "Déconnexion...",
-    searchConversations: "Rechercher des conversations...",
-    searchPeople: "Rechercher des personnes",
-    privateChats: "Chats privés",
-    chats: "Chats",
-    focus: "Focus",
-    open: "Ouvert",
-    idle: "Inactif",
-    peopleToMessage: "Personnes à contacter",
-    peopleEmpty: "Commencez à discuter avec des personnes depuis leur profil.",
-    conversations: "Conversations",
-    activeChats: "chats actifs",
-    noConversations: "Aucune conversation pour le moment.",
-    openConversation: "Ouvrir la conversation",
-    selectConversation: "Sélectionnez une conversation",
-    selectConversationHelp: "Ouvrez un chat à gauche pour lire les messages et commencer la conversation.",
-    openProfile: "Ouvrir le profil",
-    member: "membre",
-    noMessages: "Aucun message pour le moment. Commencez la conversation.",
-    message: "Message",
-    writeFirst: "Écrivez d’abord un message.",
-    selectFirst: "Sélectionnez d’abord une conversation.",
-    sending: "Envoi...",
-    send: "Envoyer",
-    audioCall: "Appel audio",
-    videoCall: "Appel vidéo",
-    endCall: "Terminer l’appel",
-    callPreview: "Aperçu de l’appel",
-    callPermission: "Autorisez le micro/la caméra pour démarrer l’aperçu.",
-    voiceRecord: "Voix",
-    recording: "Enregistrement...",
-    sendVoice: "Envoyer la voix",
-    stop: "Arrêter",
-    voiceMessage: "Message vocal",
-    voiceUploadError: "Impossible d’envoyer le message vocal.",
-    incomingAudioCall: "Appel audio entrant",
-    incomingVideoCall: "Appel vidéo entrant",
-    isCallingYou: "vous appelle",
-    accept: "Accepter",
-    decline: "Refuser",
-    callDeclined: "Appel refusé",
-    callStarted: "Appel commencé",
-    connecting: "Connexion...",
-    connected: "Connecté",
-    online: "en ligne",
-    remoteVideo: "Vidéo distante",
-    localPreview: "Votre aperçu",
-    callEnded: "Appel terminé",
-    callFailed: "Appel échoué",
-    recordingTip: "Parlez clairement près du micro. Vérifiez le micro du navigateur ou du système si votre voix n’est pas capturée.",
-    micActive: "Micro actif",
-  },
-  rw: {
-    loadingMessages: "Ubutumwa burimo gufunguka...",
-    brandTagline: "Ubutumwa",
-    navigation: "Igenzura",
-    homeFeed: "Urupapuro nyamukuru",
-    videos: "Amashusho",
-    communities: "Imiryango",
-    groups: "Amatsinda",
-    messages: "Ubutumwa",
-    saved: "Byabitswe",
-    profile: "Umwirondoro",
-    settings: "Igenamiterere",
-    language: "Ururimi",
-    privacy: "Ubwirinzi bwite",
-    help: "Ubufasha",
-    logout: "Sohoka",
-    signingOut: "Birimo gusohoka...",
-    searchConversations: "Shakisha ibiganiro...",
-    searchPeople: "Shakisha abantu",
-    privateChats: "Ibiganiro byihariye",
-    chats: "Ibiganiro",
-    focus: "Icyerekezo",
-    open: "Bifunguye",
-    idle: "Biratuje",
-    peopleToMessage: "Abantu woherereza ubutumwa",
-    peopleEmpty: "Tangira kuganira n’abantu uhereye kuri profile zabo.",
-    conversations: "Ibiganiro",
-    activeChats: "ibiganiro bikora",
-    noConversations: "Nta biganiro birimo ubu.",
-    openConversation: "Fungura ikiganiro",
-    selectConversation: "Hitamo ikiganiro",
-    selectConversationHelp: "Fungura chat ibumoso usome ubutumwa utangire kuganira.",
-    openProfile: "Fungura umwirondoro",
-    member: "umunyamuryango",
-    noMessages: "Nta butumwa burimo ubu. Tangira ikiganiro.",
-    message: "Ubutumwa",
-    writeFirst: "Banza wandike ubutumwa.",
-    selectFirst: "Banza uhitemo ikiganiro.",
-    sending: "Birimo koherezwa...",
-    send: "Ohereza",
-    audioCall: "Guhamagara amajwi",
-    videoCall: "Guhamagara video",
-    endCall: "Soza guhamagara",
-    callPreview: "Igerageza ryo guhamagara",
-    callPermission: "Emerera mikoro/kamera kugira ngo igerageza ritangire.",
-    voiceRecord: "Ijwi",
-    recording: "Birimo gufata amajwi...",
-    sendVoice: "Ohereza ijwi",
-    stop: "Hagarika",
-    voiceMessage: "Ubutumwa bw’ijwi",
-    voiceUploadError: "Ntibyashobotse kohereza ubutumwa bw’ijwi.",
-    incomingAudioCall: "Hari guhamagara amajwi",
-    incomingVideoCall: "Hari guhamagara video",
-    isCallingYou: "araguhamagara",
-    accept: "Emera",
-    decline: "Hakana",
-    callDeclined: "Guhamagara byahakanywe",
-    callStarted: "Guhamagara byatangiye",
-    connecting: "Birimo kwihuza...",
-    connected: "Byahujwe",
-    online: "online",
-    remoteVideo: "Video y’undi muntu",
-    localPreview: "Igerageza ryawe",
-    callEnded: "Guhamagara byarangiye",
-    callFailed: "Guhamagara byanze",
-    recordingTip: "Vugira hafi ya mikoro. Reba mic ya browser cyangwa system niba ijwi ryawe ridafatwa.",
-    micActive: "Mikoro iri gukora",
-  },
-} as const;
+/* Page text now comes from the shared FaceGrem language provider. */
 
 function MessagesPageContent() {
   const router = useRouter();
@@ -405,7 +133,7 @@ function MessagesPageContent() {
   const [remoteStreamReady, setRemoteStreamReady] = useState(false);
 
   const selectedUserId = searchParams.get("user") || "";
-  const t = uiTranslations[selectedLanguage];
+  const { language: selectedLanguage, setLanguage: setSelectedLanguage, t } = useLanguage();
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -606,36 +334,6 @@ function MessagesPageContent() {
 
     void loadMessagesPage();
   }, [router]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const storedLanguage = window.localStorage.getItem("facegrem_language");
-    if (
-      storedLanguage === "en" ||
-      storedLanguage === "sw" ||
-      storedLanguage === "fr" ||
-      storedLanguage === "rw"
-    ) {
-      setSelectedLanguage(storedLanguage);
-    }
-
-    const handleStorage = () => {
-      const latest = window.localStorage.getItem("facegrem_language");
-      if (
-        latest === "en" ||
-        latest === "sw" ||
-        latest === "fr" ||
-        latest === "rw"
-      ) {
-        setSelectedLanguage(latest);
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -889,9 +587,6 @@ function MessagesPageContent() {
 
   const handleLanguageChange = (language: TranslationLanguage) => {
     setSelectedLanguage(language);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("facegrem_language", language);
-    }
     setIsLanguageMenuOpen(false);
   };
 
