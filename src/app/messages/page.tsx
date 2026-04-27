@@ -2071,7 +2071,7 @@ function MessagesPageContent() {
                 </div>
               )}
 
-              <div className="max-h-[calc(100vh-280px)] min-h-[520px] space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
+              <div className="max-h-[calc(100vh-280px)] min-h-[520px] space-y-2.5 overflow-y-auto px-4 py-4 sm:space-y-3 sm:px-6">
                 {activeMessages.length === 0 ? (
                   <div className="p-4 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-400">
                     {t.noMessages}
@@ -2085,7 +2085,7 @@ function MessagesPageContent() {
                         key={message.id}
                         className={`flex ${mine ? "justify-end" : "justify-start"}`}
                       >
-                        <div className="flex max-w-[78%] items-end gap-2 sm:max-w-[70%] sm:gap-3">
+                        <div className="flex max-w-[82%] items-end gap-2 sm:max-w-[62%] sm:gap-3">
                           {!mine && (
                             <img
                               src={
@@ -2095,33 +2095,33 @@ function MessagesPageContent() {
                                 )
                               }
                               alt={selectedConversationUser?.full_name || "FaceGrem User"}
-                              className="hidden object-cover h-9 w-9 rounded-xl sm:block"
+                              className="hidden h-8 w-8 rounded-xl object-cover sm:block"
                             />
                           )}
 
                           <div
-                            className={`rounded-[26px] px-4 py-3 text-sm leading-7 shadow-[0_12px_28px_rgba(2,8,23,0.16)] ${
+                            className={`rounded-[20px] px-3 py-2 text-[13px] leading-5 shadow-[0_10px_22px_rgba(2,8,23,0.14)] sm:px-3.5 sm:py-2.5 break-words sm:text-sm sm:leading-6 ${
                               mine
                                 ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
                                 : "border border-white/10 bg-white/5 text-slate-200"
                             }`}
                           >
                             {parseVoiceMessageContent(message.content) ? (
-                              <div className="min-w-[220px]">
+                              <div className="min-w-[180px] max-w-[260px]">
                                 <p className="mb-2 text-xs font-medium opacity-85">
                                   🎙️ {t.voiceMessage}
                                 </p>
                                 <audio
                                   controls
                                   src={parseVoiceMessageContent(message.content) || undefined}
-                                  className="w-full"
+                                  className="h-8 w-full"
                                 />
                               </div>
                             ) : (
-                              <p>{message.content}</p>
+                              <p className="whitespace-pre-wrap break-words">{message.content}</p>
                             )}
                             <p
-                              className={`mt-2 text-[11px] ${
+                              className={`mt-1 text-[10px] leading-none ${
                                 mine ? "text-white/80" : "text-slate-400"
                               }`}
                             >
