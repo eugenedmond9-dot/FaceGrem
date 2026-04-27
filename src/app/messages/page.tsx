@@ -147,6 +147,7 @@ const uiTranslations = {
     callStarted: "Call started",
     connecting: "Connecting...",
     connected: "Connected",
+    online: "online",
     remoteVideo: "Remote video",
     localPreview: "Your preview",
     callEnded: "Call ended",
@@ -214,6 +215,7 @@ const uiTranslations = {
     callStarted: "Simu imeanza",
     connecting: "Inaunganisha...",
     connected: "Imeunganishwa",
+    online: "mtandaoni",
     remoteVideo: "Video ya upande mwingine",
     localPreview: "Muonekano wako",
     callEnded: "Simu imeisha",
@@ -281,6 +283,7 @@ const uiTranslations = {
     callStarted: "Appel commencé",
     connecting: "Connexion...",
     connected: "Connecté",
+    online: "en ligne",
     remoteVideo: "Vidéo distante",
     localPreview: "Votre aperçu",
     callEnded: "Appel terminé",
@@ -348,6 +351,7 @@ const uiTranslations = {
     callStarted: "Guhamagara byatangiye",
     connecting: "Birimo kwihuza...",
     connected: "Byahujwe",
+    online: "online",
     remoteVideo: "Video y’undi muntu",
     localPreview: "Igerageza ryawe",
     callEnded: "Guhamagara byarangiye",
@@ -1784,7 +1788,7 @@ function MessagesPageContent() {
         </div>
       )}
 
-      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_320px_minmax(0,1fr)]">
+      <main className="relative mx-auto grid min-h-[calc(100vh-76px)] max-w-7xl gap-4 px-3 py-4 sm:px-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[260px_320px_minmax(0,1fr)] xl:gap-6">
         <aside className="hidden xl:block">
           <div className="sticky top-[104px] space-y-4">
             <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.12),rgba(15,23,42,0.94)_45%,rgba(30,41,59,0.94))] p-4 shadow-[0_20px_60px_rgba(6,182,212,0.10)] backdrop-blur-xl">
@@ -1860,7 +1864,7 @@ function MessagesPageContent() {
           </div>
         </aside>
 
-        <aside className="rounded-[30px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+        <aside className={`${selectedConversation ? "hidden lg:block" : "block"} rounded-[30px] border border-white/[0.07] bg-white/[0.035] p-4 shadow-[0_20px_60px_rgba(15,23,42,0.30)] backdrop-blur-2xl sm:p-5`}>
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-cyan-200">{t.conversations}</p>
@@ -1883,7 +1887,7 @@ function MessagesPageContent() {
             </div>
           </div>
 
-          <div className="mt-5 space-y-3">
+          <div className="mt-5 max-h-[calc(100vh-240px)] space-y-3 overflow-y-auto pr-1">
             {filteredConversations.length === 0 ? (
               <div className="p-4 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-400">
                 {t.noConversations}
@@ -1903,10 +1907,10 @@ function MessagesPageContent() {
                     key={conversation.id}
                     type="button"
                     onClick={() => openConversation(partnerId)}
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${
+                    className={`flex w-full items-center gap-3 rounded-[22px] px-3.5 py-3 text-left transition ${
                       isActive
                         ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                        : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                        : "border border-white/[0.07] bg-white/[0.035] text-slate-200 hover:bg-white/[0.06]"
                     }`}
                   >
                     <img
@@ -1931,9 +1935,9 @@ function MessagesPageContent() {
           </div>
         </aside>
 
-        <section className="min-w-0">
+        <section className={`${!selectedConversation ? "hidden lg:block" : "block"} min-w-0`}>
           {!selectedUserId || !selectedConversation ? (
-            <div className="flex min-h-[620px] items-center justify-center rounded-[30px] border border-white/10 bg-white/5 p-8 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <div className="flex min-h-[620px] items-center justify-center rounded-[34px] border border-white/[0.07] bg-white/[0.035] p-8 shadow-[0_20px_60px_rgba(15,23,42,0.35)] backdrop-blur-2xl">
               <div className="max-w-md text-center">
                 <p className="text-sm font-semibold text-cyan-200">Messages</p>
                 <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">
@@ -1945,48 +1949,59 @@ function MessagesPageContent() {
               </div>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-[30px] border border-white/10 bg-white/5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl">
-              <div className="px-5 py-4 border-b border-white/10 sm:px-6">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
+            <div className="overflow-hidden rounded-[30px] border border-white/[0.07] bg-white/[0.035] shadow-[0_22px_70px_rgba(2,8,23,0.32)] backdrop-blur-2xl sm:rounded-[34px]">
+              <div className="border-b border-white/[0.07] bg-[#07111f]/35 px-4 py-3 backdrop-blur-2xl sm:px-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => router.push("/messages")}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-white transition hover:bg-white/[0.06] lg:hidden"
+                      aria-label="Back to conversations"
+                    >
+                      ←
+                    </button>
+
                     <img
                       src={
                         selectedConversationUser?.avatar_url ||
                         getAvatarUrl(selectedConversationUser?.full_name || "FaceGrem User")
                       }
                       alt={selectedConversationUser?.full_name || "FaceGrem User"}
-                      className="object-cover w-12 h-12 rounded-2xl"
+                      className="h-11 w-11 rounded-2xl object-cover ring-1 ring-cyan-400/15 sm:h-12 sm:w-12"
                     />
-                    <div>
-                      <p className="font-semibold text-white">
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-white">
                         {selectedConversationUser?.full_name || "FaceGrem User"}
                       </p>
-                      <p className="text-xs text-slate-400">
+                      <p className="truncate text-xs text-slate-400">
                         {selectedConversationUser?.username
-                          ? `@${selectedConversationUser.username}`
-                          : `FaceGrem ${t.member}`}
+                          ? `@${selectedConversationUser.username} • ${t.online}`
+                          : `FaceGrem ${t.member} • ${t.online}`}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap justify-end gap-2">
+                  <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                     <button
                       type="button"
                       onClick={() => handleStartCall("audio")}
-                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-base text-slate-200 transition hover:bg-white/[0.06] sm:w-auto sm:px-3 sm:text-sm"
+                      title={t.audioCall}
                     >
-                      📞 {t.audioCall}
+                      📞 <span className="ml-2 hidden sm:inline">{t.audioCall}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleStartCall("video")}
-                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10"
+                      className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-base text-slate-200 transition hover:bg-white/[0.06] sm:w-auto sm:px-3 sm:text-sm"
+                      title={t.videoCall}
                     >
-                      🎥 {t.videoCall}
+                      🎥 <span className="ml-2 hidden sm:inline">{t.videoCall}</span>
                     </button>
                     <Link
                       href={`/profile?id=${selectedUserId}`}
-                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-cyan-300 transition hover:bg-white/10"
+                      className="hidden rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-sm text-cyan-300 transition hover:bg-white/[0.06] sm:inline-flex"
                     >
                       {t.openProfile}
                     </Link>
@@ -1995,8 +2010,8 @@ function MessagesPageContent() {
               </div>
 
               {activeCallType && (
-                <div className="border-b border-white/10 bg-black/20 px-5 py-4 sm:px-6">
-                  <div className="rounded-[26px] border border-white/10 bg-white/5 p-4">
+                <div className="border-b border-white/[0.07] bg-black/20 px-4 py-4 sm:px-6">
+                  <div className="rounded-[26px] border border-white/[0.07] bg-white/[0.035] p-4 backdrop-blur-2xl">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-sm font-semibold text-cyan-200">
@@ -2056,7 +2071,7 @@ function MessagesPageContent() {
                 </div>
               )}
 
-              <div className="min-h-[420px] space-y-4 px-4 py-5 sm:px-6">
+              <div className="max-h-[calc(100vh-280px)] min-h-[520px] space-y-4 overflow-y-auto px-4 py-5 sm:px-6">
                 {activeMessages.length === 0 ? (
                   <div className="p-4 text-sm border rounded-2xl border-white/10 bg-white/5 text-slate-400">
                     {t.noMessages}
@@ -2070,7 +2085,7 @@ function MessagesPageContent() {
                         key={message.id}
                         className={`flex ${mine ? "justify-end" : "justify-start"}`}
                       >
-                        <div className="flex max-w-[85%] items-end gap-3">
+                        <div className="flex max-w-[78%] items-end gap-2 sm:max-w-[70%] sm:gap-3">
                           {!mine && (
                             <img
                               src={
@@ -2085,7 +2100,7 @@ function MessagesPageContent() {
                           )}
 
                           <div
-                            className={`rounded-[24px] px-4 py-3 text-sm leading-7 ${
+                            className={`rounded-[26px] px-4 py-3 text-sm leading-7 shadow-[0_12px_28px_rgba(2,8,23,0.16)] ${
                               mine
                                 ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
                                 : "border border-white/10 bg-white/5 text-slate-200"
@@ -2122,9 +2137,9 @@ function MessagesPageContent() {
                 <div ref={bottomRef} />
               </div>
 
-              <div className="px-4 py-4 border-t border-white/10 sm:px-6">
+              <div className="border-t border-white/[0.07] bg-[#07111f]/45 px-4 py-4 backdrop-blur-2xl sm:px-6">
                 <form onSubmit={handleSendMessage}>
-                  <div className="flex flex-col gap-3 sm:flex-row">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="flex gap-2 sm:flex-col">
                       <button
                         type="button"
@@ -2165,13 +2180,13 @@ function MessagesPageContent() {
                       onChange={(e) => setMessageText(e.target.value)}
                       rows={2}
                       placeholder={`${t.message} ${selectedConversationUser?.full_name?.split(" ")[0] || "them"}...`}
-                      className="w-full px-4 py-3 text-sm text-white transition border outline-none resize-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400 focus:border-cyan-400/40"
+                      className="max-h-32 w-full resize-none rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-400/40"
                     />
 
                     <button
                       type="submit"
                       disabled={sending}
-                      className="px-6 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70"
+                      className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 disabled:opacity-70"
                     >
                       {sending ? t.sending : t.send}
                     </button>
