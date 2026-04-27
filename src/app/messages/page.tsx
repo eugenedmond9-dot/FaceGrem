@@ -60,6 +60,25 @@ type NotificationRecord = {
 
 type TranslationLanguage = "en" | "sw" | "fr" | "rw";
 
+type IncomingCallState = {
+  callerId: string;
+  callerName: string;
+  callType: "audio" | "video";
+  callId: string;
+  offer: RTCSessionDescriptionInit;
+  notificationId?: string;
+};
+
+type CallSignalRecord = {
+  id: string;
+  call_id: string;
+  sender_id: string;
+  receiver_id: string;
+  type: "offer" | "answer" | "ice" | "end" | "decline";
+  payload: any;
+  created_at: string;
+};
+
 const languageLabels: Record<TranslationLanguage, string> = {
   en: "English",
   sw: "Swahili",
@@ -93,16 +112,16 @@ const uiTranslations = {
     open: "Open",
     idle: "Idle",
     peopleToMessage: "People to message",
-    peopleEmpty: "{t.peopleEmpty}",
+    peopleEmpty: "Start chatting with people from their profile pages.",
     conversations: "Conversations",
     activeChats: "active chats",
-    noConversations: "{t.noConversations}",
-    openConversation: "{t.openConversation}",
+    noConversations: "No conversations yet.",
+    openConversation: "Open conversation",
     selectConversation: "Select a conversation",
-    selectConversationHelp: "{t.selectConversationHelp}",
+    selectConversationHelp: "Open a chat from the left to read messages and start the conversation.",
     openProfile: "Open profile",
     member: "member",
-    noMessages: "{t.noMessages}",
+    noMessages: "No messages yet. Start the conversation.",
     message: "Message",
     writeFirst: "Write a message first.",
     selectFirst: "Select a conversation first.",
@@ -119,6 +138,21 @@ const uiTranslations = {
     stop: "Stop",
     voiceMessage: "Voice message",
     voiceUploadError: "Could not send voice message.",
+    incomingAudioCall: "Incoming audio call",
+    incomingVideoCall: "Incoming video call",
+    isCallingYou: "is calling you",
+    accept: "Accept",
+    decline: "Decline",
+    callDeclined: "Call declined",
+    callStarted: "Call started",
+    connecting: "Connecting...",
+    connected: "Connected",
+    remoteVideo: "Remote video",
+    localPreview: "Your preview",
+    callEnded: "Call ended",
+    callFailed: "Call failed",
+    recordingTip: "Speak clearly near your microphone. Use your browser or system mic settings if your voice is not captured.",
+    micActive: "Microphone active",
   },
   sw: {
     loadingMessages: "Inapakia ujumbe...",
@@ -171,6 +205,21 @@ const uiTranslations = {
     stop: "Simamisha",
     voiceMessage: "Ujumbe wa sauti",
     voiceUploadError: "Imeshindikana kutuma ujumbe wa sauti.",
+    incomingAudioCall: "Simu ya sauti inaingia",
+    incomingVideoCall: "Simu ya video inaingia",
+    isCallingYou: "anakupigia",
+    accept: "Kubali",
+    decline: "Kataa",
+    callDeclined: "Simu imekataliwa",
+    callStarted: "Simu imeanza",
+    connecting: "Inaunganisha...",
+    connected: "Imeunganishwa",
+    remoteVideo: "Video ya upande mwingine",
+    localPreview: "Muonekano wako",
+    callEnded: "Simu imeisha",
+    callFailed: "Simu imeshindikana",
+    recordingTip: "Ongea karibu na kipaza sauti. Tumia mipangilio ya mic ya browser au mfumo kama sauti yako haishikwi.",
+    micActive: "Kipaza sauti kinafanya kazi",
   },
   fr: {
     loadingMessages: "Chargement des messages...",
@@ -223,6 +272,21 @@ const uiTranslations = {
     stop: "Arrêter",
     voiceMessage: "Message vocal",
     voiceUploadError: "Impossible d’envoyer le message vocal.",
+    incomingAudioCall: "Appel audio entrant",
+    incomingVideoCall: "Appel vidéo entrant",
+    isCallingYou: "vous appelle",
+    accept: "Accepter",
+    decline: "Refuser",
+    callDeclined: "Appel refusé",
+    callStarted: "Appel commencé",
+    connecting: "Connexion...",
+    connected: "Connecté",
+    remoteVideo: "Vidéo distante",
+    localPreview: "Votre aperçu",
+    callEnded: "Appel terminé",
+    callFailed: "Appel échoué",
+    recordingTip: "Parlez clairement près du micro. Vérifiez le micro du navigateur ou du système si votre voix n’est pas capturée.",
+    micActive: "Micro actif",
   },
   rw: {
     loadingMessages: "Ubutumwa burimo gufunguka...",
@@ -275,6 +339,21 @@ const uiTranslations = {
     stop: "Hagarika",
     voiceMessage: "Ubutumwa bw’ijwi",
     voiceUploadError: "Ntibyashobotse kohereza ubutumwa bw’ijwi.",
+    incomingAudioCall: "Hari guhamagara amajwi",
+    incomingVideoCall: "Hari guhamagara video",
+    isCallingYou: "araguhamagara",
+    accept: "Emera",
+    decline: "Hakana",
+    callDeclined: "Guhamagara byahakanywe",
+    callStarted: "Guhamagara byatangiye",
+    connecting: "Birimo kwihuza...",
+    connected: "Byahujwe",
+    remoteVideo: "Video y’undi muntu",
+    localPreview: "Igerageza ryawe",
+    callEnded: "Guhamagara byarangiye",
+    callFailed: "Guhamagara byanze",
+    recordingTip: "Vugira hafi ya mikoro. Reba mic ya browser cyangwa system niba ijwi ryawe ridafatwa.",
+    micActive: "Mikoro iri gukora",
   },
 } as const;
 
@@ -289,7 +368,11 @@ function MessagesPageContent() {
   const voiceChunksRef = useRef<Blob[]>([]);
   const voiceMimeTypeRef = useRef("audio/webm");
   const callStreamRef = useRef<MediaStream | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const callIdRef = useRef("");
+  const callTargetIdRef = useRef("");
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
@@ -311,6 +394,11 @@ function MessagesPageContent() {
   const [voiceUploading, setVoiceUploading] = useState(false);
   const [activeCallType, setActiveCallType] = useState<"audio" | "video" | null>(null);
   const [callError, setCallError] = useState("");
+  const [incomingCall, setIncomingCall] = useState<IncomingCallState | null>(null);
+  const [micLevel, setMicLevel] = useState(0);
+  const [activeCallTargetId, setActiveCallTargetId] = useState("");
+  const [callStatus, setCallStatus] = useState("");
+  const [remoteStreamReady, setRemoteStreamReady] = useState(false);
 
   const selectedUserId = searchParams.get("user") || "";
   const t = uiTranslations[selectedLanguage];
@@ -678,6 +766,123 @@ function MessagesPageContent() {
     };
   }, [userId]);
 
+  useEffect(() => {
+    if (!userId) return;
+
+    const notificationsChannel = supabase
+      .channel(`message-page-notifications-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const notification = payload.new as NotificationRecord;
+          setNotifications((prev) => {
+            if (prev.some((item) => item.id === notification.id)) return prev;
+            return [notification, ...prev];
+          });
+
+          // Incoming call UI is handled through call_signals offers so it has the WebRTC offer.
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notificationsChannel);
+    };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const callSignalsChannel = supabase
+      .channel(`message-call-signals-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "call_signals",
+          filter: `receiver_id=eq.${userId}`,
+        },
+        async (payload) => {
+          const signal = payload.new as CallSignalRecord;
+
+          if (signal.sender_id === userId) return;
+
+          if (signal.type === "offer") {
+            const callerProfile = getProfileById(signal.sender_id);
+
+            setIncomingCall({
+              callerId: signal.sender_id,
+              callerName:
+                callerProfile?.full_name ||
+                signal.payload?.callerName ||
+                "FaceGrem User",
+              callType: signal.payload?.callType === "video" ? "video" : "audio",
+              callId: signal.call_id,
+              offer: signal.payload?.offer,
+            });
+
+            return;
+          }
+
+          if (signal.type === "answer") {
+            if (
+              peerConnectionRef.current &&
+              callIdRef.current === signal.call_id &&
+              signal.payload?.answer
+            ) {
+              await peerConnectionRef.current.setRemoteDescription(
+                new RTCSessionDescription(signal.payload.answer)
+              );
+              setCallStatus(t.connected);
+            }
+
+            return;
+          }
+
+          if (signal.type === "ice") {
+            if (
+              peerConnectionRef.current &&
+              callIdRef.current === signal.call_id &&
+              signal.payload
+            ) {
+              try {
+                await peerConnectionRef.current.addIceCandidate(
+                  new RTCIceCandidate(signal.payload)
+                );
+              } catch {
+                // ICE candidates can arrive before descriptions are fully ready.
+              }
+            }
+
+            return;
+          }
+
+          if (signal.type === "decline" || signal.type === "end") {
+            if (callIdRef.current === signal.call_id) {
+              await stopCurrentCall(false);
+              setCallStatus(signal.type === "decline" ? t.callDeclined : t.callEnded);
+            }
+
+            setIncomingCall((prev) =>
+              prev?.callId === signal.call_id ? null : prev
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(callSignalsChannel);
+    };
+  }, [userId, profiles, selectedLanguage]);
+
   const handleLanguageChange = (language: TranslationLanguage) => {
     setSelectedLanguage(language);
     if (typeof window !== "undefined") {
@@ -702,6 +907,138 @@ function MessagesPageContent() {
   const unreadNotificationsCount = notifications.filter(
     (notification) => !notification.is_read
   ).length;
+
+  const createCallId = () =>
+    `${userId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+  const stopCurrentCall = async (sendSignal = true) => {
+    const targetUserId = callTargetIdRef.current;
+    const callId = callIdRef.current;
+
+    if (sendSignal && targetUserId && callId) {
+      await supabase.from("call_signals").insert([
+        {
+          call_id: callId,
+          sender_id: userId,
+          receiver_id: targetUserId,
+          type: "end",
+          payload: {},
+        },
+      ]);
+    }
+
+    peerConnectionRef.current?.close();
+    peerConnectionRef.current = null;
+
+    callStreamRef.current?.getTracks().forEach((track) => track.stop());
+    callStreamRef.current = null;
+
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = null;
+    }
+
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
+
+    callIdRef.current = "";
+    callTargetIdRef.current = "";
+    setActiveCallType(null);
+    setActiveCallTargetId("");
+    setRemoteStreamReady(false);
+    setCallStatus("");
+    setCallError("");
+  };
+
+  const createPeerConnection = (targetUserId: string, callId: string) => {
+    peerConnectionRef.current?.close();
+
+    const peerConnection = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+    });
+
+    peerConnection.onicecandidate = async (event) => {
+      if (!event.candidate) return;
+
+      await supabase.from("call_signals").insert([
+        {
+          call_id: callId,
+          sender_id: userId,
+          receiver_id: targetUserId,
+          type: "ice",
+          payload: event.candidate.toJSON(),
+        },
+      ]);
+    };
+
+    peerConnection.ontrack = (event) => {
+      const [remoteStream] = event.streams;
+
+      if (remoteVideoRef.current && remoteStream) {
+        remoteVideoRef.current.srcObject = remoteStream;
+      }
+
+      setRemoteStreamReady(true);
+      setCallStatus(t.connected);
+    };
+
+    peerConnection.onconnectionstatechange = () => {
+      const state = peerConnection.connectionState;
+
+      if (state === "connected") {
+        setCallStatus(t.connected);
+      }
+
+      if (state === "failed" || state === "disconnected" || state === "closed") {
+        setCallStatus(state === "failed" ? t.callFailed : t.callEnded);
+      }
+    };
+
+    peerConnectionRef.current = peerConnection;
+    return peerConnection;
+  };
+
+  const startLocalMedia = async (type: "audio" | "video", peerConnection: RTCPeerConnection) => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: false,
+        autoGainControl: true,
+      },
+      video: type === "video",
+    });
+
+    callStreamRef.current = stream;
+
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    }
+
+    stream.getTracks().forEach((track) => {
+      peerConnection.addTrack(track, stream);
+    });
+
+    return stream;
+  };
+
+  const notifyCaller = async (
+    callerId: string,
+    type: "call_accepted" | "call_declined",
+    content: string
+  ) => {
+    if (!callerId || !userId) return;
+
+    await supabase.from("notifications").insert([
+      {
+        user_id: callerId,
+        actor_id: userId,
+        type,
+        actor_name: userName,
+        content,
+        is_read: false,
+      },
+    ]);
+  };
 
   const selectedConversation = useMemo(() => {
     if (!selectedUserId || !userId) return null;
@@ -891,30 +1228,50 @@ function MessagesPageContent() {
     }
   };
 
-  const handleStartCall = async (type: "audio" | "video") => {
-    if (!selectedUserId) {
+  const handleStartCall = async (
+    type: "audio" | "video",
+    targetUserId = selectedUserId
+  ) => {
+    if (!targetUserId) {
       alert(t.selectFirst);
       return;
     }
 
+    const callId = createCallId();
+
     setCallError("");
+    setCallStatus(t.connecting);
     setActiveCallType(type);
+    setActiveCallTargetId(targetUserId);
+    setRemoteStreamReady(false);
+
+    callIdRef.current = callId;
+    callTargetIdRef.current = targetUserId;
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: type === "video",
-      });
+      const peerConnection = createPeerConnection(targetUserId, callId);
+      await startLocalMedia(type, peerConnection);
 
-      callStreamRef.current = stream;
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
 
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
+      await supabase.from("call_signals").insert([
+        {
+          call_id: callId,
+          sender_id: userId,
+          receiver_id: targetUserId,
+          type: "offer",
+          payload: {
+            offer,
+            callType: type,
+            callerName: userName,
+          },
+        },
+      ]);
 
       await supabase.from("notifications").insert([
         {
-          user_id: selectedUserId,
+          user_id: targetUserId,
           actor_id: userId,
           type: type === "video" ? "video_call" : "audio_call",
           actor_name: userName,
@@ -924,14 +1281,76 @@ function MessagesPageContent() {
       ]);
     } catch (error) {
       setCallError(error instanceof Error ? error.message : t.callPermission);
+      setCallStatus(t.callFailed);
     }
   };
 
-  const handleEndCall = () => {
-    callStreamRef.current?.getTracks().forEach((track) => track.stop());
-    callStreamRef.current = null;
-    setActiveCallType(null);
+  const handleAcceptIncomingCall = async () => {
+    if (!incomingCall) return;
+
+    const call = incomingCall;
+    setIncomingCall(null);
+    router.push(`/messages?user=${call.callerId}`);
+
     setCallError("");
+    setCallStatus(t.connecting);
+    setActiveCallType(call.callType);
+    setActiveCallTargetId(call.callerId);
+    setRemoteStreamReady(false);
+
+    callIdRef.current = call.callId;
+    callTargetIdRef.current = call.callerId;
+
+    try {
+      const peerConnection = createPeerConnection(call.callerId, call.callId);
+      await startLocalMedia(call.callType, peerConnection);
+
+      await peerConnection.setRemoteDescription(
+        new RTCSessionDescription(call.offer)
+      );
+
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+
+      await supabase.from("call_signals").insert([
+        {
+          call_id: call.callId,
+          sender_id: userId,
+          receiver_id: call.callerId,
+          type: "answer",
+          payload: { answer },
+        },
+      ]);
+
+      await notifyCaller(call.callerId, "call_accepted", t.callStarted);
+    } catch (error) {
+      setCallError(error instanceof Error ? error.message : t.callPermission);
+      setCallStatus(t.callFailed);
+      await stopCurrentCall(false);
+    }
+  };
+
+  const handleDeclineIncomingCall = async () => {
+    if (!incomingCall) return;
+
+    const call = incomingCall;
+    setIncomingCall(null);
+
+    await supabase.from("call_signals").insert([
+      {
+        call_id: call.callId,
+        sender_id: userId,
+        receiver_id: call.callerId,
+        type: "decline",
+        payload: {},
+      },
+    ]);
+
+    await notifyCaller(call.callerId, "call_declined", t.callDeclined);
+  };
+
+  const handleEndCall = async () => {
+    await stopCurrentCall(true);
   };
 
   const handleStartVoiceRecording = async () => {
@@ -943,13 +1362,52 @@ function MessagesPageContent() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
+          echoCancellation: false,
+          noiseSuppression: false,
           autoGainControl: true,
         },
       });
 
+      mediaRecorderRef.current = null;
       voiceChunksRef.current = [];
+      setMicLevel(0);
+
+      try {
+        const AudioContextClass =
+          window.AudioContext ||
+          (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext;
+
+        if (AudioContextClass) {
+          const audioContext = new AudioContextClass();
+          const source = audioContext.createMediaStreamSource(stream);
+          const analyser = audioContext.createAnalyser();
+          const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+          analyser.fftSize = 256;
+          source.connect(analyser);
+
+          const updateMicLevel = () => {
+            if (mediaRecorderRef.current?.state === "inactive") {
+              void audioContext.close();
+              setMicLevel(0);
+              return;
+            }
+
+            analyser.getByteTimeDomainData(dataArray);
+            const average =
+              dataArray.reduce((sum, value) => sum + Math.abs(value - 128), 0) /
+              dataArray.length;
+
+            setMicLevel(Math.min(100, Math.round(average * 4)));
+            requestAnimationFrame(updateMicLevel);
+          };
+
+          updateMicLevel();
+        }
+      } catch {
+        setMicLevel(0);
+      }
 
       const mimeType = getSupportedVoiceMimeType();
       voiceMimeTypeRef.current = mimeType || "audio/webm";
@@ -1010,6 +1468,7 @@ function MessagesPageContent() {
           setVoiceUploading(false);
           setRecordingVoice(false);
           voiceChunksRef.current = [];
+          setMicLevel(0);
         }
       };
 
@@ -1287,6 +1746,44 @@ function MessagesPageContent() {
         </>
       )}
 
+      {incomingCall && (
+        <div className="fixed inset-x-4 top-24 z-[80] mx-auto max-w-md rounded-[30px] border border-white/10 bg-[#07111f]/95 p-5 text-white shadow-2xl backdrop-blur-2xl">
+          <div className="flex items-start gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-400/15 text-2xl">
+              {incomingCall.callType === "video" ? "🎥" : "📞"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-cyan-200">
+                {incomingCall.callType === "video" ? t.incomingVideoCall : t.incomingAudioCall}
+              </p>
+              <h3 className="mt-1 truncate text-lg font-bold text-white">
+                {incomingCall.callerName} {t.isCallingYou}
+              </h3>
+              <p className="mt-2 text-xs leading-5 text-slate-400">
+                {t.callPermission}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={handleDeclineIncomingCall}
+              className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-500/20"
+            >
+              {t.decline}
+            </button>
+            <button
+              type="button"
+              onClick={handleAcceptIncomingCall}
+              className="rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20"
+            >
+              {t.accept}
+            </button>
+          </div>
+        </div>
+      )}
+
       <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_320px_minmax(0,1fr)]">
         <aside className="hidden xl:block">
           <div className="sticky top-[104px] space-y-4">
@@ -1518,15 +2015,43 @@ function MessagesPageContent() {
                       </button>
                     </div>
 
-                    {activeCallType === "video" && (
-                      <video
-                        ref={localVideoRef}
-                        autoPlay
-                        muted
-                        playsInline
-                        className="mt-4 h-56 w-full rounded-2xl bg-black object-cover"
-                      />
-                    )}
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <div>
+                        <p className="mb-2 text-xs font-medium text-slate-400">
+                          {t.localPreview}
+                        </p>
+                        {activeCallType === "video" ? (
+                          <video
+                            ref={localVideoRef}
+                            autoPlay
+                            muted
+                            playsInline
+                            className="h-56 w-full rounded-2xl bg-black object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-32 items-center justify-center rounded-2xl border border-white/10 bg-black/30 text-sm text-slate-300">
+                            🎙️ {t.micActive}
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <p className="mb-2 text-xs font-medium text-slate-400">
+                          {t.remoteVideo}
+                        </p>
+                        <video
+                          ref={remoteVideoRef}
+                          autoPlay
+                          playsInline
+                          className="h-56 w-full rounded-2xl bg-black object-cover"
+                        />
+                        {!remoteStreamReady && (
+                          <p className="mt-2 text-xs text-slate-400">
+                            {callStatus || t.connecting}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1617,6 +2142,22 @@ function MessagesPageContent() {
                           ? `⏹️ ${t.stop}`
                           : `🎙️ ${t.voiceRecord}`}
                       </button>
+
+                      {(recordingVoice || voiceUploading) && (
+                        <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-slate-300">
+                          <div className="flex items-center justify-between gap-3">
+                            <span>{recordingVoice ? t.micActive : t.sending}</span>
+                            <span>{micLevel}%</span>
+                          </div>
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                            <div
+                              className="h-full rounded-full bg-cyan-400 transition-all"
+                              style={{ width: `${micLevel}%` }}
+                            />
+                          </div>
+                          <p className="mt-2 leading-5 text-slate-400">{t.recordingTip}</p>
+                        </div>
+                      )}
                     </div>
 
                     <textarea
