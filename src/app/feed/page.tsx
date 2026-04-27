@@ -757,6 +757,419 @@ export default function FeedPage() {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const sortPostsByNewest = (items: PostRecord[]) =>
+      [...items].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+    const sortStoriesByNewest = (items: StoryRecord[]) =>
+      [...items].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+    const sortVideosByNewest = (items: VideoRecord[]) =>
+      [...items].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+    const sortNotificationsByNewest = (items: NotificationRecord[]) =>
+      [...items].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+    const isActiveStory = (story: StoryRecord) =>
+      new Date(story.expires_at).getTime() > Date.now();
+
+    const realtimeChannel = supabase
+      .channel(`feed-realtime-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "posts" },
+        (payload) => {
+          const newPost = payload.new as PostRecord;
+          if (newPost.community_id) return;
+
+          setPosts((prev) => {
+            const exists = prev.some((post) => post.id === newPost.id);
+            if (exists) return prev;
+            return sortPostsByNewest([newPost, ...prev]);
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "posts" },
+        (payload) => {
+          const updatedPost = payload.new as PostRecord;
+
+          setPosts((prev) => {
+            if (updatedPost.community_id) {
+              return prev.filter((post) => post.id !== updatedPost.id);
+            }
+
+            const exists = prev.some((post) => post.id === updatedPost.id);
+            const next = exists
+              ? prev.map((post) =>
+                  post.id === updatedPost.id ? updatedPost : post
+                )
+              : [updatedPost, ...prev];
+
+            return sortPostsByNewest(next);
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "posts" },
+        (payload) => {
+          const deletedPost = payload.old as Pick<PostRecord, "id">;
+
+          setPosts((prev) => prev.filter((post) => post.id !== deletedPost.id));
+          setLikes((prev) => prev.filter((like) => like.post_id !== deletedPost.id));
+          setComments((prev) =>
+            prev.filter((comment) => comment.post_id !== deletedPost.id)
+          );
+          setSavedPosts((prev) =>
+            prev.filter((saved) => saved.post_id !== deletedPost.id)
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "likes" },
+        (payload) => {
+          const newLike = payload.new as LikeRecord;
+
+          setLikes((prev) => {
+            const exists = prev.some((like) => like.id === newLike.id);
+            if (exists) return prev;
+            return [...prev, newLike];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "likes" },
+        (payload) => {
+          const deletedLike = payload.old as Pick<LikeRecord, "id">;
+          setLikes((prev) => prev.filter((like) => like.id !== deletedLike.id));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "comments" },
+        (payload) => {
+          const newComment = payload.new as CommentRecord;
+
+          setComments((prev) => {
+            const exists = prev.some((comment) => comment.id === newComment.id);
+            if (exists) return prev;
+            return [...prev, newComment].sort(
+              (a, b) =>
+                new Date(a.created_at).getTime() -
+                new Date(b.created_at).getTime()
+            );
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "comments" },
+        (payload) => {
+          const updatedComment = payload.new as CommentRecord;
+
+          setComments((prev) =>
+            prev.map((comment) =>
+              comment.id === updatedComment.id ? updatedComment : comment
+            )
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "comments" },
+        (payload) => {
+          const deletedComment = payload.old as Pick<CommentRecord, "id">;
+          setComments((prev) =>
+            prev.filter((comment) => comment.id !== deletedComment.id)
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "saved_posts" },
+        (payload) => {
+          const newSavedPost = payload.new as SavedPostRecord;
+          if (newSavedPost.user_id !== userId) return;
+
+          setSavedPosts((prev) => {
+            const exists = prev.some((saved) => saved.id === newSavedPost.id);
+            if (exists) return prev;
+            return [...prev, newSavedPost];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "saved_posts" },
+        (payload) => {
+          const deletedSavedPost = payload.old as Pick<SavedPostRecord, "id">;
+          setSavedPosts((prev) =>
+            prev.filter((saved) => saved.id !== deletedSavedPost.id)
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "stories" },
+        (payload) => {
+          const newStory = payload.new as StoryRecord;
+          if (!isActiveStory(newStory)) return;
+
+          setStories((prev) => {
+            const exists = prev.some((story) => story.id === newStory.id);
+            if (exists) return prev;
+            return sortStoriesByNewest([newStory, ...prev]);
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "stories" },
+        (payload) => {
+          const updatedStory = payload.new as StoryRecord;
+
+          setStories((prev) => {
+            if (!isActiveStory(updatedStory)) {
+              return prev.filter((story) => story.id !== updatedStory.id);
+            }
+
+            const exists = prev.some((story) => story.id === updatedStory.id);
+            const next = exists
+              ? prev.map((story) =>
+                  story.id === updatedStory.id ? updatedStory : story
+                )
+              : [updatedStory, ...prev];
+
+            return sortStoriesByNewest(next);
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "stories" },
+        (payload) => {
+          const deletedStory = payload.old as Pick<StoryRecord, "id">;
+          setStories((prev) =>
+            prev.filter((story) => story.id !== deletedStory.id)
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications" },
+        (payload) => {
+          const newNotification = payload.new as NotificationRecord;
+          if (newNotification.user_id !== userId) return;
+
+          setNotifications((prev) => {
+            const exists = prev.some(
+              (notification) => notification.id === newNotification.id
+            );
+            if (exists) return prev;
+            return sortNotificationsByNewest([newNotification, ...prev]);
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "notifications" },
+        (payload) => {
+          const updatedNotification = payload.new as NotificationRecord;
+          if (updatedNotification.user_id !== userId) return;
+
+          setNotifications((prev) =>
+            sortNotificationsByNewest(
+              prev.map((notification) =>
+                notification.id === updatedNotification.id
+                  ? updatedNotification
+                  : notification
+              )
+            )
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "notifications" },
+        (payload) => {
+          const deletedNotification = payload.old as Pick<NotificationRecord, "id">;
+          setNotifications((prev) =>
+            prev.filter(
+              (notification) => notification.id !== deletedNotification.id
+            )
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "follows" },
+        (payload) => {
+          const newFollow = payload.new as FollowRecord;
+
+          setFollows((prev) => {
+            const exists = prev.some((follow) => follow.id === newFollow.id);
+            if (exists) return prev;
+            return [...prev, newFollow];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "follows" },
+        (payload) => {
+          const deletedFollow = payload.old as Pick<FollowRecord, "id">;
+          setFollows((prev) =>
+            prev.filter((follow) => follow.id !== deletedFollow.id)
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "communities" },
+        (payload) => {
+          const newCommunity = payload.new as CommunityRecord;
+
+          setCommunities((prev) => {
+            const exists = prev.some(
+              (community) => community.id === newCommunity.id
+            );
+            if (exists) return prev;
+            return [newCommunity, ...prev];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "communities" },
+        (payload) => {
+          const updatedCommunity = payload.new as CommunityRecord;
+
+          setCommunities((prev) =>
+            prev.map((community) =>
+              community.id === updatedCommunity.id ? updatedCommunity : community
+            )
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "communities" },
+        (payload) => {
+          const deletedCommunity = payload.old as Pick<CommunityRecord, "id">;
+          setCommunities((prev) =>
+            prev.filter((community) => community.id !== deletedCommunity.id)
+          );
+          setCommunityMembers((prev) =>
+            prev.filter((member) => member.community_id !== deletedCommunity.id)
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "community_members" },
+        (payload) => {
+          const newMember = payload.new as CommunityMemberRecord;
+
+          setCommunityMembers((prev) => {
+            const exists = prev.some((member) => member.id === newMember.id);
+            if (exists) return prev;
+            return [...prev, newMember];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "community_members" },
+        (payload) => {
+          const deletedMember = payload.old as Pick<CommunityMemberRecord, "id">;
+          setCommunityMembers((prev) =>
+            prev.filter((member) => member.id !== deletedMember.id)
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "videos" },
+        (payload) => {
+          const newVideo = payload.new as VideoRecord;
+
+          setVideos((prev) => {
+            const exists = prev.some((video) => video.id === newVideo.id);
+            if (exists) return prev;
+            return sortVideosByNewest([newVideo, ...prev]);
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "videos" },
+        (payload) => {
+          const updatedVideo = payload.new as VideoRecord;
+
+          setVideos((prev) =>
+            sortVideosByNewest(
+              prev.map((video) =>
+                video.id === updatedVideo.id ? updatedVideo : video
+              )
+            )
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "videos" },
+        (payload) => {
+          const deletedVideo = payload.old as Pick<VideoRecord, "id">;
+          setVideos((prev) => prev.filter((video) => video.id !== deletedVideo.id));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "profiles" },
+        (payload) => {
+          const updatedProfile = payload.new as ProfileRecord;
+
+          setProfiles((prev) =>
+            prev.map((profile) =>
+              profile.id === updatedProfile.id ? updatedProfile : profile
+            )
+          );
+
+          if (updatedProfile.id === userId) {
+            setUserName(updatedProfile.full_name || "FaceGrem User");
+            setUserAvatar(
+              updatedProfile.avatar_url ||
+                getAvatarUrl(updatedProfile.full_name || "FaceGrem User")
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(realtimeChannel);
+    };
+  }, [userId]);
+
   const isFollowingUser = (targetUserId: string) =>
     follows.some(
       (follow) =>
