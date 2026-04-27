@@ -287,6 +287,7 @@ function MessagesPageContent() {
   const userIdRef = useRef("");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const voiceChunksRef = useRef<Blob[]>([]);
+  const voiceMimeTypeRef = useRef("audio/webm");
   const callStreamRef = useRef<MediaStream | null>(null);
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -354,6 +355,28 @@ function MessagesPageContent() {
       bio: "",
       avatar_url: null,
     };
+  };
+
+  const getSupportedVoiceMimeType = () => {
+    if (typeof MediaRecorder === "undefined") return "";
+
+    const options = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/mp4",
+      "audio/mpeg",
+      "audio/ogg;codecs=opus",
+      "audio/ogg",
+    ];
+
+    return options.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+  };
+
+  const getVoiceFileExtension = (mimeType: string) => {
+    if (mimeType.includes("mp4")) return "m4a";
+    if (mimeType.includes("mpeg")) return "mp3";
+    if (mimeType.includes("ogg")) return "ogg";
+    return "webm";
   };
 
   const buildVoiceMessageContent = (audioUrl: string) =>
@@ -918,26 +941,41 @@ function MessagesPageContent() {
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
       voiceChunksRef.current = [];
 
-      const recorder = new MediaRecorder(stream);
+      const mimeType = getSupportedVoiceMimeType();
+      voiceMimeTypeRef.current = mimeType || "audio/webm";
+
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+
       mediaRecorderRef.current = recorder;
 
       recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           voiceChunksRef.current.push(event.data);
         }
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(voiceChunksRef.current, {
-          type: recorder.mimeType || "audio/webm",
-        });
-
         stream.getTracks().forEach((track) => track.stop());
 
+        const chunks = voiceChunksRef.current.filter((chunk) => chunk.size > 0);
+        const audioBlob = new Blob(chunks, {
+          type: voiceMimeTypeRef.current || recorder.mimeType || "audio/webm",
+        });
+
         if (audioBlob.size === 0) {
+          alert(t.voiceUploadError);
           setRecordingVoice(false);
           return;
         }
@@ -945,14 +983,15 @@ function MessagesPageContent() {
         setVoiceUploading(true);
 
         try {
+          const extension = getVoiceFileExtension(audioBlob.type);
           const filePath = `${userId}/${Date.now()}-${Math.random()
             .toString(36)
-            .slice(2)}.webm`;
+            .slice(2)}.${extension}`;
 
           const { error: uploadError } = await supabase.storage
             .from("voice-messages")
             .upload(filePath, audioBlob, {
-              contentType: audioBlob.type,
+              contentType: audioBlob.type || "audio/webm",
               upsert: false,
             });
 
@@ -974,7 +1013,7 @@ function MessagesPageContent() {
         }
       };
 
-      recorder.start();
+      recorder.start(250);
       setRecordingVoice(true);
     } catch (error) {
       alert(error instanceof Error ? error.message : t.voiceUploadError);
@@ -983,6 +1022,12 @@ function MessagesPageContent() {
 
   const handleStopVoiceRecording = () => {
     if (mediaRecorderRef.current && recordingVoice) {
+      try {
+        mediaRecorderRef.current.requestData();
+      } catch {
+        // Some browsers do not support requestData in every state.
+      }
+
       mediaRecorderRef.current.stop();
     }
   };
