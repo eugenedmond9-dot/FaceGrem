@@ -744,11 +744,11 @@ function ProfilePageContent() {
 
               <div className="mt-4 grid grid-cols-3 gap-2">
                 <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] px-3 py-3 text-center backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]">
-                  <p className="text-[11px] text-slate-400">{"Follow"ers}</p>
+                  <p className="text-[11px] text-slate-400">{"Followers"}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{followersCount}</p>
                 </div>
                 <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] px-3 py-3 text-center backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]">
-                  <p className="text-[11px] text-slate-400">{"Follow"ing}</p>
+                  <p className="text-[11px] text-slate-400">{"Following"}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{followingCount}</p>
                 </div>
                 <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] px-3 py-3 text-center backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]">
@@ -772,7 +772,7 @@ function ProfilePageContent() {
             <div className="rounded-[28px] border border-white/[0.06] bg-white/[0.028] p-4 backdrop-blur-[28px] shadow-[0_18px_50px_rgba(2,8,23,0.18)]">
               <p className="text-sm font-semibold text-cyan-200">{"About"}</p>
               <div className="mt-4 rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
-                <p className="text-sm leading-7 text-slate-300">{profile.bio || t.noBioYet}</p>
+                <p className="text-sm leading-7 text-slate-300">{profile.bio || "No bio yet."}</p>
               </div>
             </div>
           </div>
@@ -787,13 +787,13 @@ function ProfilePageContent() {
                   <p className="text-sm font-semibold text-cyan-200">{isOwnProfile ? t.profile : t.profile}</p>
                   <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">{profile.full_name || "FaceGrem User"}</h2>
                   <p className="mt-2 text-sm text-slate-300">{profile.username ? `@${profile.username}` : "@yourusername"}</p>
-                  <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">{profile.bio || t.noBioYet}</p>
+                  <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">{profile.bio || "No bio yet."}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4"><p className="text-xs text-slate-400">{"Follow"ers}</p><p className="mt-2 text-2xl font-bold text-white">{followersCount}</p></div>
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4"><p className="text-xs text-slate-400">{"Follow"ing}</p><p className="mt-2 text-2xl font-bold text-white">{followingCount}</p></div>
+                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4"><p className="text-xs text-slate-400">{"Followers"}</p><p className="mt-2 text-2xl font-bold text-white">{followersCount}</p></div>
+                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4"><p className="text-xs text-slate-400">{"Following"}</p><p className="mt-2 text-2xl font-bold text-white">{followingCount}</p></div>
                 <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4"><p className="text-xs text-slate-400">{t.posts}</p><p className="mt-2 text-2xl font-bold text-white">{posts.length}</p></div>
               </div>
             </div>
@@ -822,7 +822,7 @@ function ProfilePageContent() {
                     <div className="rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4">
                       <label className="text-sm font-medium text-white">{t.photo}</label>
                       <input type="file" accept="image/*" onChange={handleAvatarFileChange} className="mt-3 block w-full rounded-2xl text-sm text-white file:mr-4 file:rounded-xl file:border file:border-white/[0.06] file:bg-white/[0.04] file:px-4 file:py-2.5 file:text-slate-200" />
-                      {selectedAvatarPreview && <p className="mt-3 text-xs text-cyan-300">{"New avatar selected. Save profile to upload it."}</p>}
+                      {selectedAvatarPreview && <p className="mt-3 text-xs text-cyan-300">"New avatar selected. Save profile to upload it."</p>}
                     </div>
                   </div>
 
@@ -839,8 +839,8 @@ function ProfilePageContent() {
                     </div>
 
                     <div>
-                      <label className="text-sm text-slate-300">{t.bio}</label>
-                      <textarea value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} rows={6} placeholder={"Tell FaceGrem who you are..."} className="mt-2 w-full rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-white placeholder:text-slate-400/90 outline-none transition focus:border-cyan-300/20" />
+                      <label className="text-sm text-slate-300">{"Bio"}</label>
+                      <textarea value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} rows={6} placeholder="Tell FaceGrem who you are..." className="mt-2 w-full rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-white placeholder:text-slate-400/90 outline-none transition focus:border-cyan-300/20" />
                     </div>
 
                     <div className="flex justify-end">
@@ -857,7 +857,7 @@ function ProfilePageContent() {
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold text-cyan-200">{"About"}</p>
-                  <p className="mt-2 text-sm leading-7 text-slate-300">{profile.bio || t.noBioYet}</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">{profile.bio || "No bio yet."}</p>
                 </div>
 
                 <div className="flex gap-3">
@@ -969,11 +969,11 @@ function ProfilePageContent() {
                         <div className="flex items-center gap-3 text-sm">
                           <div className="flex items-center gap-2 rounded-full border border-white/[0.05] bg-white/[0.022] px-3 py-1.5">
                             <span className="text-base">❤️</span>
-                            <span className="text-slate-200">{likesCount} {likesCount === 1 ? t.like : t.likes}</span>
+                            <span className="text-slate-200">{likesCount} {likesCount === 1 ? t.like : "likes"}</span>
                           </div>
 
                           <div className="rounded-full border border-white/[0.05] bg-white/[0.022] px-3 py-1.5 text-slate-300">
-                            {commentsCount} {commentsCount === 1 ? "comment" : "comment"s}
+                            {commentsCount} {commentsCount === 1 ? "comment" : "comments"}
                           </div>
                         </div>
 
@@ -981,8 +981,8 @@ function ProfilePageContent() {
                       </div>
 
                       <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-300">{likesCount} {t.likes}</div>
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-300">{commentsCount} {"comment"s}</div>
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-300">{likesCount} {"likes"}</div>
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-300">{commentsCount} {"comments"}</div>
                         <Link href={`/post/${post.id}`} className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-cyan-100 transition hover:bg-white/[0.045]">{t.open}</Link>
                         <Link href={`/messages?user=${post.user_id}`} className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-300 transition hover:bg-white/[0.045]">{t.message}</Link>
                       </div>
@@ -1048,8 +1048,8 @@ function ProfilePageContent() {
                 <p className="mt-2 font-medium text-white">{profile.username ? `@${profile.username}` : "Not set"}</p>
               </div>
               <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
-                <p className="text-xs text-slate-400">{t.bio}</p>
-                <p className="mt-2 text-sm leading-7 text-slate-300">{profile.bio || t.noBioYet}</p>
+                <p className="text-xs text-slate-400">{"Bio"}</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">{profile.bio || "No bio yet."}</p>
               </div>
             </div>
           </div>
@@ -1084,7 +1084,7 @@ function ProfilePageContent() {
               <Link href="/feed" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.homeFeed}</Link>
               <Link href="/videos" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.videos}</Link>
               <Link href="/communities" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.communities}</Link>
-              <Link href="/messages" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.openMessages}</Link>
+              <Link href="/messages" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.messages}</Link>
               <button
                 type="button"
                 onClick={handleLogout}

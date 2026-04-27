@@ -794,13 +794,13 @@ export default function CommunityDetailPage() {
 
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-cyan-200">{t.about}</p>
+                <p className="text-sm font-semibold text-cyan-200">{"About"}</p>
               </div>
 
               <div className="mt-4 space-y-4">
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
                   <p className="text-sm leading-7 text-slate-300">
-                    {community.description || t.noBioYet}
+                    {community.description || "No description yet."}
                   </p>
                 </div>
 

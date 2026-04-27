@@ -24,7 +24,7 @@ type PostRecord = {
   community_id?: string | null;
 };
 
-type {t.profile}Record = {
+type ProfileRecord = {
   id: string;
   full_name: string;
   username: string;
@@ -56,7 +56,7 @@ export default function SavedPage() {
   const [userAvatar, setUserAvatar] = useState("");
   const [savedPosts, setSavedPosts] = useState<SavedPostRecord[]>([]);
   const [posts, setPosts] = useState<PostRecord[]>([]);
-  const [profiles, set{t.profile}s] = useState<{t.profile}Record[]>([]);
+  const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
   const [likes, setLikes] = useState<LikeRecord[]>([]);
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,13 +67,13 @@ export default function SavedPage() {
       name
     )}&background=0f172a&color=ffffff&bold=true`;
 
-  const get{t.profile}ById = (profileId?: string) => {
+  const getProfileById = (profileId?: string) => {
     if (!profileId) return undefined;
     return profiles.find((profile) => profile.id === profileId);
   };
 
   const getBestNameForUser = (uid?: string, fallbackName?: string | null) => {
-    const profile = get{t.profile}ById(uid);
+    const profile = getProfileById(uid);
     return profile?.full_name || fallbackName || "FaceGrem User";
   };
 
@@ -82,7 +82,7 @@ export default function SavedPage() {
     fallbackName?: string | null,
     fallbackAvatarUrl?: string | null
   ) => {
-    const profile = get{t.profile}ById(uid);
+    const profile = getProfileById(uid);
     return (
       profile?.avatar_url ||
       fallbackAvatarUrl ||
@@ -156,16 +156,16 @@ export default function SavedPage() {
           .select("id, post_id, user_id, full_name, content, created_at"),
       ]);
 
-      const all{t.profile}s = profilesData || [];
-      const my{t.profile} = all{t.profile}s.find((profile) => profile.id === currentUserId);
+      const allProfiles = profilesData || [];
+      const myProfile = allProfiles.find((profile) => profile.id === currentUserId);
 
       setSavedPosts(savedPostsData || []);
       setPosts(postsData || []);
-      set{t.profile}s(all{t.profile}s);
+      setProfiles(allProfiles);
       setLikes(likesData || []);
       setComments(commentsData || []);
       setUserAvatar(
-        my{t.profile}?.avatar_url || getAvatarUrl(my{t.profile}?.full_name || currentUserName)
+        myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || currentUserName)
       );
       setLoading(false);
     };
@@ -210,7 +210,7 @@ export default function SavedPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
-        {t.loadingSaved}
+        Loading saved posts...
       </div>
     );
   }
@@ -331,7 +331,7 @@ export default function SavedPage() {
                 />
                 <div className="min-w-0">
                   <p className="font-semibold text-white truncate">{userName}</p>
-                  <p className="text-sm truncate text-slate-400">{t.savedPosts}</p>
+                  <p className="text-sm truncate text-slate-400">Your saved collection</p>
                 </div>
               </div>
 
@@ -341,19 +341,19 @@ export default function SavedPage() {
                   <p className="mt-1 text-sm font-semibold text-white">{savedPosts.length}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">{"Visible"}</p>
+                  <p className="text-[11px] text-slate-400">Visible</p>
                   <p className="mt-1 text-sm font-semibold text-white">{savedPostItems.length}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">{"Type"}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{"Mixed"}</p>
+                  <p className="text-[11px] text-slate-400">Type</p>
+                  <p className="mt-1 text-sm font-semibold text-white">Mixed</p>
                 </div>
               </div>
             </div>
 
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-3 backdrop-blur-xl">
               <p className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
-                {t.navigation}
+                Navigate
               </p>
 
               <div className="space-y-1.5">
@@ -363,7 +363,7 @@ export default function SavedPage() {
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-base">🏠</span>
-                    {t.homeFeed}
+                    Home feed
                   </span>
                   <span className="text-slate-500">→</span>
                 </Link>
@@ -385,7 +385,7 @@ export default function SavedPage() {
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-base">👥</span>
-                    {t.communities}
+                    Communities
                   </span>
                   <span className="text-slate-500">→</span>
                 </Link>
@@ -396,7 +396,7 @@ export default function SavedPage() {
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-base">💬</span>
-                    {t.messages}
+                    Messages
                   </span>
                   <span className="text-slate-500">→</span>
                 </Link>
@@ -407,7 +407,7 @@ export default function SavedPage() {
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-base">👤</span>
-                    {t.profile}
+                    Profile
                   </span>
                   <span className="text-slate-500">→</span>
                 </Link>
@@ -415,10 +415,10 @@ export default function SavedPage() {
             </div>
 
             <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-              <p className="text-sm font-semibold text-cyan-200">{"Collection note"}</p>
+              <p className="text-sm font-semibold text-cyan-200">Collection note</p>
               <div className="p-4 mt-4 border rounded-2xl border-white/10 bg-white/5">
                 <p className="text-sm leading-7 text-slate-300">
-                  {"Keep your favorite posts here so you can revisit them anytime."}
+                  Keep your favorite posts here so you can revisit them anytime.
                 </p>
               </div>
             </div>
@@ -429,12 +429,12 @@ export default function SavedPage() {
           <section className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(8,47,73,0.95),rgba(15,23,42,0.95)_55%,rgba(30,41,59,0.95))] p-6 shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
-                <p className="text-sm font-semibold text-cyan-200">{"Your collection"}</p>
+                <p className="text-sm font-semibold text-cyan-200">Your collection</p>
                 <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  {t.savedPosts} you want to come back to.
+                  Saved posts you want to come back to.
                 </h2>
                 <p className="max-w-xl mt-3 text-sm leading-7 text-slate-300">
-                  {"Keep useful ideas, inspiring posts, videos, and moments in one place."}
+                  Keep useful ideas, inspiring posts, videos, and moments in one place.
                 </p>
               </div>
 
@@ -444,11 +444,11 @@ export default function SavedPage() {
                   <p className="mt-2 text-2xl font-bold text-white">{savedPosts.length}</p>
                 </div>
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">{"Visible"}</p>
+                  <p className="text-xs text-slate-400">Visible</p>
                   <p className="mt-2 text-2xl font-bold text-white">{savedPostItems.length}</p>
                 </div>
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">{t.search}</p>
+                  <p className="text-xs text-slate-400">Search</p>
                   <p className="mt-2 text-xl font-bold text-white">
                     {searchText.trim() ? "On" : "Off"}
                   </p>
@@ -462,26 +462,26 @@ export default function SavedPage() {
               <div>
                 <p className="text-sm font-semibold text-cyan-200">{t.savedPosts}</p>
                 <h3 className="mt-1 text-2xl font-bold tracking-tight text-white">
-                  {"Everything you bookmarked"}
+                  Everything you bookmarked
                 </h3>
               </div>
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
-                {savedPostItems.length} {"visible"}
+                {savedPostItems.length} visible
               </span>
             </div>
           </section>
 
           {savedPostItems.length === 0 ? (
             <div className="rounded-[30px] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
-              <p className="text-lg font-medium text-white">{"You have not saved any posts yet."}</p>
+              <p className="text-lg font-medium text-white">You have not saved any posts yet.</p>
               <p className="mt-2 text-sm text-slate-400">
-                {"Posts you save from the feed will show up here."}
+                Posts you save from the feed will show up here.
               </p>
             </div>
           ) : (
             <section className="space-y-6">
               {savedPostItems.map((post) => {
-                const author{t.profile} = get{t.profile}ById(post.user_id);
+                const authorProfile = getProfileById(post.user_id);
                 const authorName = getBestNameForUser(post.user_id, post.full_name);
                 const authorAvatar = getBestAvatarForUser(
                   post.user_id,
@@ -522,9 +522,9 @@ export default function SavedPage() {
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="font-semibold text-white truncate">{authorName}</p>
 
-                              {author{t.profile}?.username && (
+                              {authorProfile?.username && (
                                 <span className="text-sm truncate text-slate-400">
-                                  @{author{t.profile}.username}
+                                  @{authorProfile.username}
                                 </span>
                               )}
 
@@ -542,13 +542,13 @@ export default function SavedPage() {
 
                               {post.video_url && (
                                 <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
-                                  {t.video}
+                                  Video post
                                 </span>
                               )}
 
                               {post.image_url && !post.video_url && (
                                 <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-2.5 py-1 text-[11px] text-fuchsia-200">
-                                  {t.photo}
+                                  Photo post
                                 </span>
                               )}
                             </div>
@@ -613,7 +613,7 @@ export default function SavedPage() {
                           <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5">
                             <span className="text-base">❤️</span>
                             <span className="text-slate-200">
-                              {likesCount} {likesCount === 1 ? t.like : "likes"}
+                              {likesCount} {likesCount === 1 ? "like" : "likes"}
                             </span>
                           </div>
 
@@ -627,7 +627,7 @@ export default function SavedPage() {
                           href={`/post/${post.id}`}
                           className="text-sm font-medium transition text-cyan-300 hover:text-cyan-200"
                         >
-                          {t.viewDiscussion}
+                          View discussion
                         </Link>
                       </div>
 
@@ -637,7 +637,7 @@ export default function SavedPage() {
                         </div>
 
                         <div className="px-4 py-3 text-sm font-medium text-center border rounded-2xl border-white/10 bg-white/5 text-slate-300">
-                          {commentsCount} {"comments"}
+                          {commentsCount} Comments
                         </div>
 
                         <Link
@@ -660,7 +660,7 @@ export default function SavedPage() {
                       {latestComments.length > 0 && (
                         <div className="pt-4 mt-5 space-y-3 border-t border-white/10">
                           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                            {"Recent comments"}
+                            Recent comments
                           </p>
 
                           {latestComments.map((comment) => {
@@ -716,26 +716,26 @@ export default function SavedPage() {
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">{"Saved summary"}</p>
-                <p className="mt-1 text-xs text-slate-400">{"Quick view of your collection"}</p>
+                <p className="text-sm font-semibold text-cyan-200">Saved summary</p>
+                <p className="mt-1 text-xs text-slate-400">Quick view of your collection</p>
               </div>
             </div>
 
             <div className="mt-4 space-y-4">
               <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                <p className="text-xs text-slate-400">{"Total saved posts"}</p>
+                <p className="text-xs text-slate-400">Total saved posts</p>
                 <p className="mt-2 text-2xl font-bold text-white">{savedPosts.length}</p>
               </div>
 
               <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                <p className="text-xs text-slate-400">{"Visible after search"}</p>
+                <p className="text-xs text-slate-400">Visible after search</p>
                 <p className="mt-2 text-2xl font-bold text-white">{savedPostItems.length}</p>
               </div>
 
               <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                <p className="text-xs text-slate-400">{"Search state"}</p>
+                <p className="text-xs text-slate-400">Search state</p>
                 <p className="mt-2 font-medium text-white">
-                  {searchText.trim() ? "{"Filtering collection"}" : "{"Showing all"}"}
+                  {searchText.trim() ? "Filtering collection" : "Showing all"}
                 </p>
               </div>
             </div>
@@ -744,8 +744,8 @@ export default function SavedPage() {
           <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">{"Quick links"}</p>
-                <p className="mt-1 text-xs text-slate-400">{t.brandTagline}</p>
+                <p className="text-sm font-semibold text-cyan-200">Quick links</p>
+                <p className="mt-1 text-xs text-slate-400">Move around FaceGrem fast</p>
               </div>
             </div>
 
@@ -754,25 +754,25 @@ export default function SavedPage() {
                 href="/feed"
                 className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                {t.homeFeed}
+                Back to feed
               </Link>
               <Link
                 href="/videos"
                 className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                {t.videos}
+                Open videos
               </Link>
               <Link
                 href="/communities"
                 className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                {t.communities}
+                Explore communities
               </Link>
               <Link
                 href="/messages"
                 className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
               >
-                {t.messages}
+                Open messages
               </Link>
             </div>
           </div>

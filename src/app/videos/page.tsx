@@ -594,7 +594,7 @@ export default function VideosPage() {
                   <p className="mt-1 text-sm font-semibold text-white">{videos.length}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">{"Tab"s}</p>
+                  <p className="text-[11px] text-slate-400">{"Tabs"}</p>
                   <p className="mt-1 text-sm font-semibold text-white">{videoTabs.length}</p>
                 </div>
                 <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">

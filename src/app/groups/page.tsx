@@ -795,7 +795,7 @@ export default function GroupsPage() {
                         </h3>
 
                         <p className="mt-3 text-sm leading-7 text-slate-300">
-                          {group.description || t.noBioYet}
+                          {group.description || "No description yet."}
                         </p>
                       </div>
 

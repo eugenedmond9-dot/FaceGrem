@@ -803,7 +803,7 @@ export default function CommunitiesPage() {
                           </h3>
 
                           <p className="mt-3 text-sm leading-7 text-slate-300">
-                            {community.description || t.noBioYet}
+                            {community.description || "No description yet."}
                           </p>
                         </div>
                       </div>

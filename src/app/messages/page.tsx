@@ -114,7 +114,6 @@ function MessagesPageContent() {
   const [messages, setMessages] = useState<MessageRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
-  const [selectedLanguage, setSelectedLanguage] = useState<TranslationLanguage>("en");
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);

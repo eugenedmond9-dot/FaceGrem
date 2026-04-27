@@ -10,16 +10,16 @@ import {
 } from "react";
 import {
   getStoredLanguage,
-  LANGUAGE_STORAGE_KEY,
   saveStoredLanguage,
   TranslationLanguage,
+  UiTranslations,
   uiTranslations,
 } from "../lib/language";
 
 type LanguageContextValue = {
   language: TranslationLanguage;
   setLanguage: (language: TranslationLanguage) => void;
-  t: typeof uiTranslations.en;
+  t: UiTranslations;
 };
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -55,11 +55,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     setLanguageState(nextLanguage);
   };
 
-  const value = useMemo(
+  const value = useMemo<LanguageContextValue>(
     () => ({
       language,
       setLanguage,
-      t: uiTranslations[language],
+      t: uiTranslations[language] as UiTranslations,
     }),
     [language]
   );
