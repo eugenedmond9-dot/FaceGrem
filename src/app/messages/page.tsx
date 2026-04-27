@@ -69,7 +69,7 @@ const languageLabels: Record<TranslationLanguage, string> = {
 
 const uiTranslations = {
   en: {
-    loadingMessages: "{t.loadingMessages}",
+    loadingMessages: "Loading messages...",
     brandTagline: "Messages",
     navigation: "Navigation",
     homeFeed: "Home Feed",
@@ -108,6 +108,17 @@ const uiTranslations = {
     selectFirst: "Select a conversation first.",
     sending: "Sending...",
     send: "Send",
+    audioCall: "Audio call",
+    videoCall: "Video call",
+    endCall: "End call",
+    callPreview: "Call preview",
+    callPermission: "Allow microphone/camera permission to start the preview.",
+    voiceRecord: "Voice",
+    recording: "Recording...",
+    sendVoice: "Send voice",
+    stop: "Stop",
+    voiceMessage: "Voice message",
+    voiceUploadError: "Could not send voice message.",
   },
   sw: {
     loadingMessages: "Inapakia ujumbe...",
@@ -149,6 +160,17 @@ const uiTranslations = {
     selectFirst: "Chagua mazungumzo kwanza.",
     sending: "Inatuma...",
     send: "Tuma",
+    audioCall: "Simu ya sauti",
+    videoCall: "Simu ya video",
+    endCall: "Maliza simu",
+    callPreview: "Muonekano wa simu",
+    callPermission: "Ruhusu kipaza sauti/kamera ili kuanza muonekano.",
+    voiceRecord: "Sauti",
+    recording: "Inarekodi...",
+    sendVoice: "Tuma sauti",
+    stop: "Simamisha",
+    voiceMessage: "Ujumbe wa sauti",
+    voiceUploadError: "Imeshindikana kutuma ujumbe wa sauti.",
   },
   fr: {
     loadingMessages: "Chargement des messages...",
@@ -190,6 +212,17 @@ const uiTranslations = {
     selectFirst: "Sélectionnez d’abord une conversation.",
     sending: "Envoi...",
     send: "Envoyer",
+    audioCall: "Appel audio",
+    videoCall: "Appel vidéo",
+    endCall: "Terminer l’appel",
+    callPreview: "Aperçu de l’appel",
+    callPermission: "Autorisez le micro/la caméra pour démarrer l’aperçu.",
+    voiceRecord: "Voix",
+    recording: "Enregistrement...",
+    sendVoice: "Envoyer la voix",
+    stop: "Arrêter",
+    voiceMessage: "Message vocal",
+    voiceUploadError: "Impossible d’envoyer le message vocal.",
   },
   rw: {
     loadingMessages: "Ubutumwa burimo gufunguka...",
@@ -231,6 +264,17 @@ const uiTranslations = {
     selectFirst: "Banza uhitemo ikiganiro.",
     sending: "Birimo koherezwa...",
     send: "Ohereza",
+    audioCall: "Guhamagara amajwi",
+    videoCall: "Guhamagara video",
+    endCall: "Soza guhamagara",
+    callPreview: "Igerageza ryo guhamagara",
+    callPermission: "Emerera mikoro/kamera kugira ngo igerageza ritangire.",
+    voiceRecord: "Ijwi",
+    recording: "Birimo gufata amajwi...",
+    sendVoice: "Ohereza ijwi",
+    stop: "Hagarika",
+    voiceMessage: "Ubutumwa bw’ijwi",
+    voiceUploadError: "Ntibyashobotse kohereza ubutumwa bw’ijwi.",
   },
 } as const;
 
@@ -241,6 +285,10 @@ function MessagesPageContent() {
   const languageMenuRef = useRef<HTMLDivElement | null>(null);
   const conversationsRef = useRef<ConversationRecord[]>([]);
   const userIdRef = useRef("");
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const voiceChunksRef = useRef<Blob[]>([]);
+  const callStreamRef = useRef<MediaStream | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
@@ -258,6 +306,10 @@ function MessagesPageContent() {
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [recordingVoice, setRecordingVoice] = useState(false);
+  const [voiceUploading, setVoiceUploading] = useState(false);
+  const [activeCallType, setActiveCallType] = useState<"audio" | "video" | null>(null);
+  const [callError, setCallError] = useState("");
 
   const selectedUserId = searchParams.get("user") || "";
   const t = uiTranslations[selectedLanguage];
@@ -302,6 +354,20 @@ function MessagesPageContent() {
       bio: "",
       avatar_url: null,
     };
+  };
+
+  const buildVoiceMessageContent = (audioUrl: string) =>
+    `__voice_note__|${audioUrl}`;
+
+  const parseVoiceMessageContent = (content: string) => {
+    if (!content.startsWith("__voice_note__|")) return null;
+    const [, audioUrl] = content.split("|");
+    return audioUrl || null;
+  };
+
+  const getMessagePreview = (content?: string) => {
+    if (!content) return t.openConversation;
+    return parseVoiceMessageContent(content) ? `🎙️ ${t.voiceMessage}` : content;
   };
 
   const sortConversationsByUpdatedAt = (items: ConversationRecord[]) =>
@@ -745,13 +811,184 @@ function MessagesPageContent() {
     return fallbackConversation;
   };
 
-  const handleSendMessage = async (e: FormEvent) => {
-    e.preventDefault();
-
+  const sendMessageContent = async (content: string) => {
     if (!selectedUserId) {
       alert(t.selectFirst);
       return;
     }
+
+    const trimmed = content.trim();
+    if (!trimmed) {
+      alert(t.writeFirst);
+      return;
+    }
+
+    const conversation = await getOrCreateConversation(selectedUserId);
+
+    const { data, error } = await supabase
+      .from("messages")
+      .insert([
+        {
+          conversation_id: conversation.id,
+          sender_id: userId,
+          content: trimmed,
+        },
+      ])
+      .select("id, conversation_id, sender_id, content, created_at, is_read")
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    if (data) {
+      upsertMessage(data);
+
+      const bumpedConversation: ConversationRecord = {
+        ...conversation,
+        updated_at: data.created_at,
+      };
+      upsertConversation(bumpedConversation);
+
+      await supabase
+        .from("conversations")
+        .update({ updated_at: data.created_at })
+        .eq("id", conversation.id);
+
+      await supabase.from("notifications").insert([
+        {
+          user_id: selectedUserId,
+          actor_id: userId,
+          type: "message",
+          actor_name: userName,
+          content: parseVoiceMessageContent(trimmed) ? t.voiceMessage : trimmed,
+          is_read: false,
+        },
+      ]);
+    }
+  };
+
+  const handleStartCall = async (type: "audio" | "video") => {
+    if (!selectedUserId) {
+      alert(t.selectFirst);
+      return;
+    }
+
+    setCallError("");
+    setActiveCallType(type);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: type === "video",
+      });
+
+      callStreamRef.current = stream;
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+      }
+
+      await supabase.from("notifications").insert([
+        {
+          user_id: selectedUserId,
+          actor_id: userId,
+          type: type === "video" ? "video_call" : "audio_call",
+          actor_name: userName,
+          content: type === "video" ? t.videoCall : t.audioCall,
+          is_read: false,
+        },
+      ]);
+    } catch (error) {
+      setCallError(error instanceof Error ? error.message : t.callPermission);
+    }
+  };
+
+  const handleEndCall = () => {
+    callStreamRef.current?.getTracks().forEach((track) => track.stop());
+    callStreamRef.current = null;
+    setActiveCallType(null);
+    setCallError("");
+  };
+
+  const handleStartVoiceRecording = async () => {
+    if (!selectedUserId) {
+      alert(t.selectFirst);
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      voiceChunksRef.current = [];
+
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          voiceChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(voiceChunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+
+        stream.getTracks().forEach((track) => track.stop());
+
+        if (audioBlob.size === 0) {
+          setRecordingVoice(false);
+          return;
+        }
+
+        setVoiceUploading(true);
+
+        try {
+          const filePath = `${userId}/${Date.now()}-${Math.random()
+            .toString(36)
+            .slice(2)}.webm`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("voice-messages")
+            .upload(filePath, audioBlob, {
+              contentType: audioBlob.type,
+              upsert: false,
+            });
+
+          if (uploadError) {
+            throw uploadError;
+          }
+
+          const { data } = supabase.storage
+            .from("voice-messages")
+            .getPublicUrl(filePath);
+
+          await sendMessageContent(buildVoiceMessageContent(data.publicUrl));
+        } catch (error) {
+          alert(error instanceof Error ? error.message : t.voiceUploadError);
+        } finally {
+          setVoiceUploading(false);
+          setRecordingVoice(false);
+          voiceChunksRef.current = [];
+        }
+      };
+
+      recorder.start();
+      setRecordingVoice(true);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : t.voiceUploadError);
+    }
+  };
+
+  const handleStopVoiceRecording = () => {
+    if (mediaRecorderRef.current && recordingVoice) {
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const handleSendMessage = async (e: FormEvent) => {
+    e.preventDefault();
 
     const trimmed = messageText.trim();
     if (!trimmed) {
@@ -762,59 +999,16 @@ function MessagesPageContent() {
     setSending(true);
 
     try {
-      const conversation = await getOrCreateConversation(selectedUserId);
-
-      const { data, error } = await supabase
-        .from("messages")
-        .insert([
-          {
-            conversation_id: conversation.id,
-            sender_id: userId,
-            content: trimmed,
-          },
-        ])
-        .select("id, conversation_id, sender_id, content, created_at, is_read")
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        upsertMessage(data);
-
-        const bumpedConversation: ConversationRecord = {
-          ...conversation,
-          updated_at: data.created_at,
-        };
-        upsertConversation(bumpedConversation);
-
-        await supabase
-          .from("conversations")
-          .update({ updated_at: data.created_at })
-          .eq("id", conversation.id);
-
-        await supabase.from("notifications").insert([
-          {
-            user_id: selectedUserId,
-            actor_id: userId,
-            type: "message",
-            actor_name: userName,
-            content: trimmed,
-            is_read: false,
-          },
-        ]);
-      }
-
+      await sendMessageContent(trimmed);
       setMessageText("");
     } catch (error: any) {
       console.error("Send message error:", error);
       alert(
         error?.message ||
-        error?.details ||
-        error?.hint ||
-        JSON.stringify(error) ||
-        "Could not send message."
+          error?.details ||
+          error?.hint ||
+          JSON.stringify(error) ||
+          "Could not send message."
       );
     } finally {
       setSending(false);
@@ -839,7 +1033,7 @@ function MessagesPageContent() {
       </div>
 
       <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/40 backdrop-blur-3xl">
-        <div className="flex items-center gap-3 px-4 py-3 mx-auto max-w-7xl sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -861,8 +1055,8 @@ function MessagesPageContent() {
             </Link>
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="max-w-xl mx-auto">
+          <div className="min-w-0 flex-1">
+            <div className="mx-auto max-w-xl">
               <div className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-2.5 shadow-[0_10px_35px_rgba(15,23,42,0.14)] transition focus-within:border-cyan-400/40 sm:px-4 lg:py-3">
                 <span className="text-sm text-slate-400">⌕</span>
                 <input
@@ -870,13 +1064,13 @@ function MessagesPageContent() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t.searchConversations}
-                  className="w-full text-xs text-white bg-transparent outline-none placeholder:text-slate-400 sm:text-sm"
+                  className="w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-400 sm:text-sm"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <div ref={languageMenuRef} className="relative hidden lg:block">
               <button
                 type="button"
@@ -895,10 +1089,11 @@ function MessagesPageContent() {
                       key={language}
                       type="button"
                       onClick={() => handleLanguageChange(language)}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${selectedLanguage === language
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
+                        selectedLanguage === language
                           ? "bg-cyan-400/[0.14] text-cyan-100"
                           : "text-white hover:bg-white/[0.06]"
-                        }`}
+                      }`}
                     >
                       <span>{languageLabels[language]}</span>
                       {selectedLanguage === language && <span>✓</span>}
@@ -930,7 +1125,7 @@ function MessagesPageContent() {
               <img
                 src={userAvatar}
                 alt={userName}
-                className="object-cover w-8 h-8 rounded-xl ring-1 ring-cyan-400/15"
+                className="h-8 w-8 rounded-xl object-cover ring-1 ring-cyan-400/15"
               />
               <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
                 {userName}
@@ -987,7 +1182,7 @@ function MessagesPageContent() {
               <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">👤 {t.profile}</Link>
             </div>
 
-            <div className="pt-5 mt-8 border-t border-white/10">
+            <div className="mt-8 border-t border-white/10 pt-5">
               <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 More
               </p>
@@ -1007,16 +1202,17 @@ function MessagesPageContent() {
                   </button>
 
                   {isLanguageMenuOpen && (
-                    <div className="px-2 pb-2 mt-2 space-y-1">
+                    <div className="mt-2 space-y-1 px-2 pb-2">
                       {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
                         <button
                           key={language}
                           type="button"
                           onClick={() => handleLanguageChange(language)}
-                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${selectedLanguage === language
+                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
+                            selectedLanguage === language
                               ? "bg-cyan-400/[0.14] text-cyan-100"
                               : "text-white hover:bg-white/[0.06]"
-                            }`}
+                          }`}
                         >
                           <span>{languageLabels[language]}</span>
                           {selectedLanguage === language && <span>✓</span>}
@@ -1036,7 +1232,7 @@ function MessagesPageContent() {
                   type="button"
                   onClick={handleLogout}
                   disabled={signingOut}
-                  className="block w-full px-4 py-3 text-left text-red-100 transition rounded-2xl hover:bg-red-500/10 disabled:opacity-70"
+                  className="block w-full rounded-2xl px-4 py-3 text-left text-red-100 transition hover:bg-red-500/10 disabled:opacity-70"
                 >
                   ↩️ {signingOut ? t.signingOut : t.logout}
                 </button>
@@ -1165,10 +1361,11 @@ function MessagesPageContent() {
                     key={conversation.id}
                     type="button"
                     onClick={() => openConversation(partnerId)}
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${isActive
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${
+                      isActive
                         ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
                         : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
-                      }`}
+                    }`}
                   >
                     <img
                       src={profile.avatar_url || getAvatarUrl(profile.full_name)}
@@ -1178,10 +1375,11 @@ function MessagesPageContent() {
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{profile.full_name}</p>
                       <p
-                        className={`mt-1 truncate text-xs ${isActive ? "text-white/80" : "text-slate-400"
-                          }`}
+                        className={`mt-1 truncate text-xs ${
+                          isActive ? "text-white/80" : "text-slate-400"
+                        }`}
                       >
-                        {latestMessage?.content || "{t.openConversation}"}
+                        {getMessagePreview(latestMessage?.content)}
                       </p>
                     </div>
                   </button>
@@ -1229,14 +1427,64 @@ function MessagesPageContent() {
                     </div>
                   </div>
 
-                  <Link
-                    href={`/profile?id=${selectedUserId}`}
-                    className="px-4 py-2 text-sm transition border rounded-2xl border-white/10 bg-white/5 text-cyan-300 hover:bg-white/10"
-                  >
-                    Open profile
-                  </Link>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleStartCall("audio")}
+                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10"
+                    >
+                      📞 {t.audioCall}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStartCall("video")}
+                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200 transition hover:bg-white/10"
+                    >
+                      🎥 {t.videoCall}
+                    </button>
+                    <Link
+                      href={`/profile?id=${selectedUserId}`}
+                      className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-cyan-300 transition hover:bg-white/10"
+                    >
+                      {t.openProfile}
+                    </Link>
+                  </div>
                 </div>
               </div>
+
+              {activeCallType && (
+                <div className="border-b border-white/10 bg-black/20 px-5 py-4 sm:px-6">
+                  <div className="rounded-[26px] border border-white/10 bg-white/5 p-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-cyan-200">
+                          {activeCallType === "video" ? t.videoCall : t.audioCall}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {callError || t.callPermission}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleEndCall}
+                        className="rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-100 transition hover:bg-red-500/20"
+                      >
+                        {t.endCall}
+                      </button>
+                    </div>
+
+                    {activeCallType === "video" && (
+                      <video
+                        ref={localVideoRef}
+                        autoPlay
+                        muted
+                        playsInline
+                        className="mt-4 h-56 w-full rounded-2xl bg-black object-cover"
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="min-h-[420px] space-y-4 px-4 py-5 sm:px-6">
                 {activeMessages.length === 0 ? (
@@ -1267,15 +1515,30 @@ function MessagesPageContent() {
                           )}
 
                           <div
-                            className={`rounded-[24px] px-4 py-3 text-sm leading-7 ${mine
+                            className={`rounded-[24px] px-4 py-3 text-sm leading-7 ${
+                              mine
                                 ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
                                 : "border border-white/10 bg-white/5 text-slate-200"
-                              }`}
+                            }`}
                           >
-                            <p>{message.content}</p>
+                            {parseVoiceMessageContent(message.content) ? (
+                              <div className="min-w-[220px]">
+                                <p className="mb-2 text-xs font-medium opacity-85">
+                                  🎙️ {t.voiceMessage}
+                                </p>
+                                <audio
+                                  controls
+                                  src={parseVoiceMessageContent(message.content) || undefined}
+                                  className="w-full"
+                                />
+                              </div>
+                            ) : (
+                              <p>{message.content}</p>
+                            )}
                             <p
-                              className={`mt-2 text-[11px] ${mine ? "text-white/80" : "text-slate-400"
-                                }`}
+                              className={`mt-2 text-[11px] ${
+                                mine ? "text-white/80" : "text-slate-400"
+                              }`}
                             >
                               {new Date(message.created_at).toLocaleString()}
                             </p>
@@ -1292,6 +1555,25 @@ function MessagesPageContent() {
               <div className="px-4 py-4 border-t border-white/10 sm:px-6">
                 <form onSubmit={handleSendMessage}>
                   <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="flex gap-2 sm:flex-col">
+                      <button
+                        type="button"
+                        onClick={recordingVoice ? handleStopVoiceRecording : handleStartVoiceRecording}
+                        disabled={voiceUploading}
+                        className={`rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:opacity-70 ${
+                          recordingVoice
+                            ? "border border-red-400/20 bg-red-500/10 text-red-100 hover:bg-red-500/20"
+                            : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                        }`}
+                      >
+                        {voiceUploading
+                          ? t.sending
+                          : recordingVoice
+                          ? `⏹️ ${t.stop}`
+                          : `🎙️ ${t.voiceRecord}`}
+                      </button>
+                    </div>
+
                     <textarea
                       value={messageText}
                       onChange={(e) => setMessageText(e.target.value)}
