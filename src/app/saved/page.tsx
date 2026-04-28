@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
+import NotificationDropdown from "../../components/NotificationDropdown";
 
 type SavedPostRecord = {
   id: string;

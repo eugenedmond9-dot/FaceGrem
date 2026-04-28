@@ -13,6 +13,7 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
+import NotificationDropdown from "../../components/NotificationDropdown";
 
 type ProfileRecord = {
   id: string;
@@ -1305,20 +1306,9 @@ function MessagesPageContent() {
               )}
             </div>
 
-            <div className="relative">
-              <Link
-                href="/notifications"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-[13px] text-slate-200 transition hover:bg-white/[0.06]"
-              >
-                🔔
-              </Link>
-
-              {unreadNotificationsCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-cyan-400 px-1 text-[10px] font-bold text-slate-950 shadow-lg">
-                  {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
-                </span>
-              )}
-            </div>
+            <NotificationDropdown
+              iconClassName="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-[13px] text-slate-200 transition hover:bg-white/[0.06]"
+            />
 
             <Link
               href="/profile"
