@@ -32,7 +32,6 @@ const settingsTranslations: Record<
     terms: string;
     cookies: string;
     logout: string;
-    loggingOut: string;
     comingSoon: string;
     backToFeed: string;
   }
@@ -59,7 +58,6 @@ const settingsTranslations: Record<
     terms: "Terms",
     cookies: "Cookies",
     logout: "Log out",
-    loggingOut: "Logging out...",
     comingSoon: "More controls coming soon",
     backToFeed: "Back to feed",
   },
@@ -85,7 +83,6 @@ const settingsTranslations: Record<
     terms: "Masharti",
     cookies: "Vidakuzi",
     logout: "Toka",
-    loggingOut: "Inatoka...",
     comingSoon: "Udhibiti zaidi unakuja hivi karibuni",
     backToFeed: "Rudi kwenye feed",
   },
@@ -111,7 +108,6 @@ const settingsTranslations: Record<
     terms: "Conditions",
     cookies: "Cookies",
     logout: "Se déconnecter",
-    loggingOut: "Déconnexion...",
     comingSoon: "Plus de contrôles arrivent bientôt",
     backToFeed: "Retour au fil",
   },
@@ -137,7 +133,6 @@ const settingsTranslations: Record<
     terms: "Amabwiriza",
     cookies: "Cookies",
     logout: "Sohoka",
-    loggingOut: "Birimo gusohoka...",
     comingSoon: "Ibindi byo kugenzura biri hafi kuza",
     backToFeed: "Subira kuri feed",
   },
@@ -146,7 +141,8 @@ const settingsTranslations: Record<
 export default function SettingsPage() {
   const router = useRouter();
   const { language } = useLanguage();
-  const pageText = settingsTranslations[language];
+
+  const pageText = settingsTranslations[language] || settingsTranslations.en;
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -158,48 +154,6 @@ export default function SettingsPage() {
 
     router.push("/");
   };
-
-  const settingCards = [
-    {
-      icon: "👤",
-      title: pageText.account,
-      text: pageText.accountText,
-      href: "/profile",
-      action: pageText.openProfile,
-    },
-    {
-      icon: "🔒",
-      title: pageText.privacy,
-      text: pageText.privacyText,
-      href: "/privacy-centre",
-      action: pageText.privacyCentre,
-    },
-    {
-      icon: "🌐",
-      title: pageText.language,
-      text: pageText.languageText,
-      custom: <LanguageMenu />,
-    },
-    {
-      icon: "🔔",
-      title: pageText.notifications,
-      text: pageText.notificationsText,
-      custom: <NotificationDropdown />,
-    },
-    {
-      icon: "🛡️",
-      title: pageText.security,
-      text: pageText.securityText,
-      badge: pageText.comingSoon,
-    },
-    {
-      icon: "❓",
-      title: pageText.help,
-      text: pageText.helpText,
-      href: "/help",
-      action: pageText.help,
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-[#020817] text-white">
@@ -249,68 +203,97 @@ export default function SettingsPage() {
           </div>
 
           <div className="grid gap-4 p-5 sm:p-8 lg:grid-cols-2">
-            {settingCards.map((card) => (
-              <section
-                key={card.title}
-                className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">
-                    {card.icon}
-                  </div>
+            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">👤</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{pageText.account}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.accountText}</p>
+                  <Link href="/profile" className="mt-4 inline-flex rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/15">
+                    {pageText.openProfile}
+                  </Link>
+                </div>
+              </div>
+            </section>
 
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-lg font-semibold text-white">{card.title}</h3>
-                    <p className="mt-2 text-sm leading-7 text-slate-300">
-                      {card.text}
-                    </p>
-
-                    <div className="mt-4">
-                      {card.custom ? (
-                        card.custom
-                      ) : card.href ? (
-                        <Link
-                          href={card.href}
-                          className="inline-flex rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/15"
-                        >
-                          {card.action}
-                        </Link>
-                      ) : (
-                        <span className="inline-flex rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-2 text-sm text-slate-300">
-                          {card.badge}
-                        </span>
-                      )}
-                    </div>
+            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🌐</div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-semibold text-white">{pageText.language}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.languageText}</p>
+                  <div className="mt-4">
+                    <LanguageMenu />
                   </div>
                 </div>
-              </section>
-            ))}
+              </div>
+            </section>
+
+            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🔔</div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-semibold text-white">{pageText.notifications}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.notificationsText}</p>
+                  <div className="mt-4">
+                    <NotificationDropdown />
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🔒</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{pageText.privacy}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.privacyText}</p>
+                  <Link href="/privacy-centre" className="mt-4 inline-flex rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/15">
+                    {pageText.privacyCentre}
+                  </Link>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🛡️</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{pageText.security}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.securityText}</p>
+                  <span className="mt-4 inline-flex rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-2 text-sm text-slate-300">
+                    {pageText.comingSoon}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">❓</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">{pageText.help}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.helpText}</p>
+                  <span className="mt-4 inline-flex rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-2 text-sm text-slate-300">
+                    {pageText.comingSoon}
+                  </span>
+                </div>
+              </div>
+            </section>
           </div>
 
           <div className="border-t border-white/[0.07] p-5 sm:p-8">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Link
-                href="/saved"
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
-              >
+              <Link href="/saved" className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]">
                 {pageText.savedPosts}
               </Link>
-              <Link
-                href="/privacy-centre"
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
-              >
+              <Link href="/privacy-centre" className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]">
                 {pageText.privacyCentre}
               </Link>
-              <Link
-                href="/terms"
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
-              >
+              <Link href="/terms" className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]">
                 {pageText.terms}
               </Link>
-              <Link
-                href="/cookies"
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
-              >
+              <Link href="/cookies" className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]">
                 {pageText.cookies}
               </Link>
             </div>
