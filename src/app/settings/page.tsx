@@ -2,147 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import LanguageMenu from "../../components/LanguageMenu";
-import NotificationDropdown from "../../components/NotificationDropdown";
 import { useLanguage } from "../../components/LanguageProvider";
-import { TranslationLanguage } from "../../lib/language";
 import { supabase } from "../../lib/supabase";
-
-const settingsTranslations: Record<
-  TranslationLanguage,
-  {
-    title: string;
-    subtitle: string;
-    account: string;
-    accountText: string;
-    privacy: string;
-    privacyText: string;
-    language: string;
-    languageText: string;
-    notifications: string;
-    notificationsText: string;
-    security: string;
-    securityText: string;
-    help: string;
-    helpText: string;
-    quickLinks: string;
-    openProfile: string;
-    savedPosts: string;
-    privacyCentre: string;
-    terms: string;
-    cookies: string;
-    logout: string;
-    comingSoon: string;
-    backToFeed: string;
-  }
-> = {
-  en: {
-    title: "Settings",
-    subtitle: "Manage your FaceGrem account, language, privacy, and app preferences.",
-    account: "Account",
-    accountText: "Update your profile, username, avatar, and public identity.",
-    privacy: "Privacy",
-    privacyText: "Review privacy controls and learn how FaceGrem handles your information.",
-    language: "Language",
-    languageText: "Choose the language used across the whole website.",
-    notifications: "Notifications",
-    notificationsText: "Open recent alerts, messages, calls, follows, likes, and comments.",
-    security: "Security",
-    securityText: "Use a strong password and keep your account access safe.",
-    help: "Help",
-    helpText: "Find support information and learn how to use FaceGrem.",
-    quickLinks: "Quick links",
-    openProfile: "Open profile",
-    savedPosts: "Saved posts",
-    privacyCentre: "Privacy Centre",
-    terms: "Terms",
-    cookies: "Cookies",
-    logout: "Log out",
-    comingSoon: "More controls coming soon",
-    backToFeed: "Back to feed",
-  },
-  sw: {
-    title: "Mipangilio",
-    subtitle: "Simamia akaunti yako ya FaceGrem, lugha, faragha, na mapendeleo ya app.",
-    account: "Akaunti",
-    accountText: "Sasisha wasifu, username, picha, na utambulisho wako wa umma.",
-    privacy: "Faragha",
-    privacyText: "Kagua udhibiti wa faragha na ujifunze FaceGrem inavyoshughulikia taarifa zako.",
-    language: "Lugha",
-    languageText: "Chagua lugha itakayotumika kwenye tovuti yote.",
-    notifications: "Arifa",
-    notificationsText: "Fungua arifa za hivi karibuni, ujumbe, simu, follows, likes, na comments.",
-    security: "Usalama",
-    securityText: "Tumia nenosiri imara na linda ufikiaji wa akaunti yako.",
-    help: "Msaada",
-    helpText: "Pata taarifa za msaada na ujifunze kutumia FaceGrem.",
-    quickLinks: "Viungo vya haraka",
-    openProfile: "Fungua wasifu",
-    savedPosts: "Machapisho yaliyohifadhiwa",
-    privacyCentre: "Kituo cha Faragha",
-    terms: "Masharti",
-    cookies: "Vidakuzi",
-    logout: "Toka",
-    comingSoon: "Udhibiti zaidi unakuja hivi karibuni",
-    backToFeed: "Rudi kwenye feed",
-  },
-  fr: {
-    title: "Paramètres",
-    subtitle: "Gérez votre compte FaceGrem, la langue, la confidentialité et les préférences de l’application.",
-    account: "Compte",
-    accountText: "Mettez à jour votre profil, nom d’utilisateur, avatar et identité publique.",
-    privacy: "Confidentialité",
-    privacyText: "Consultez les contrôles de confidentialité et découvrez comment FaceGrem gère vos informations.",
-    language: "Langue",
-    languageText: "Choisissez la langue utilisée sur tout le site.",
-    notifications: "Notifications",
-    notificationsText: "Ouvrez les alertes récentes, messages, appels, abonnements, likes et commentaires.",
-    security: "Sécurité",
-    securityText: "Utilisez un mot de passe fort et protégez l’accès à votre compte.",
-    help: "Aide",
-    helpText: "Trouvez des informations d’assistance et apprenez à utiliser FaceGrem.",
-    quickLinks: "Liens rapides",
-    openProfile: "Ouvrir le profil",
-    savedPosts: "Publications enregistrées",
-    privacyCentre: "Centre de confidentialité",
-    terms: "Conditions",
-    cookies: "Cookies",
-    logout: "Se déconnecter",
-    comingSoon: "Plus de contrôles arrivent bientôt",
-    backToFeed: "Retour au fil",
-  },
-  rw: {
-    title: "Igenamiterere",
-    subtitle: "Cunga konti yawe ya FaceGrem, ururimi, ubwirinzi bwite, n’ibyo ukunda muri app.",
-    account: "Konti",
-    accountText: "Vugurura profile yawe, username, ifoto, n’uko ugaragara ku rubuga.",
-    privacy: "Ubwirinzi bwite",
-    privacyText: "Reba uburyo bwo gucunga ubwirinzi bwite n’uko FaceGrem ifata amakuru yawe.",
-    language: "Ururimi",
-    languageText: "Hitamo ururimi ruzakoreshwa ku rubuga rwose.",
-    notifications: "Amamenyesha",
-    notificationsText: "Fungura alerts nshya, ubutumwa, guhamagara, follows, likes, na comments.",
-    security: "Umutekano",
-    securityText: "Koresha password ikomeye kandi urinde access ya konti yawe.",
-    help: "Ubufasha",
-    helpText: "Bona amakuru y’ubufasha kandi wige uko ukoresha FaceGrem.",
-    quickLinks: "Links zihuse",
-    openProfile: "Fungura umwirondoro",
-    savedPosts: "Ibyanditswe byabitswe",
-    privacyCentre: "Ikigo cy’Ubwirinzi bwite",
-    terms: "Amabwiriza",
-    cookies: "Cookies",
-    logout: "Sohoka",
-    comingSoon: "Ibindi byo kugenzura biri hafi kuza",
-    backToFeed: "Subira kuri feed",
-  },
-};
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { language } = useLanguage();
-
-  const pageText = settingsTranslations[language] || settingsTranslations.en;
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -171,14 +36,16 @@ export default function SettingsPage() {
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight text-white">FaceGrem</h1>
-              <p className="text-xs text-slate-400">{pageText.title}</p>
+              <p className="text-xs text-slate-400">{t.settings}</p>
             </div>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <NotificationDropdown />
-            <LanguageMenu compact />
-          </div>
+          <Link
+            href="/feed"
+            className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
+          >
+            {t.homeFeed}
+          </Link>
         </div>
       </header>
 
@@ -188,122 +55,119 @@ export default function SettingsPage() {
             <Link
               href="/feed"
               className="mb-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-2xl text-slate-200 transition hover:bg-white/[0.06]"
-              aria-label={pageText.backToFeed}
+              aria-label={t.homeFeed}
             >
               ‹
             </Link>
 
             <p className="text-sm font-semibold text-cyan-200">FaceGrem</p>
             <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">
-              {pageText.title}
+              {t.settings}
             </h2>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300">
-              {pageText.subtitle}
+              Manage your FaceGrem account, privacy, language, notifications, and quick links.
             </p>
           </div>
 
           <div className="grid gap-4 p-5 sm:p-8 lg:grid-cols-2">
-            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+            <Link
+              href="/profile"
+              className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]"
+            >
               <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">👤</div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{pageText.account}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.accountText}</p>
-                  <Link href="/profile" className="mt-4 inline-flex rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/15">
-                    {pageText.openProfile}
-                  </Link>
+                  <h3 className="text-lg font-semibold text-white">{t.profile}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">
+                    Update your public profile, photo, name, username, and bio.
+                  </p>
                 </div>
               </div>
-            </section>
+            </Link>
 
-            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🌐</div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-semibold text-white">{pageText.language}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.languageText}</p>
-                  <div className="mt-4">
-                    <LanguageMenu />
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🔔</div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-lg font-semibold text-white">{pageText.notifications}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.notificationsText}</p>
-                  <div className="mt-4">
-                    <NotificationDropdown />
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+            <Link
+              href="/privacy-centre"
+              className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]"
+            >
               <div className="flex items-start gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🔒</div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{pageText.privacy}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.privacyText}</p>
-                  <Link href="/privacy-centre" className="mt-4 inline-flex rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/15">
-                    {pageText.privacyCentre}
-                  </Link>
+                  <h3 className="text-lg font-semibold text-white">{t.privacy}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">
+                    Review privacy information and user controls.
+                  </p>
                 </div>
               </div>
-            </section>
+            </Link>
 
-            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+            <Link
+              href="/notifications"
+              className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]"
+            >
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🛡️</div>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🔔</div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{pageText.security}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.securityText}</p>
-                  <span className="mt-4 inline-flex rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-2 text-sm text-slate-300">
-                    {pageText.comingSoon}
-                  </span>
+                  <h3 className="text-lg font-semibold text-white">{t.notifications}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">
+                    Open your notification centre.
+                  </p>
                 </div>
               </div>
-            </section>
+            </Link>
 
-            <section className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]">
+            <Link
+              href="/saved"
+              className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]"
+            >
               <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">❓</div>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🔖</div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{pageText.help}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-300">{pageText.helpText}</p>
-                  <span className="mt-4 inline-flex rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-2 text-sm text-slate-300">
-                    {pageText.comingSoon}
-                  </span>
+                  <h3 className="text-lg font-semibold text-white">{t.savedPosts}</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">
+                    View your saved posts and collection.
+                  </p>
                 </div>
               </div>
-            </section>
+            </Link>
+
+            <Link
+              href="/terms"
+              className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">📄</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Terms</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">
+                    Read FaceGrem terms and platform rules.
+                  </p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              href="/cookies"
+              className="rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.05]"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">🍪</div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Cookies</h3>
+                  <p className="mt-2 text-sm leading-7 text-slate-300">
+                    Learn how cookies may be used on FaceGrem.
+                  </p>
+                </div>
+              </div>
+            </Link>
           </div>
 
           <div className="border-t border-white/[0.07] p-5 sm:p-8">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <Link href="/saved" className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]">
-                {pageText.savedPosts}
-              </Link>
-              <Link href="/privacy-centre" className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]">
-                {pageText.privacyCentre}
-              </Link>
-              <Link href="/terms" className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]">
-                {pageText.terms}
-              </Link>
-              <Link href="/cookies" className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]">
-                {pageText.cookies}
-              </Link>
-            </div>
-
             <button
               type="button"
               onClick={handleLogout}
-              className="mt-6 w-full rounded-2xl border border-red-300/10 bg-red-400/[0.07] px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-400/[0.11]"
+              className="w-full rounded-2xl border border-red-300/10 bg-red-400/[0.07] px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-400/[0.11]"
             >
-              ↩️ {pageText.logout}
+              ↩️ {t.logout}
             </button>
           </div>
         </section>
