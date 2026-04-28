@@ -1645,9 +1645,13 @@ export default function FeedPage() {
               </p>
 
               <div className="space-y-2">
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
+                <Link
+                  href="/settings"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
+                >
                   ⚙️ {t.settings}
-                </button>
+                </Link>
                 <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-2">
                   <button
                     type="button"
