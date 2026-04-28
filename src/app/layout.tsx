@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { LanguageProvider } from "../components/LanguageProvider";
 
 export const metadata: Metadata = {
   title: "FaceGrem",
-  description: "FaceGrem is a social platform to connect, share, message, and grow your community.",
+  description:
+    "FaceGrem is a social platform to connect, share, message, and grow your community.",
 };
 
 export default function RootLayout({
@@ -13,7 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <LanguageProvider>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }
