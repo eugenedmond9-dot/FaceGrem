@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "../../components/LanguageProvider";
+import LanguageMenu from "../../components/LanguageMenu";
+import { languageLabels } from "../../lib/language";
 
 type Profile = {
   id: string;
@@ -59,22 +61,12 @@ type NotificationRecord = {
   created_at: string;
 };
 
-type TranslationLanguage = "en" | "sw" | "fr" | "rw";
-
-const languageLabels: Record<TranslationLanguage, string> = {
-  en: "English",
-  sw: "Swahili",
-  fr: "French",
-  rw: "Kinyarwanda",
-};
 
 /* Page text now comes from the shared FaceGrem language provider. */
 
 function ProfilePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const languageMenuRef = useRef<HTMLDivElement | null>(null);
-
   const [sessionUserId, setSessionUserId] = useState("");
   const [sessionUserName, setSessionUserName] = useState("FaceGrem User");
   const [profile, setProfile] = useState<Profile>({
@@ -99,14 +91,13 @@ function ProfilePageContent() {
   const [searchText, setSearchText] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [translatedPosts, setTranslatedPosts] = useState<Record<string, string>>({});
   const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
   const [translatingPosts, setTranslatingPosts] = useState<Record<string, boolean>>({});
   const [translatingComments, setTranslatingComments] = useState<Record<string, boolean>>({});
 
   const requestedProfileId = searchParams.get("id");
-  const { language: selectedLanguage, setLanguage: setSelectedLanguage, t } = useLanguage();
+  const { language: selectedLanguage, t } = useLanguage();
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f172a&color=ffffff&bold=true`;
@@ -203,10 +194,6 @@ function ProfilePageContent() {
     }
   };
 
-  const handleLanguageChange = (language: TranslationLanguage) => {
-    setSelectedLanguage(language);
-    setIsLanguageMenuOpen(false);
-  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -219,16 +206,6 @@ function ProfilePageContent() {
     router.push("/");
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target as Node)) {
-        setIsLanguageMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
   useEffect(() => {
     const loadProfile = async () => {
       const {
@@ -539,35 +516,7 @@ function ProfilePageContent() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            <div ref={languageMenuRef} className="relative hidden lg:block">
-              <button
-                type="button"
-                onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
-                className="inline-flex h-9 items-center rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06]"
-              >
-                🌐 {languageLabels[selectedLanguage]}
-              </button>
-
-              {isLanguageMenuOpen && (
-                <div className="absolute right-0 top-11 z-[90] w-44 rounded-2xl border border-white/[0.08] bg-[#07111f]/95 p-2 shadow-2xl backdrop-blur-2xl">
-                  {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
-                    <button
-                      key={language}
-                      type="button"
-                      onClick={() => handleLanguageChange(language)}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
-                        selectedLanguage === language
-                          ? "bg-cyan-400/[0.14] text-cyan-100"
-                          : "text-white hover:bg-white/[0.06]"
-                      }`}
-                    >
-                      <span>{languageLabels[language]}</span>
-                      {selectedLanguage === language && <span>✓</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <LanguageMenu compact className="hidden lg:block" />
 
             {!isOwnProfile && (
               <button
@@ -681,33 +630,9 @@ function ProfilePageContent() {
                 </button>
 
                 <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
-                    className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
-                  >
-                    🌐 {t.language}: {languageLabels[selectedLanguage]}
-                  </button>
-
-                  {isLanguageMenuOpen && (
-                    <div className="mt-2 space-y-1 px-2 pb-2">
-                      {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
-                        <button
-                          key={language}
-                          type="button"
-                          onClick={() => handleLanguageChange(language)}
-                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
-                            selectedLanguage === language
-                              ? "bg-cyan-400/[0.14] text-cyan-100"
-                              : "text-white hover:bg-white/[0.06]"
-                          }`}
-                        >
-                          <span>{languageLabels[language]}</span>
-                          {selectedLanguage === language && <span>✓</span>}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <div className="px-2 py-2">
+                    <LanguageMenu />
+                  </div>
                 </div>
 
                 <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
