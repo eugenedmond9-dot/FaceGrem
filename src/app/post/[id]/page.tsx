@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
-import MobileBottomNav from "../../../components/MobileBottomNav";
+import { useLanguage } from "../../../components/LanguageProvider";
 
 type PostRecord = {
   id: string;
@@ -58,6 +58,7 @@ type CommunityRecord = {
 
 export default function PostDetailPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const params = useParams<{ id: string }>();
   const postId = params?.id || "";
 
@@ -207,6 +208,169 @@ export default function PostDetailPage() {
     void loadPostPage();
   }, [postId, router]);
 
+  useEffect(() => {
+    if (!postId) return;
+
+    const postChannel = supabase
+      .channel(`post-detail-live-${postId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "posts",
+          filter: `id=eq.${postId}`,
+        },
+        (payload) => {
+          setPost(payload.new as PostRecord);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "posts",
+          filter: `id=eq.${postId}`,
+        },
+        () => {
+          router.push("/feed");
+        }
+      )
+      .subscribe();
+
+    const likesChannel = supabase
+      .channel(`post-detail-likes-${postId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "likes",
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const newLike = payload.new as LikeRecord;
+          setLikes((prev) => {
+            if (prev.some((like) => like.id === newLike.id)) return prev;
+            return [...prev, newLike];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "likes",
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const deletedLike = payload.old as Partial<LikeRecord>;
+          setLikes((prev) => prev.filter((like) => like.id !== deletedLike.id));
+        }
+      )
+      .subscribe();
+
+    const commentsChannel = supabase
+      .channel(`post-detail-comments-${postId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "comments",
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const newComment = payload.new as CommentRecord;
+          setComments((prev) => {
+            if (prev.some((comment) => comment.id === newComment.id)) return prev;
+            return [...prev, newComment].sort(
+              (a, b) =>
+                new Date(a.created_at).getTime() -
+                new Date(b.created_at).getTime()
+            );
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "comments",
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const updatedComment = payload.new as CommentRecord;
+          setComments((prev) =>
+            prev.map((comment) =>
+              comment.id === updatedComment.id ? updatedComment : comment
+            )
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "comments",
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const deletedComment = payload.old as Partial<CommentRecord>;
+          setComments((prev) =>
+            prev.filter((comment) => comment.id !== deletedComment.id)
+          );
+        }
+      )
+      .subscribe();
+
+    const savedChannel = supabase
+      .channel(`post-detail-saved-${postId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "saved_posts",
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const newSaved = payload.new as SavedPostRecord;
+          setSavedPosts((prev) => {
+            if (prev.some((saved) => saved.id === newSaved.id)) return prev;
+            return [...prev, newSaved];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "saved_posts",
+          filter: `post_id=eq.${postId}`,
+        },
+        (payload) => {
+          const deletedSaved = payload.old as Partial<SavedPostRecord>;
+          setSavedPosts((prev) =>
+            prev.filter((saved) => saved.id !== deletedSaved.id)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(postChannel);
+      void supabase.removeChannel(likesChannel);
+      void supabase.removeChannel(commentsChannel);
+      void supabase.removeChannel(savedChannel);
+    };
+  }, [postId, router]);
+
   const likesCount = likes.length;
 
   const filteredComments = useMemo(() => {
@@ -352,7 +516,7 @@ export default function PostDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020817] pb-24 text-white xl:pb-0">
+    <div className="min-h-screen bg-[#020817] text-white">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.10),transparent_25%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_22%),linear-gradient(to_bottom,#020817,#07111f_45%,#020817)]" />
         <div className="absolute left-0 rounded-full top-10 h-72 w-72 bg-cyan-400/10 blur-3xl" />
@@ -368,7 +532,7 @@ export default function PostDetailPage() {
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
-                <p className="text-xs text-slate-400">Post discussion</p>
+                <p className="text-xs text-slate-400">{t.viewDiscussion}</p>
               </div>
             </Link>
           </div>
@@ -381,7 +545,7 @@ export default function PostDetailPage() {
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Search comments on this post..."
+                  placeholder={t.searchPlaceholder}
                   className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
                 />
               </div>
@@ -429,7 +593,7 @@ export default function PostDetailPage() {
                 type="text"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search comments..."
+                placeholder={t.searchPlaceholder}
                 className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
               />
             </div>
@@ -539,7 +703,7 @@ export default function PostDetailPage() {
                   <p className="mt-2 text-xl font-bold text-white">{likesCount}</p>
                 </div>
                 <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Comments</p>
+                  <p className="text-xs text-slate-400">{"Comments"}</p>
                   <p className="mt-2 text-xl font-bold text-white">{comments.length}</p>
                 </div>
               </div>
@@ -573,7 +737,7 @@ export default function PostDetailPage() {
                         {new Date(post.created_at).toLocaleString()}
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-slate-400">Public post</p>
+                    <p className="mt-1 text-xs text-slate-400">{t.publicPost}</p>
                   </div>
                 </Link>
 
@@ -654,7 +818,7 @@ export default function PostDetailPage() {
                       : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
                   }`}
                 >
-                  {isLiked ? "Liked" : "Like"}
+                  {isLiked ? t.liked : t.like}
                 </button>
 
                 <div className="px-4 py-3 text-sm font-medium text-center border rounded-2xl border-white/10 bg-white/5 text-slate-300">
@@ -669,7 +833,7 @@ export default function PostDetailPage() {
                       : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
                   }`}
                 >
-                  {savedRecord ? "Saved" : "Save"}
+                  {savedRecord ? t.saved : t.saved}
                 </button>
 
                 <Link
@@ -714,7 +878,7 @@ export default function PostDetailPage() {
                     disabled={commenting}
                     className="px-6 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70"
                   >
-                    {commenting ? "Posting..." : "Add comment"}
+                    {commenting ? t.posting : "Add comment"}
                   </button>
                 </div>
               </form>
@@ -724,7 +888,7 @@ export default function PostDetailPage() {
           <section className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">Comments</p>
+                <p className="text-sm font-semibold text-cyan-200">{"Comments"}</p>
                 <h3 className="mt-1 text-2xl font-bold tracking-tight text-white">
                   Discussion ({filteredComments.length})
                 </h3>
@@ -861,7 +1025,6 @@ export default function PostDetailPage() {
         </aside>
       </main>
 
-      <MobileBottomNav />
     </div>
   );
 }
