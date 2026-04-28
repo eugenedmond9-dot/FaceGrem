@@ -22,10 +22,20 @@ type LanguageContextValue = {
   t: UiTranslations;
 };
 
+const fallbackLanguage: TranslationLanguage = "en";
+
+const fallbackLanguageContext: LanguageContextValue = {
+  language: fallbackLanguage,
+  setLanguage: () => {
+    // No-op fallback used during prerendering if a page is not wrapped yet.
+  },
+  t: uiTranslations[fallbackLanguage] as UiTranslations,
+};
+
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<TranslationLanguage>("en");
+  const [language, setLanguageState] = useState<TranslationLanguage>(fallbackLanguage);
 
   useEffect(() => {
     setLanguageState(getStoredLanguage());
@@ -72,11 +82,5 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext);
-
-  if (!context) {
-    throw new Error("useLanguage must be used inside LanguageProvider");
-  }
-
-  return context;
+  return useContext(LanguageContext) ?? fallbackLanguageContext;
 }
