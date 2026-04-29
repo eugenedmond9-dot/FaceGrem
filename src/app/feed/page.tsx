@@ -73,6 +73,172 @@ type CommunityRecord = {
   created_at: string;
 };
 
+type IconProps = { className?: string };
+
+function HomeIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10.75 12 4l9 6.75" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5.5 9.75V20h13V9.75" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 20v-5.5h5V20" />
+    </svg>
+  );
+}
+
+function VideoIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <rect x="3" y="6" width="13" height="12" rx="3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m16 10 5-3v10l-5-3" />
+    </svg>
+  );
+}
+
+function CommunitiesIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 21v-1.5A3.5 3.5 0 0 0 12.5 16H6.5A3.5 3.5 0 0 0 3 19.5V21" />
+      <circle cx="9.5" cy="8" r="3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21v-1.5a3.5 3.5 0 0 0-2.5-3.35" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 5.2a3 3 0 0 1 0 5.6" />
+    </svg>
+  );
+}
+
+function GroupsIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <circle cx="8" cy="8.5" r="2.5" />
+      <circle cx="16" cy="8.5" r="2.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 19a4.5 4.5 0 0 1 9 0" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11.5 19a4.5 4.5 0 0 1 9 0" />
+    </svg>
+  );
+}
+
+function MessageIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 18.5 3.5 20V6.75A2.75 2.75 0 0 1 6.25 4h11.5A2.75 2.75 0 0 1 20.5 6.75v7.5A2.75 2.75 0 0 1 17.75 17H9.5L7 18.5Z" />
+    </svg>
+  );
+}
+
+function BookmarkIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 4.5h10a1.5 1.5 0 0 1 1.5 1.5V20l-6.5-4-6.5 4V6A1.5 1.5 0 0 1 7 4.5Z" />
+    </svg>
+  );
+}
+
+function SettingsIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1 1 0 0 0 .2 1.1l.05.06a1.25 1.25 0 0 1-1.77 1.77l-.06-.05a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.91V19a1.25 1.25 0 0 1-2.5 0v-.09a1 1 0 0 0-.67-.95 1 1 0 0 0-1.04.23l-.06.05a1.25 1.25 0 1 1-1.77-1.77l.05-.06a1 1 0 0 0 .2-1.1 1 1 0 0 0-.91-.6H5a1.25 1.25 0 0 1 0-2.5h.09a1 1 0 0 0 .95-.67 1 1 0 0 0-.23-1.04l-.05-.06a1.25 1.25 0 1 1 1.77-1.77l.06.05a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.91V5a1.25 1.25 0 0 1 2.5 0v.09a1 1 0 0 0 .67.95 1 1 0 0 0 1.04-.23l.06-.05a1.25 1.25 0 0 1 1.77 1.77l-.05.06a1 1 0 0 0-.2 1.1 1 1 0 0 0 .91.6H19a1.25 1.25 0 0 1 0 2.5h-.09a1 1 0 0 0-.95.67 1 1 0 0 0 .23 1.04l.05.06A1 1 0 0 0 19.4 15Z" />
+    </svg>
+  );
+}
+
+function LogoutIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M14 7V5.75A1.75 1.75 0 0 0 12.25 4H6.75A1.75 1.75 0 0 0 5 5.75v12.5C5 19.22 5.78 20 6.75 20h5.5A1.75 1.75 0 0 0 14 18.25V17" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 12h10" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m17 8 4 4-4 4" />
+    </svg>
+  );
+}
+
+function SearchIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+      <circle cx="11" cy="11" r="6" />
+      <path strokeLinecap="round" d="m20 20-4.35-4.35" />
+    </svg>
+  );
+}
+
+function MenuIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+      <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  );
+}
+
+function CloseIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+      <path strokeLinecap="round" d="m6 6 12 12M18 6 6 18" />
+    </svg>
+  );
+}
+
+function PhotoIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <rect x="3" y="5" width="18" height="14" rx="3" />
+      <circle cx="9" cy="10" r="1.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m21 15-4.2-4.2a1 1 0 0 0-1.4 0L9 17" />
+    </svg>
+  );
+}
+
+function VideoPlusIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <rect x="3" y="6" width="12" height="12" rx="3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="m15 10 5-3v10l-5-3" />
+      <path strokeLinecap="round" d="M9 9v6M6 12h6" />
+    </svg>
+  );
+}
+
+function SmileIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <circle cx="12" cy="12" r="8" />
+      <path strokeLinecap="round" d="M9 10h.01M15 10h.01" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 14.5a4.5 4.5 0 0 0 7 0" />
+    </svg>
+  );
+}
+
+function HeartFilledIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+      <path d="M12 21s-7.2-4.74-9.5-8.38C.77 9.95 2.13 6 5.92 6c2.02 0 3.16 1.08 4.04 2.28C10.84 7.08 11.98 6 14 6c3.79 0 5.15 3.95 3.42 6.62C19.2 16.26 12 21 12 21Z" />
+    </svg>
+  );
+}
+
+function LikeIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M8 10v10H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3Zm0 10h8.2a2 2 0 0 0 1.96-1.6l1.2-6A2 2 0 0 0 17.4 10H13l.6-3.1A2.5 2.5 0 0 0 11.14 4L8 10Z" />
+    </svg>
+  );
+}
+
+function CommentIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 18.5 3.5 20V6.75A2.75 2.75 0 0 1 6.25 4h11.5A2.75 2.75 0 0 1 20.5 6.75v7.5A2.75 2.75 0 0 1 17.75 17H9.5L7 18.5Z" />
+    </svg>
+  );
+}
+
+function SendIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 3 10 14" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 3 14 21l-4-7-7-4L21 3Z" />
+    </svg>
+  );
+}
+
 export default function FeedPage() {
   const router = useRouter();
   const { t } = useLanguage();
@@ -735,7 +901,7 @@ export default function FeedPage() {
           </Link>
 
           <div className="hidden w-[280px] items-center gap-2 rounded-full bg-slate-100 px-4 py-2 md:flex">
-            <span className="text-slate-500">⌕</span>
+            <SearchIcon className="h-4 w-4 text-slate-500" />
             <input
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
@@ -745,21 +911,21 @@ export default function FeedPage() {
           </div>
 
           <nav className="mx-auto hidden h-full items-center gap-2 lg:flex">
-            <Link href="/feed" className="flex h-12 w-24 items-center justify-center border-b-4 border-blue-600 text-blue-600">🏠</Link>
-            <Link href="/videos" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100">🎬</Link>
-            <Link href="/communities" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100">👥</Link>
-            <Link href="/groups" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100">🫂</Link>
-            <Link href="/messages" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100">💬</Link>
+            <Link href="/feed" className="flex h-12 w-24 items-center justify-center border-b-4 border-blue-600 text-blue-600"><HomeIcon className="h-6 w-6" /></Link>
+            <Link href="/videos" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"><VideoIcon className="h-6 w-6" /></Link>
+            <Link href="/communities" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"><CommunitiesIcon className="h-6 w-6" /></Link>
+            <Link href="/groups" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"><GroupsIcon className="h-6 w-6" /></Link>
+            <Link href="/messages" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"><MessageIcon className="h-6 w-6" /></Link>
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsMenuOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl transition hover:bg-slate-200"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-sm transition hover:bg-slate-200 hover:text-slate-900"
               aria-label="Open menu"
             >
-              ☰
+              <MenuIcon className="h-5 w-5" />
             </button>
 
             <LanguageMenu compact />
@@ -780,7 +946,7 @@ export default function FeedPage() {
 
         <div className="border-t border-slate-100 px-3 py-2 md:hidden">
           <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2">
-            <span className="text-slate-500">⌕</span>
+            <SearchIcon className="h-4 w-4 text-slate-500" />
             <input
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
@@ -803,9 +969,9 @@ export default function FeedPage() {
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-lg hover:bg-slate-200"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-sm transition hover:bg-slate-200 hover:text-slate-900"
               >
-                ✕
+                <CloseIcon className="h-5 w-5" />
               </button>
             </div>
 
@@ -828,19 +994,19 @@ export default function FeedPage() {
             </div>
 
             <div className="mt-4 grid gap-2">
-              <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">🏠 Home Feed</Link>
-              <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">🎬 Videos</Link>
-              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">👥 Communities</Link>
-              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">🫂 Groups</Link>
-              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">💬 Messages</Link>
-              <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">🔖 Saved</Link>
-              <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">⚙️ Settings</Link>
+              <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><HomeIcon className="h-5 w-5 text-slate-500" /> Home Feed</Link>
+              <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><VideoIcon className="h-5 w-5 text-slate-500" /> Videos</Link>
+              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> Communities</Link>
+              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><GroupsIcon className="h-5 w-5 text-slate-500" /> Groups</Link>
+              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><MessageIcon className="h-5 w-5 text-slate-500" /> Messages</Link>
+              <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><BookmarkIcon className="h-5 w-5 text-slate-500" /> Saved</Link>
+              <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><SettingsIcon className="h-5 w-5 text-slate-500" /> Settings</Link>
               <button
                 type="button"
                 onClick={handleLogout}
                 className="rounded-xl p-3 text-left font-medium text-red-600 hover:bg-red-50"
               >
-                ↩️ Log out
+                <span className="inline-flex items-center gap-3"><LogoutIcon className="h-5 w-5" /> Log out</span>
               </button>
             </div>
           </aside>
@@ -858,18 +1024,18 @@ export default function FeedPage() {
               />
               <span className="font-medium">{userName}</span>
             </Link>
-            <Link href="/friends" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">👫 Friends</Link>
-            <Link href="/saved" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">🔖 Saved</Link>
-            <Link href="/groups" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">🫂 Groups</Link>
-            <Link href="/communities" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">👥 Communities</Link>
-            <Link href="/videos" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">🎬 Videos</Link>
-            <Link href="/settings" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">⚙️ Settings</Link>
+            <Link href="/friends" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> Friends</Link>
+            <Link href="/saved" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><BookmarkIcon className="h-5 w-5 text-slate-500" /> Saved</Link>
+            <Link href="/groups" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><GroupsIcon className="h-5 w-5 text-slate-500" /> Groups</Link>
+            <Link href="/communities" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> Communities</Link>
+            <Link href="/videos" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><VideoIcon className="h-5 w-5 text-slate-500" /> Videos</Link>
+            <Link href="/settings" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><SettingsIcon className="h-5 w-5 text-slate-500" /> Settings</Link>
             <button
               type="button"
               onClick={handleLogout}
               className="flex w-full items-center gap-3 rounded-xl p-3 text-left text-red-600 hover:bg-red-50"
             >
-              ↩️ Log out
+              <LogoutIcon className="h-5 w-5" /> Log out
             </button>
 
             <div className="mt-4 border-t border-slate-300 pt-4">
@@ -945,7 +1111,7 @@ export default function FeedPage() {
 
             <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3">
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                🖼️ Photo
+                <PhotoIcon className="h-5 w-5 text-emerald-500" /> Photo
                 <input type="file" accept="image/*" onChange={handlePostImageChange} className="hidden" />
               </label>
               <button
@@ -953,7 +1119,7 @@ export default function FeedPage() {
                 onClick={() => setVideoUrl((prev) => prev || "https://")}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
-                🎥 Video
+                <span className="inline-flex items-center gap-2"><VideoPlusIcon className="h-5 w-5 text-rose-500" /> Video</span>
               </button>
               <button
                 type="button"
@@ -961,7 +1127,7 @@ export default function FeedPage() {
                 disabled={posting}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
               >
-                😊 Feeling
+                <span className="inline-flex items-center gap-2"><SmileIcon className="h-5 w-5 text-amber-500" /> Feeling</span>
               </button>
             </div>
           </div>
@@ -1088,7 +1254,7 @@ export default function FeedPage() {
 
                   <div className="px-4 py-3">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3 text-sm text-slate-500">
-                      <span>❤️ {postLikesCount} {postLikesCount === 1 ? "like" : "likes"}</span>
+                      <span className="inline-flex items-center gap-2"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white"><HeartFilledIcon className="h-3.5 w-3.5" /></span>{postLikesCount} {postLikesCount === 1 ? "like" : "likes"}</span>
                       <Link href={`/post/${post.id}`} className="hover:underline">
                         {postComments.length} {postComments.length === 1 ? "comment" : "comments"}
                       </Link>
@@ -1102,10 +1268,10 @@ export default function FeedPage() {
                           isLiked ? "text-blue-600" : "text-slate-600"
                         }`}
                       >
-                        👍 Like
+                        <span className="inline-flex items-center gap-2"><LikeIcon className="h-4.5 w-4.5" /> Like</span>
                       </button>
                       <Link href={`/post/${post.id}`} className="rounded-lg px-2 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                        💬 Comment
+                        <span className="inline-flex items-center justify-center gap-2"><CommentIcon className="h-4.5 w-4.5" /> Comment</span>
                       </Link>
                       <button
                         type="button"
@@ -1114,10 +1280,10 @@ export default function FeedPage() {
                           isSaved ? "text-blue-600" : "text-slate-600"
                         }`}
                       >
-                        🔖 Save
+                        <span className="inline-flex items-center gap-2"><BookmarkIcon className="h-4.5 w-4.5" /> Save</span>
                       </button>
                       <Link href={`/messages?user=${post.user_id}`} className="rounded-lg px-2 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                        ✉️ Send
+                        <span className="inline-flex items-center justify-center gap-2"><SendIcon className="h-4.5 w-4.5" /> Send</span>
                       </Link>
                     </div>
 
