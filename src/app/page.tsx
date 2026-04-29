@@ -12,6 +12,7 @@ import {
 } from "../lib/i18n";
 import AuthBackground from "../components/AuthBackground";
 import AuthFooter from "../components/AuthFooter";
+import FaceGremLogo from "../components/FaceGremLogo";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -82,8 +83,12 @@ export default function LandingPage() {
         <div className="mx-auto grid min-h-[78vh] max-w-7xl gap-10 lg:grid-cols-2 lg:items-center">
           <section className="flex items-center">
             <div className="max-w-[560px]">
-              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#1877f2] text-4xl font-bold text-white shadow-lg shadow-blue-500/20">
-                F
+              <div className="mb-5">
+                <FaceGremLogo
+                  href=""
+                  showWordmark={false}
+                  markClassName="h-16 w-16 rounded-full ring-0 shadow-lg shadow-blue-500/20"
+                />
               </div>
 
               <div className="inline-flex px-4 py-2 text-sm font-medium border rounded-full border-cyan-400/30 bg-white/50 text-cyan-700 backdrop-blur-md">
