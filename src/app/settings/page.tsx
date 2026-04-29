@@ -349,7 +349,7 @@ export default function SettingsPage() {
         key={item.key}
         className="flex items-center justify-between gap-4 px-3 py-4"
       >
-        <div className="flex items-start min-w-0 gap-3">
+        <div className="flex min-w-0 items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035]">
             {item.icon}
           </div>
@@ -388,12 +388,12 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-[#020817] text-white">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_28%),linear-gradient(to_bottom,#020817,#07111f_45%,#020817)]" />
-        <div className="absolute left-0 rounded-full top-10 h-72 w-72 bg-cyan-400/10 blur-3xl" />
-        <div className="absolute top-0 right-0 rounded-full h-96 w-96 bg-blue-500/10 blur-3xl" />
+        <div className="absolute left-0 top-10 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
       </div>
 
       <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/55 backdrop-blur-3xl">
-        <div className="flex items-center justify-between gap-3 px-4 py-3 mx-auto max-w-7xl sm:px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <FaceGremLogo
               href="/feed"
@@ -415,7 +415,7 @@ export default function SettingsPage() {
         </div>
       </header>
 
-      <main className="relative px-4 py-8 mx-auto max-w-7xl sm:px-6 sm:py-12">
+      <main className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
         <section className="overflow-hidden rounded-[34px] border border-white/[0.07] bg-white/[0.035] shadow-[0_25px_90px_rgba(2,8,23,0.35)] backdrop-blur-2xl">
           <div className="border-b border-white/[0.07] bg-[linear-gradient(135deg,rgba(8,47,73,0.85),rgba(15,23,42,0.92)_55%,rgba(30,41,59,0.92))] p-6 sm:p-8">
             <Link
@@ -432,7 +432,7 @@ export default function SettingsPage() {
                 <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">
                   {t.settings}
                 </h2>
-                <p className="max-w-2xl mt-5 text-sm leading-7 text-slate-300">
+                <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300">
                   Manage your account, privacy, notifications, layout preferences, safety controls, and important FaceGrem links from one professional control panel.
                 </p>
               </div>
@@ -442,13 +442,13 @@ export default function SettingsPage() {
                   <img
                     src={profileSummary.avatarUrl || getAvatarUrl(profileSummary.fullName)}
                     alt={profileSummary.fullName}
-                    className="object-cover h-14 w-14 rounded-2xl ring-1 ring-cyan-300/20"
+                    className="h-14 w-14 rounded-2xl object-cover ring-1 ring-cyan-300/20"
                   />
                   <div className="min-w-0">
-                    <p className="font-semibold text-white truncate">
+                    <p className="truncate font-semibold text-white">
                       {profileSummary.fullName}
                     </p>
-                    <p className="text-xs truncate text-slate-400">
+                    <p className="truncate text-xs text-slate-400">
                       {profileSummary.username
                         ? `@${profileSummary.username}`
                         : profileSummary.email || "FaceGrem account"}
@@ -456,7 +456,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mt-4">
+                <div className="mt-4 grid grid-cols-3 gap-2">
                   <div className="rounded-2xl bg-white/[0.04] p-3 text-center">
                     <p className="text-xl">🔔</p>
                     <p className="mt-1 text-[11px] text-slate-400">Alerts</p>
@@ -477,7 +477,7 @@ export default function SettingsPage() {
           <div className="grid gap-6 p-5 sm:p-8 xl:grid-cols-[minmax(0,1fr)_370px]">
             <section className="space-y-6">
               <div>
-                <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold text-cyan-200">Account shortcuts</p>
                     <p className="mt-1 text-xs text-slate-400">
@@ -505,7 +505,7 @@ export default function SettingsPage() {
                           <p className="mt-2 text-sm leading-7 text-slate-300">
                             {card.text}
                           </p>
-                          <span className="inline-flex mt-4 text-sm font-semibold transition text-cyan-200 group-hover:text-cyan-100">
+                          <span className="mt-4 inline-flex text-sm font-semibold text-cyan-200 transition group-hover:text-cyan-100">
                             {card.action} →
                           </span>
                         </div>
