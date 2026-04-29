@@ -240,9 +240,205 @@ function SendIcon({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
+const feedPageText = {
+  en: {
+    search: "Search FaceGrem",
+    menu: "Menu",
+    viewProfile: "View your profile",
+    homeFeed: "Home Feed",
+    videos: "Videos",
+    communities: "Communities",
+    groups: "Groups",
+    messages: "Messages",
+    saved: "Saved",
+    settings: "Settings",
+    logout: "Log out",
+    friends: "Friends",
+    yourCommunities: "Your communities",
+    whatsMind: "What's on your mind",
+    friend: "Friend",
+    sharePlaceholder: "Share something with FaceGrem...",
+    videoPlaceholder: "Paste video link...",
+    posting: "Posting...",
+    post: "Post",
+    photo: "Photo",
+    video: "Video",
+    feeling: "Feeling",
+    stories: "Stories",
+    storySub: "Quick moments from your people",
+    createStory: "Create story",
+    storyCaption: "Story caption...",
+    creatingStory: "Creating story...",
+    shareStory: "Share story",
+    noPosts: "No posts found.",
+    noPostsSub: "Try a different search or create the first post.",
+    like: "like",
+    likes: "likes",
+    comment: "comment",
+    comments: "comments",
+    save: "Save",
+    send: "Send",
+    writeComment: "Write a comment...",
+    friendRequests: "Friend requests",
+    seeAll: "See all",
+    noSuggestions: "No new suggestions right now.",
+    confirm: "Confirm",
+    delete: "Delete",
+    contacts: "Contacts",
+    online: "Online",
+    suggestedCommunities: "Suggested communities",
+    communityFallback: "Community on FaceGrem",
+  },
+  sw: {
+    search: "Tafuta FaceGrem",
+    menu: "Menyu",
+    viewProfile: "Tazama wasifu wako",
+    homeFeed: "Feed ya nyumbani",
+    videos: "Video",
+    communities: "Jumuiya",
+    groups: "Makundi",
+    messages: "Ujumbe",
+    saved: "Zilizohifadhiwa",
+    settings: "Mipangilio",
+    logout: "Toka",
+    friends: "Marafiki",
+    yourCommunities: "Jumuiya zako",
+    whatsMind: "Unafikiria nini",
+    friend: "Rafiki",
+    sharePlaceholder: "Shiriki kitu kwenye FaceGrem...",
+    videoPlaceholder: "Bandika kiungo cha video...",
+    posting: "Inachapisha...",
+    post: "Chapisha",
+    photo: "Picha",
+    video: "Video",
+    feeling: "Hisia",
+    stories: "Hadithi",
+    storySub: "Matukio ya haraka kutoka kwa watu wako",
+    createStory: "Tengeneza hadithi",
+    storyCaption: "Maelezo ya hadithi...",
+    creatingStory: "Inatengeneza hadithi...",
+    shareStory: "Shiriki hadithi",
+    noPosts: "Hakuna machapisho yaliyopatikana.",
+    noPostsSub: "Jaribu utafutaji mwingine au tengeneza chapisho la kwanza.",
+    like: "like",
+    likes: "likes",
+    comment: "comment",
+    comments: "comments",
+    save: "Hifadhi",
+    send: "Tuma",
+    writeComment: "Andika comment...",
+    friendRequests: "Maombi ya urafiki",
+    seeAll: "Ona yote",
+    noSuggestions: "Hakuna mapendekezo mapya kwa sasa.",
+    confirm: "Thibitisha",
+    delete: "Futa",
+    contacts: "Wasiliani",
+    online: "Mtandaoni",
+    suggestedCommunities: "Jumuiya zinazopendekezwa",
+    communityFallback: "Jumuiya kwenye FaceGrem",
+  },
+  fr: {
+    search: "Rechercher sur FaceGrem",
+    menu: "Menu",
+    viewProfile: "Voir votre profil",
+    homeFeed: "Fil d’accueil",
+    videos: "Vidéos",
+    communities: "Communautés",
+    groups: "Groupes",
+    messages: "Messages",
+    saved: "Enregistrés",
+    settings: "Paramètres",
+    logout: "Se déconnecter",
+    friends: "Amis",
+    yourCommunities: "Vos communautés",
+    whatsMind: "Quoi de neuf",
+    friend: "Ami",
+    sharePlaceholder: "Partagez quelque chose sur FaceGrem...",
+    videoPlaceholder: "Collez un lien vidéo...",
+    posting: "Publication...",
+    post: "Publier",
+    photo: "Photo",
+    video: "Vidéo",
+    feeling: "Humeur",
+    stories: "Stories",
+    storySub: "Moments rapides de vos proches",
+    createStory: "Créer une story",
+    storyCaption: "Légende de la story...",
+    creatingStory: "Création de la story...",
+    shareStory: "Partager la story",
+    noPosts: "Aucune publication trouvée.",
+    noPostsSub: "Essayez une autre recherche ou créez la première publication.",
+    like: "j’aime",
+    likes: "j’aime",
+    comment: "commentaire",
+    comments: "commentaires",
+    save: "Enregistrer",
+    send: "Envoyer",
+    writeComment: "Écrire un commentaire...",
+    friendRequests: "Demandes d’amis",
+    seeAll: "Voir tout",
+    noSuggestions: "Aucune nouvelle suggestion pour le moment.",
+    confirm: "Confirmer",
+    delete: "Supprimer",
+    contacts: "Contacts",
+    online: "En ligne",
+    suggestedCommunities: "Communautés suggérées",
+    communityFallback: "Communauté sur FaceGrem",
+  },
+  rw: {
+    search: "Shaka kuri FaceGrem",
+    menu: "Menyu",
+    viewProfile: "Reba umwirondoro wawe",
+    homeFeed: "Feed y’ahabanza",
+    videos: "Video",
+    communities: "Imiryango",
+    groups: "Amatsinda",
+    messages: "Ubutumwa",
+    saved: "Ibyabitswe",
+    settings: "Igenamiterere",
+    logout: "Sohoka",
+    friends: "Inshuti",
+    yourCommunities: "Imiryango yawe",
+    whatsMind: "Urimo gutekereza iki",
+    friend: "Nshuti",
+    sharePlaceholder: "Sangiza ikintu kuri FaceGrem...",
+    videoPlaceholder: "Shyiramo link ya video...",
+    posting: "Birimo gutangazwa...",
+    post: "Tangaza",
+    photo: "Ifoto",
+    video: "Video",
+    feeling: "Uko wiyumva",
+    stories: "Inkuru",
+    storySub: "Ibihe byihuse by’abantu bawe",
+    createStory: "Kora inkuru",
+    storyCaption: "Amagambo y’inkuru...",
+    creatingStory: "Birimo gukora inkuru...",
+    shareStory: "Sangiza inkuru",
+    noPosts: "Nta nyandiko zabonetse.",
+    noPostsSub: "Gerageza gushaka ukundi cyangwa ukore inyandiko ya mbere.",
+    like: "like",
+    likes: "likes",
+    comment: "comment",
+    comments: "comments",
+    save: "Bika",
+    send: "Ohereza",
+    writeComment: "Andika comment...",
+    friendRequests: "Ubusabe bw’ubucuti",
+    seeAll: "Reba byose",
+    noSuggestions: "Nta byifuzo bishya bihari ubu.",
+    confirm: "Emeza",
+    delete: "Siba",
+    contacts: "Abantu",
+    online: "Ari online",
+    suggestedCommunities: "Imiryango usabwa",
+    communityFallback: "Umuryango kuri FaceGrem",
+  },
+} as const;
+
 export default function FeedPage() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+  const ft = feedPageText[language] || feedPageText.en;
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
@@ -908,7 +1104,7 @@ export default function FeedPage() {
             <input
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
-              placeholder="Search FaceGrem"
+              placeholder={ft.search}
               className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
             />
           </div>
@@ -953,7 +1149,7 @@ export default function FeedPage() {
             <input
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
-              placeholder="Search FaceGrem"
+              placeholder={ft.search}
               className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
             />
           </div>
@@ -966,9 +1162,9 @@ export default function FeedPage() {
             className="fixed inset-0 z-[80] bg-black/35"
             onClick={() => setIsMenuOpen(false)}
           />
-          <aside className="fixed left-0 top-0 z-[90] flex h-full w-[320px] flex-col overflow-y-auto bg-white p-4 shadow-2xl">
+          <aside className="fixed right-0 top-0 z-[90] flex h-full w-[320px] max-w-[88vw] flex-col overflow-y-auto bg-white p-4 shadow-2xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">Menu</h2>
+              <h2 className="text-xl font-bold">{ft.menu}</h2>
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
@@ -991,25 +1187,25 @@ export default function FeedPage() {
                 />
                 <div>
                   <p className="font-semibold">{userName}</p>
-                  <p className="text-xs text-slate-500">View your profile</p>
+                  <p className="text-xs text-slate-500">{ft.viewProfile}</p>
                 </div>
               </Link>
             </div>
 
             <div className="mt-4 grid gap-2">
-              <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><HomeIcon className="h-5 w-5 text-slate-500" /> Home Feed</Link>
-              <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><VideoIcon className="h-5 w-5 text-slate-500" /> Videos</Link>
-              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> Communities</Link>
-              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><GroupsIcon className="h-5 w-5 text-slate-500" /> Groups</Link>
-              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><MessageIcon className="h-5 w-5 text-slate-500" /> Messages</Link>
-              <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><BookmarkIcon className="h-5 w-5 text-slate-500" /> Saved</Link>
-              <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><SettingsIcon className="h-5 w-5 text-slate-500" /> Settings</Link>
+              <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><HomeIcon className="h-5 w-5 text-slate-500" /> {ft.homeFeed}</Link>
+              <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><VideoIcon className="h-5 w-5 text-slate-500" /> {ft.videos}</Link>
+              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> {ft.communities}</Link>
+              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><GroupsIcon className="h-5 w-5 text-slate-500" /> {ft.groups}</Link>
+              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><MessageIcon className="h-5 w-5 text-slate-500" /> {ft.messages}</Link>
+              <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><BookmarkIcon className="h-5 w-5 text-slate-500" /> {ft.saved}</Link>
+              <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><SettingsIcon className="h-5 w-5 text-slate-500" /> {ft.settings}</Link>
               <button
                 type="button"
                 onClick={handleLogout}
                 className="rounded-xl p-3 text-left font-medium text-red-600 hover:bg-red-50"
               >
-                <span className="inline-flex items-center gap-3"><LogoutIcon className="h-5 w-5" /> Log out</span>
+                <span className="inline-flex items-center gap-3"><LogoutIcon className="h-5 w-5" /> {ft.logout}</span>
               </button>
             </div>
           </aside>
@@ -1027,22 +1223,22 @@ export default function FeedPage() {
               />
               <span className="font-medium">{userName}</span>
             </Link>
-            <Link href="/friends" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> Friends</Link>
-            <Link href="/saved" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><BookmarkIcon className="h-5 w-5 text-slate-500" /> Saved</Link>
-            <Link href="/groups" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><GroupsIcon className="h-5 w-5 text-slate-500" /> Groups</Link>
-            <Link href="/communities" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> Communities</Link>
-            <Link href="/videos" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><VideoIcon className="h-5 w-5 text-slate-500" /> Videos</Link>
-            <Link href="/settings" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><SettingsIcon className="h-5 w-5 text-slate-500" /> Settings</Link>
+            <Link href="/friends" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> {ft.friends}</Link>
+            <Link href="/saved" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><BookmarkIcon className="h-5 w-5 text-slate-500" /> {ft.saved}</Link>
+            <Link href="/groups" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><GroupsIcon className="h-5 w-5 text-slate-500" /> {ft.groups}</Link>
+            <Link href="/communities" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> {ft.communities}</Link>
+            <Link href="/videos" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><VideoIcon className="h-5 w-5 text-slate-500" /> {ft.videos}</Link>
+            <Link href="/settings" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><SettingsIcon className="h-5 w-5 text-slate-500" /> {ft.settings}</Link>
             <button
               type="button"
               onClick={handleLogout}
               className="flex w-full items-center gap-3 rounded-xl p-3 text-left text-red-600 hover:bg-red-50"
             >
-              <LogoutIcon className="h-5 w-5" /> Log out
+              <LogoutIcon className="h-5 w-5" /> {ft.logout}
             </button>
 
             <div className="mt-4 border-t border-slate-300 pt-4">
-              <p className="px-3 text-sm font-semibold text-slate-600">Your communities</p>
+              <p className="px-3 text-sm font-semibold text-slate-600">{ft.yourCommunities}</p>
               <div className="mt-2 space-y-1">
                 {communities.slice(0, 4).map((community) => (
                   <Link
@@ -1073,7 +1269,7 @@ export default function FeedPage() {
                 onClick={() => document.getElementById("feed-composer-textarea")?.focus()}
                 className="flex-1 rounded-full bg-slate-100 px-4 text-left text-slate-500 hover:bg-slate-200"
               >
-                What&apos;s on your mind, {userName.split(" ")[0] || "Friend"}?
+                {ft.whatsMind}, {userName.split(" ")[0] || ft.friend}?
               </button>
             </div>
 
@@ -1082,7 +1278,7 @@ export default function FeedPage() {
                 id="feed-composer-textarea"
                 value={postText}
                 onChange={(event) => setPostText(event.target.value)}
-                placeholder="Share something with FaceGrem..."
+                placeholder={ft.sharePlaceholder}
                 rows={3}
                 className="w-full resize-none rounded-2xl bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-200"
               />
@@ -1097,7 +1293,7 @@ export default function FeedPage() {
                 <input
                   value={videoUrl}
                   onChange={(event) => setVideoUrl(event.target.value)}
-                  placeholder="Paste video link..."
+                  placeholder={ft.videoPlaceholder}
                   className="rounded-xl bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-200"
                 />
 
@@ -1107,14 +1303,14 @@ export default function FeedPage() {
                   disabled={posting}
                   className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
                 >
-                  {posting ? "Posting..." : "Post"}
+                  {posting ? ft.posting : ft.post}
                 </button>
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3">
               <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                <PhotoIcon className="h-5 w-5 text-emerald-500" /> Photo
+                <PhotoIcon className="h-5 w-5 text-emerald-500" /> {ft.photo}
                 <input type="file" accept="image/*" onChange={handlePostImageChange} className="hidden" />
               </label>
               <button
@@ -1122,7 +1318,7 @@ export default function FeedPage() {
                 onClick={() => setVideoUrl((prev) => prev || "https://")}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
               >
-                <span className="inline-flex items-center gap-2"><VideoPlusIcon className="h-5 w-5 text-rose-500" /> Video</span>
+                <span className="inline-flex items-center gap-2"><VideoPlusIcon className="h-5 w-5 text-rose-500" /> {ft.video}</span>
               </button>
               <button
                 type="button"
@@ -1130,7 +1326,7 @@ export default function FeedPage() {
                 disabled={posting}
                 className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
               >
-                <span className="inline-flex items-center gap-2"><SmileIcon className="h-5 w-5 text-amber-500" /> Feeling</span>
+                <span className="inline-flex items-center gap-2"><SmileIcon className="h-5 w-5 text-amber-500" /> {ft.feeling}</span>
               </button>
             </div>
           </div>
@@ -1138,11 +1334,11 @@ export default function FeedPage() {
           <div className="rounded-xl bg-white p-4 shadow-sm">
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <p className="font-semibold">Stories</p>
-                <p className="text-sm text-slate-500">Quick moments from your people</p>
+                <p className="font-semibold">{ft.stories}</p>
+                <p className="text-sm text-slate-500">{ft.storySub}</p>
               </div>
               <label className="cursor-pointer rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold hover:bg-slate-200">
-                Create story
+                {ft.createStory}
                 <input type="file" accept="image/*" onChange={handleStoryImageChange} className="hidden" />
               </label>
             </div>
@@ -1153,7 +1349,7 @@ export default function FeedPage() {
                 <input
                   value={storyCaption}
                   onChange={(event) => setStoryCaption(event.target.value)}
-                  placeholder="Story caption..."
+                  placeholder={ft.storyCaption}
                   className="mt-3 w-full rounded-xl bg-white px-3 py-2 text-sm outline-none"
                 />
                 <button
@@ -1162,7 +1358,7 @@ export default function FeedPage() {
                   disabled={savingStory}
                   className="mt-3 w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                 >
-                  {savingStory ? "Creating story..." : "Share story"}
+                  {savingStory ? ft.creatingStory : ft.shareStory}
                 </button>
               </div>
             )}
@@ -1171,7 +1367,7 @@ export default function FeedPage() {
               <div className="relative h-48 w-28 shrink-0 overflow-hidden rounded-2xl bg-slate-900 text-white">
                 <img src={userAvatar || getAvatarUrl(userName)} alt={userName} className="h-32 w-full object-cover opacity-80" />
                 <div className="absolute left-1/2 top-[112px] flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full border-4 border-white bg-blue-600 text-xl">+</div>
-                <p className="absolute bottom-3 left-2 right-2 text-center text-sm font-semibold">Create story</p>
+                <p className="absolute bottom-3 left-2 right-2 text-center text-sm font-semibold">{ft.createStory}</p>
               </div>
 
               {stories.map((story) => (
@@ -1198,8 +1394,8 @@ export default function FeedPage() {
 
           {filteredPosts.length === 0 ? (
             <div className="rounded-xl bg-white p-8 text-center shadow-sm">
-              <p className="text-lg font-semibold">No posts found.</p>
-              <p className="mt-2 text-sm text-slate-500">Try a different search or create the first post.</p>
+              <p className="text-lg font-semibold">{ft.noPosts}</p>
+              <p className="mt-2 text-sm text-slate-500">{ft.noPostsSub}</p>
             </div>
           ) : (
             filteredPosts.map((post) => {
@@ -1257,9 +1453,9 @@ export default function FeedPage() {
 
                   <div className="px-4 py-3">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3 text-sm text-slate-500">
-                      <span className="inline-flex items-center gap-2"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white"><HeartFilledIcon className="h-3.5 w-3.5" /></span>{postLikesCount} {postLikesCount === 1 ? "like" : "likes"}</span>
+                      <span className="inline-flex items-center gap-2"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white"><HeartFilledIcon className="h-3.5 w-3.5" /></span>{postLikesCount} {postLikesCount === 1 ? ft.like : ft.likes}</span>
                       <Link href={`/post/${post.id}`} className="hover:underline">
-                        {postComments.length} {postComments.length === 1 ? "comment" : "comments"}
+                        {postComments.length} {postComments.length === 1 ? ft.comment : ft.comments}
                       </Link>
                     </div>
 
@@ -1271,10 +1467,10 @@ export default function FeedPage() {
                           isLiked ? "text-blue-600" : "text-slate-600"
                         }`}
                       >
-                        <span className="inline-flex items-center gap-2"><LikeIcon className="h-4.5 w-4.5" /> Like</span>
+                        <span className="inline-flex items-center gap-2"><LikeIcon className="h-4.5 w-4.5" /> {ft.like}</span>
                       </button>
                       <Link href={`/post/${post.id}`} className="rounded-lg px-2 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                        <span className="inline-flex items-center justify-center gap-2"><CommentIcon className="h-4.5 w-4.5" /> Comment</span>
+                        <span className="inline-flex items-center justify-center gap-2"><CommentIcon className="h-4.5 w-4.5" /> {ft.comment}</span>
                       </Link>
                       <button
                         type="button"
@@ -1283,10 +1479,10 @@ export default function FeedPage() {
                           isSaved ? "text-blue-600" : "text-slate-600"
                         }`}
                       >
-                        <span className="inline-flex items-center gap-2"><BookmarkIcon className="h-4.5 w-4.5" /> Save</span>
+                        <span className="inline-flex items-center gap-2"><BookmarkIcon className="h-4.5 w-4.5" /> {ft.save}</span>
                       </button>
                       <Link href={`/messages?user=${post.user_id}`} className="rounded-lg px-2 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                        <span className="inline-flex items-center justify-center gap-2"><SendIcon className="h-4.5 w-4.5" /> Send</span>
+                        <span className="inline-flex items-center justify-center gap-2"><SendIcon className="h-4.5 w-4.5" /> {ft.send}</span>
                       </Link>
                     </div>
 
@@ -1326,7 +1522,7 @@ export default function FeedPage() {
                               [post.id]: event.target.value,
                             }))
                           }
-                          placeholder="Write a comment..."
+                          placeholder={ft.writeComment}
                           className="flex-1 rounded-full bg-slate-100 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
                         />
                         <button
@@ -1334,7 +1530,7 @@ export default function FeedPage() {
                           disabled={commentingPostId === post.id}
                           className="rounded-full bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
                         >
-                          {commentingPostId === post.id ? "..." : "Post"}
+                          {commentingPostId === post.id ? "..." : ft.post}
                         </button>
                       </form>
                     </div>
@@ -1349,12 +1545,12 @@ export default function FeedPage() {
           <div className="sticky top-[72px] space-y-4">
             <section className="rounded-xl bg-white p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between">
-                <p className="font-semibold text-slate-600">Friend requests</p>
-                <Link href="/friends" className="text-sm text-blue-600">See all</Link>
+                <p className="font-semibold text-slate-600">{ft.friendRequests}</p>
+                <Link href="/friends" className="text-sm text-blue-600">{ft.seeAll}</Link>
               </div>
 
               {suggestedProfiles.length === 0 ? (
-                <p className="text-sm text-slate-500">No new suggestions right now.</p>
+                <p className="text-sm text-slate-500">{ft.noSuggestions}</p>
               ) : (
                 <div className="space-y-3">
                   {suggestedProfiles.slice(0, 2).map((profile) => (
@@ -1374,13 +1570,13 @@ export default function FeedPage() {
                             disabled={followingUserId === profile.id}
                             className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
                           >
-                            Confirm
+                            {ft.confirm}
                           </button>
                           <button
                             type="button"
                             className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700"
                           >
-                            Delete
+                            {ft.delete}
                           </button>
                         </div>
                       </div>
@@ -1392,8 +1588,8 @@ export default function FeedPage() {
 
             <section className="rounded-xl bg-white p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between">
-                <p className="font-semibold text-slate-600">Contacts</p>
-                <span className="text-sm text-slate-400">Online</span>
+                <p className="font-semibold text-slate-600">{ft.contacts}</p>
+                <span className="text-sm text-slate-400">{ft.online}</span>
               </div>
 
               <div className="space-y-1">
@@ -1418,7 +1614,7 @@ export default function FeedPage() {
             </section>
 
             <section className="rounded-xl bg-white p-4 shadow-sm">
-              <p className="mb-3 font-semibold text-slate-600">Suggested communities</p>
+              <p className="mb-3 font-semibold text-slate-600">{ft.suggestedCommunities}</p>
               <div className="space-y-2">
                 {communities.slice(0, 4).map((community) => (
                   <Link
@@ -1428,7 +1624,7 @@ export default function FeedPage() {
                   >
                     <p className="truncate text-sm font-semibold">{community.name}</p>
                     <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-                      {community.description || community.category || "Community on FaceGrem"}
+                      {community.description || community.category || ft.communityFallback}
                     </p>
                   </Link>
                 ))}
