@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import LanguageMenu from "../../components/LanguageMenu";
 import NotificationDropdown from "../../components/NotificationDropdown";
+import FaceGremLogo from "../../components/FaceGremLogo";
 
 type ProfileRecord = {
   id: string;
@@ -896,9 +897,11 @@ export default function FeedPage() {
     <div className="min-h-screen bg-[#f0f2f5] text-[#050505]">
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
         <div className="flex h-14 items-center gap-3 px-3 sm:px-4">
-          <Link href="/feed" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xl font-bold text-white shadow-sm">
-            F
-          </Link>
+          <FaceGremLogo
+            href="/feed"
+            showWordmark={false}
+            markClassName="h-10 w-10 rounded-full ring-0 shadow-none"
+          />
 
           <div className="hidden w-[280px] items-center gap-2 rounded-full bg-slate-100 px-4 py-2 md:flex">
             <SearchIcon className="h-4 w-4 text-slate-500" />

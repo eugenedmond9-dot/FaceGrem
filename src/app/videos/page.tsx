@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import NotificationDropdown from "../../components/NotificationDropdown";
+import FaceGremLogo from "../../components/FaceGremLogo";
 
 type VideoRecord = {
   id: string;

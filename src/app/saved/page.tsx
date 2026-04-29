@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import NotificationDropdown from "../../components/NotificationDropdown";
+import FaceGremLogo from "../../components/FaceGremLogo";
 
 type SavedPostRecord = {
   id: string;
@@ -227,15 +228,17 @@ export default function SavedPage() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#020817]/75 backdrop-blur-2xl">
         <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
           <div className="flex items-center gap-3">
-            <Link href="/feed" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 font-bold text-white shadow-[0_12px_40px_rgba(34,211,238,0.28)] sm:h-12 sm:w-12">
-                F
-              </div>
+            <div className="flex items-center gap-3">
+              <FaceGremLogo
+                href="/feed"
+                showWordmark={false}
+                markClassName="h-11 w-11 rounded-2xl ring-0 shadow-[0_12px_40px_rgba(34,211,238,0.18)] sm:h-12 sm:w-12"
+              />
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
                 <p className="text-xs text-slate-400">{t.savedPosts}</p>
               </div>
-            </Link>
+            </div>
           </div>
 
           <div className="flex-1 hidden lg:block">
@@ -260,6 +263,10 @@ export default function SavedPage() {
             >
               Feed
             </Link>
+
+            <NotificationDropdown
+              iconClassName="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm text-slate-200 transition hover:bg-white/10"
+            />
 
             <Link
               href="/profile"

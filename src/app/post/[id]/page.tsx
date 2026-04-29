@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../components/LanguageProvider";
+import FaceGremLogo from "../../../components/FaceGremLogo";
 
 type PostRecord = {
   id: string;

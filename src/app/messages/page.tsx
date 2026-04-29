@@ -14,6 +14,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import NotificationDropdown from "../../components/NotificationDropdown";
+import FaceGremLogo from "../../components/FaceGremLogo";
 
 type ProfileRecord = {
   id: string;
@@ -1380,13 +1381,9 @@ function MessagesPageContent() {
               </p>
 
               <div className="space-y-2">
-                <Link
-                  href="/settings"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
-                >
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
                   ⚙️ {t.settings}
-                </Link>
+                </button>
 
                 <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-2">
                   <button

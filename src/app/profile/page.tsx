@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "../../components/LanguageProvider";
 import LanguageMenu from "../../components/LanguageMenu";
 import NotificationDropdown from "../../components/NotificationDropdown";
+import FaceGremLogo from "../../components/FaceGremLogo";
 import { languageLabels } from "../../lib/language";
 
 type Profile = {
