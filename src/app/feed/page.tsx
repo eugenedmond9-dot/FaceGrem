@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
+import LanguageMenu from "../../components/LanguageMenu";
 import NotificationDropdown from "../../components/NotificationDropdown";
 
 type ProfileRecord = {
@@ -48,46 +49,6 @@ type SavedPostRecord = {
   post_id: string;
 };
 
-type CommunityRecord = {
-  id: string;
-  creator_id: string;
-  name: string;
-  category: string | null;
-  description: string | null;
-  created_at: string;
-};
-
-type CommunityMemberRecord = {
-  id: string;
-  community_id: string;
-  user_id: string;
-  created_at: string;
-};
-
-type VideoRecord = {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string | null;
-  category: string | null;
-  video_url: string;
-  thumbnail_url: string | null;
-  views_count: number | null;
-  created_at: string;
-};
-
-type NotificationRecord = {
-  id: string;
-  user_id: string;
-  actor_id: string | null;
-  type: string;
-  post_id: string | null;
-  actor_name: string | null;
-  content: string | null;
-  is_read: boolean | null;
-  created_at: string;
-};
-
 type StoryRecord = {
   id: string;
   user_id: string;
@@ -103,117 +64,68 @@ type FollowRecord = {
   following_id: string;
 };
 
-type TranslationLanguage = "en" | "sw" | "fr" | "rw";
-
-const languageLabels: Record<TranslationLanguage, string> = {
-  en: "English",
-  sw: "Swahili",
-  fr: "French",
-  rw: "Kinyarwanda",
-};
-
-const quickActions = ["Photo", "Video", "Live", "Story"] as const;
-const feedTabs = ["For You", "Following", "Creators", "Videos", "Faith", "Business"] as const;
-
-const glassCard =
-  "border border-white/[0.06] bg-white/[0.028] backdrop-blur-[28px] shadow-[0_18px_50px_rgba(2,8,23,0.18)]";
-const softCard =
-  "border border-white/[0.05] bg-white/[0.02] backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]";
-
-
-/* Page text now comes from the shared FaceGrem language provider. */
-
-const quickActionLabels: Record<TranslationLanguage, Record<typeof quickActions[number], string>> = {
-  en: { Photo: "Photo", Video: "Video", Live: "Live", Story: "Story" },
-  sw: { Photo: "Picha", Video: "Video", Live: "Mubashara", Story: "Hadithi" },
-  fr: { Photo: "Photo", Video: "Vidéo", Live: "Direct", Story: "Story" },
-  rw: { Photo: "Ifoto", Video: "Video", Live: "Live", Story: "Inkuru" },
-};
-
-const feedTabLabels: Record<TranslationLanguage, Record<typeof feedTabs[number], string>> = {
-  en: { "For You": "For You", Following: "Following", Creators: "Creators", Videos: "Videos", Faith: "Faith", Business: "Business" },
-  sw: { "For You": "Kwa Ajili Yako", Following: "Unaowafuata", Creators: "Waundaji", Videos: "Video", Faith: "Imani", Business: "Biashara" },
-  fr: { "For You": "Pour vous", Following: "Abonnements", Creators: "Créateurs", Videos: "Vidéos", Faith: "Foi", Business: "Business" },
-  rw: { "For You": "Bikubereye", Following: "Ukurikira", Creators: "Abahanzi", Videos: "Amashusho", Faith: "Ukwizera", Business: "Ubucuruzi" },
+type CommunityRecord = {
+  id: string;
+  creator_id: string;
+  name: string;
+  category: string | null;
+  description: string | null;
+  created_at: string;
 };
 
 export default function FeedPage() {
   const router = useRouter();
-  const storyInputRef = useRef<HTMLInputElement | null>(null);
-  const languageMenuRef = useRef<HTMLDivElement | null>(null);
+  const { t } = useLanguage();
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
   const [userAvatar, setUserAvatar] = useState("");
+
   const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
   const [posts, setPosts] = useState<PostRecord[]>([]);
   const [likes, setLikes] = useState<LikeRecord[]>([]);
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [savedPosts, setSavedPosts] = useState<SavedPostRecord[]>([]);
-  const [communities, setCommunities] = useState<CommunityRecord[]>([]);
-  const [communityMembers, setCommunityMembers] = useState<CommunityMemberRecord[]>([]);
-  const [videos, setVideos] = useState<VideoRecord[]>([]);
-  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [stories, setStories] = useState<StoryRecord[]>([]);
   const [follows, setFollows] = useState<FollowRecord[]>([]);
+  const [communities, setCommunities] = useState<CommunityRecord[]>([]);
+
   const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
+  const [commentingPostId, setCommentingPostId] = useState("");
+  const [savingStory, setSavingStory] = useState(false);
+  const [followingUserId, setFollowingUserId] = useState("");
 
-  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
-  const [translatedPosts, setTranslatedPosts] = useState<Record<string, string>>({});
-  const [translatedComments, setTranslatedComments] = useState<Record<string, string>>({});
-  const [translatingPosts, setTranslatingPosts] = useState<Record<string, boolean>>({});
-  const [translatingComments, setTranslatingComments] = useState<Record<string, boolean>>({});
-
-  const [activeComposerAction, setActiveComposerAction] =
-    useState<(typeof quickActions)[number]>("Photo");
-  const [activeFeedTab, setActiveFeedTab] =
-    useState<(typeof feedTabs)[number]>("For You");
-
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [postText, setPostText] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [posting, setPosting] = useState(false);
+  const [storyFile, setStoryFile] = useState<File | null>(null);
+  const [storyPreview, setStoryPreview] = useState("");
+  const [storyCaption, setStoryCaption] = useState("");
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [searchText, setSearchText] = useState("");
-
-  const [storyUploading, setStoryUploading] = useState(false);
-  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
-  const [activeStoryUserId, setActiveStoryUserId] = useState("");
-  const [activeStoryIndex, setActiveStoryIndex] = useState(0);
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
-
-  const [activeRightPanel, setActiveRightPanel] = useState<
-    "friends" | "communities" | "messages" | "videos"
-  >("friends");
-  const [activeFriendsTab, setActiveFriendsTab] = useState<
-    "online" | "suggestions" | "your_friends"
-  >("online");
-
-  const { language: selectedLanguage, setLanguage: setSelectedLanguage, t } = useLanguage();
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      name
+      name || "FaceGrem User"
     )}&background=0f172a&color=ffffff&bold=true`;
 
-  const getProfileById = (profileId?: string) => {
-    if (!profileId) return undefined;
-    return profiles.find((profile) => profile.id === profileId);
-  };
+  const getProfileById = (profileId?: string) =>
+    profiles.find((profile) => profile.id === profileId);
 
-  const getBestNameForUser = (uid?: string, fallbackName?: string | null) => {
-    const profile = getProfileById(uid);
+  const getBestNameForUser = (profileId?: string, fallbackName?: string | null) => {
+    const profile = getProfileById(profileId);
     return profile?.full_name || fallbackName || "FaceGrem User";
   };
 
   const getBestAvatarForUser = (
-    uid?: string,
+    profileId?: string,
     fallbackName?: string | null,
     fallbackAvatarUrl?: string | null
   ) => {
-    const profile = getProfileById(uid);
+    const profile = getProfileById(profileId);
     return (
       profile?.avatar_url ||
       fallbackAvatarUrl ||
@@ -245,101 +157,6 @@ export default function FeedPage() {
     return url.includes("youtube.com") || url.includes("youtu.be");
   };
 
-  const translateText = async (text: string) => {
-    const trimmed = text.trim();
-    if (!trimmed) return "";
-
-    const response = await fetch("/api/translate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text: trimmed,
-        targetLanguage: selectedLanguage,
-      }),
-    });
-
-    const payload = await response.json();
-
-    if (!response.ok) {
-      throw new Error(payload?.error || "Could not translate text.");
-    }
-
-    return payload.translation as string;
-  };
-
-  const handleTogglePostTranslation = async (postId: string, text: string) => {
-    if (translatedPosts[postId]) {
-      setTranslatedPosts((prev) => {
-        const next = { ...prev };
-        delete next[postId];
-        return next;
-      });
-      return;
-    }
-
-    setTranslatingPosts((prev) => ({ ...prev, [postId]: true }));
-
-    try {
-      const translation = await translateText(text);
-      setTranslatedPosts((prev) => ({ ...prev, [postId]: translation }));
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Could not translate post.");
-    } finally {
-      setTranslatingPosts((prev) => ({ ...prev, [postId]: false }));
-    }
-  };
-
-  const handleToggleCommentTranslation = async (commentId: string, text: string) => {
-    if (translatedComments[commentId]) {
-      setTranslatedComments((prev) => {
-        const next = { ...prev };
-        delete next[commentId];
-        return next;
-      });
-      return;
-    }
-
-    setTranslatingComments((prev) => ({ ...prev, [commentId]: true }));
-
-    try {
-      const translation = await translateText(text);
-      setTranslatedComments((prev) => ({ ...prev, [commentId]: translation }));
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Could not translate comment.");
-    } finally {
-      setTranslatingComments((prev) => ({ ...prev, [commentId]: false }));
-    }
-  };
-
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    router.push("/");
-  };
-
-  const handleLanguageChange = (language: TranslationLanguage) => {
-    setSelectedLanguage(language);
-    setIsLanguageMenuOpen(false);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (languageMenuRef.current && !languageMenuRef.current.contains(event.target as Node)) {
-        setIsLanguageMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   useEffect(() => {
     const loadFeed = async () => {
       const {
@@ -354,11 +171,10 @@ export default function FeedPage() {
       const currentUserId = session.user.id;
       const currentUserName =
         session.user.user_metadata?.full_name || "FaceGrem User";
+      const nowIso = new Date().toISOString();
 
       setUserId(currentUserId);
       setUserName(currentUserName);
-
-      const nowIso = new Date().toISOString();
 
       const [
         { data: profilesData },
@@ -366,12 +182,9 @@ export default function FeedPage() {
         { data: likesData },
         { data: commentsData },
         { data: savedPostsData },
-        { data: communitiesData },
-        { data: communityMembersData },
-        { data: videosData },
-        { data: notificationsData },
         { data: storiesData },
         { data: followsData },
+        { data: communitiesData },
       ] = await Promise.all([
         supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
         supabase
@@ -379,57 +192,41 @@ export default function FeedPage() {
           .select(
             "id, user_id, content, created_at, full_name, avatar_url, image_url, video_url, community_id"
           )
-          .is("community_id", null)
-          .order("created_at", { ascending: false }),
+          .order("created_at", { ascending: false })
+          .limit(80),
         supabase.from("likes").select("id, post_id, user_id"),
         supabase
           .from("comments")
-          .select("id, post_id, user_id, full_name, content, created_at"),
+          .select("id, post_id, user_id, full_name, content, created_at")
+          .order("created_at", { ascending: true }),
         supabase.from("saved_posts").select("id, user_id, post_id"),
-        supabase
-          .from("communities")
-          .select("id, creator_id, name, category, description, created_at")
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("community_members")
-          .select("id, community_id, user_id, created_at"),
-        supabase
-          .from("videos")
-          .select(
-            "id, user_id, title, description, category, video_url, thumbnail_url, views_count, created_at"
-          )
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("notifications")
-          .select(
-            "id, user_id, actor_id, type, post_id, actor_name, content, is_read, created_at"
-          )
-          .eq("user_id", currentUserId)
-          .order("created_at", { ascending: false }),
         supabase
           .from("stories")
           .select("id, user_id, image_url, caption, created_at, expires_at")
           .gt("expires_at", nowIso)
-          .order("created_at", { ascending: false }),
+          .order("created_at", { ascending: false })
+          .limit(24),
         supabase.from("follows").select("id, follower_id, following_id"),
+        supabase
+          .from("communities")
+          .select("id, creator_id, name, category, description, created_at")
+          .order("created_at", { ascending: false })
+          .limit(6),
       ]);
 
       const allProfiles = profilesData || [];
-      const myProfile = allProfiles.find((profile) => profile.id === currentUserId);
+      const currentProfile = allProfiles.find((profile) => profile.id === currentUserId);
 
       setProfiles(allProfiles);
       setPosts(postsData || []);
       setLikes(likesData || []);
       setComments(commentsData || []);
       setSavedPosts(savedPostsData || []);
-      setCommunities(communitiesData || []);
-      setCommunityMembers(communityMembersData || []);
-      setVideos(videosData || []);
-      setNotifications(notificationsData || []);
       setStories(storiesData || []);
       setFollows(followsData || []);
+      setCommunities(communitiesData || []);
       setUserAvatar(
-        myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || currentUserName)
+        currentProfile?.avatar_url || getAvatarUrl(currentProfile?.full_name || currentUserName)
       );
       setLoading(false);
     };
@@ -440,46 +237,22 @@ export default function FeedPage() {
   useEffect(() => {
     if (!userId) return;
 
-    const sortPostsByNewest = (items: PostRecord[]) =>
+    const sortNewest = (items: PostRecord[]) =>
       [...items].sort(
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
-    const sortStoriesByNewest = (items: StoryRecord[]) =>
-      [...items].sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-    const sortVideosByNewest = (items: VideoRecord[]) =>
-      [...items].sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-    const sortNotificationsByNewest = (items: NotificationRecord[]) =>
-      [...items].sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-    const isActiveStory = (story: StoryRecord) =>
-      new Date(story.expires_at).getTime() > Date.now();
-
-    const realtimeChannel = supabase
-      .channel(`feed-realtime-${userId}`)
+    const postsChannel = supabase
+      .channel("facegrem-feed-posts-live")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "posts" },
         (payload) => {
           const newPost = payload.new as PostRecord;
-          if (newPost.community_id) return;
-
           setPosts((prev) => {
-            const exists = prev.some((post) => post.id === newPost.id);
-            if (exists) return prev;
-            return sortPostsByNewest([newPost, ...prev]);
+            if (prev.some((post) => post.id === newPost.id)) return prev;
+            return sortNewest([newPost, ...prev]);
           });
         }
       )
@@ -488,48 +261,32 @@ export default function FeedPage() {
         { event: "UPDATE", schema: "public", table: "posts" },
         (payload) => {
           const updatedPost = payload.new as PostRecord;
-
-          setPosts((prev) => {
-            if (updatedPost.community_id) {
-              return prev.filter((post) => post.id !== updatedPost.id);
-            }
-
-            const exists = prev.some((post) => post.id === updatedPost.id);
-            const next = exists
-              ? prev.map((post) =>
-                  post.id === updatedPost.id ? updatedPost : post
-                )
-              : [updatedPost, ...prev];
-
-            return sortPostsByNewest(next);
-          });
+          setPosts((prev) =>
+            sortNewest(
+              prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
+            )
+          );
         }
       )
       .on(
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "posts" },
         (payload) => {
-          const deletedPost = payload.old as Pick<PostRecord, "id">;
-
+          const deletedPost = payload.old as Partial<PostRecord>;
           setPosts((prev) => prev.filter((post) => post.id !== deletedPost.id));
-          setLikes((prev) => prev.filter((like) => like.post_id !== deletedPost.id));
-          setComments((prev) =>
-            prev.filter((comment) => comment.post_id !== deletedPost.id)
-          );
-          setSavedPosts((prev) =>
-            prev.filter((saved) => saved.post_id !== deletedPost.id)
-          );
         }
       )
+      .subscribe();
+
+    const likesChannel = supabase
+      .channel("facegrem-feed-likes-live")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "likes" },
         (payload) => {
           const newLike = payload.new as LikeRecord;
-
           setLikes((prev) => {
-            const exists = prev.some((like) => like.id === newLike.id);
-            if (exists) return prev;
+            if (prev.some((like) => like.id === newLike.id)) return prev;
             return [...prev, newLike];
           });
         }
@@ -538,19 +295,21 @@ export default function FeedPage() {
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "likes" },
         (payload) => {
-          const deletedLike = payload.old as Pick<LikeRecord, "id">;
+          const deletedLike = payload.old as Partial<LikeRecord>;
           setLikes((prev) => prev.filter((like) => like.id !== deletedLike.id));
         }
       )
+      .subscribe();
+
+    const commentsChannel = supabase
+      .channel("facegrem-feed-comments-live")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "comments" },
         (payload) => {
           const newComment = payload.new as CommentRecord;
-
           setComments((prev) => {
-            const exists = prev.some((comment) => comment.id === newComment.id);
-            if (exists) return prev;
+            if (prev.some((comment) => comment.id === newComment.id)) return prev;
             return [...prev, newComment].sort(
               (a, b) =>
                 new Date(a.created_at).getTime() -
@@ -559,40 +318,18 @@ export default function FeedPage() {
           });
         }
       )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "comments" },
-        (payload) => {
-          const updatedComment = payload.new as CommentRecord;
+      .subscribe();
 
-          setComments((prev) =>
-            prev.map((comment) =>
-              comment.id === updatedComment.id ? updatedComment : comment
-            )
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "comments" },
-        (payload) => {
-          const deletedComment = payload.old as Pick<CommentRecord, "id">;
-          setComments((prev) =>
-            prev.filter((comment) => comment.id !== deletedComment.id)
-          );
-        }
-      )
+    const savedChannel = supabase
+      .channel("facegrem-feed-saved-live")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "saved_posts" },
         (payload) => {
-          const newSavedPost = payload.new as SavedPostRecord;
-          if (newSavedPost.user_id !== userId) return;
-
+          const newSaved = payload.new as SavedPostRecord;
           setSavedPosts((prev) => {
-            const exists = prev.some((saved) => saved.id === newSavedPost.id);
-            if (exists) return prev;
-            return [...prev, newSavedPost];
+            if (prev.some((saved) => saved.id === newSaved.id)) return prev;
+            return [...prev, newSaved];
           });
         }
       )
@@ -600,415 +337,86 @@ export default function FeedPage() {
         "postgres_changes",
         { event: "DELETE", schema: "public", table: "saved_posts" },
         (payload) => {
-          const deletedSavedPost = payload.old as Pick<SavedPostRecord, "id">;
-          setSavedPosts((prev) =>
-            prev.filter((saved) => saved.id !== deletedSavedPost.id)
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "stories" },
-        (payload) => {
-          const newStory = payload.new as StoryRecord;
-          if (!isActiveStory(newStory)) return;
-
-          setStories((prev) => {
-            const exists = prev.some((story) => story.id === newStory.id);
-            if (exists) return prev;
-            return sortStoriesByNewest([newStory, ...prev]);
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "stories" },
-        (payload) => {
-          const updatedStory = payload.new as StoryRecord;
-
-          setStories((prev) => {
-            if (!isActiveStory(updatedStory)) {
-              return prev.filter((story) => story.id !== updatedStory.id);
-            }
-
-            const exists = prev.some((story) => story.id === updatedStory.id);
-            const next = exists
-              ? prev.map((story) =>
-                  story.id === updatedStory.id ? updatedStory : story
-                )
-              : [updatedStory, ...prev];
-
-            return sortStoriesByNewest(next);
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "stories" },
-        (payload) => {
-          const deletedStory = payload.old as Pick<StoryRecord, "id">;
-          setStories((prev) =>
-            prev.filter((story) => story.id !== deletedStory.id)
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications" },
-        (payload) => {
-          const newNotification = payload.new as NotificationRecord;
-          if (newNotification.user_id !== userId) return;
-
-          setNotifications((prev) => {
-            const exists = prev.some(
-              (notification) => notification.id === newNotification.id
-            );
-            if (exists) return prev;
-            return sortNotificationsByNewest([newNotification, ...prev]);
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "notifications" },
-        (payload) => {
-          const updatedNotification = payload.new as NotificationRecord;
-          if (updatedNotification.user_id !== userId) return;
-
-          setNotifications((prev) =>
-            sortNotificationsByNewest(
-              prev.map((notification) =>
-                notification.id === updatedNotification.id
-                  ? updatedNotification
-                  : notification
-              )
-            )
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "notifications" },
-        (payload) => {
-          const deletedNotification = payload.old as Pick<NotificationRecord, "id">;
-          setNotifications((prev) =>
-            prev.filter(
-              (notification) => notification.id !== deletedNotification.id
-            )
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "follows" },
-        (payload) => {
-          const newFollow = payload.new as FollowRecord;
-
-          setFollows((prev) => {
-            const exists = prev.some((follow) => follow.id === newFollow.id);
-            if (exists) return prev;
-            return [...prev, newFollow];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "follows" },
-        (payload) => {
-          const deletedFollow = payload.old as Pick<FollowRecord, "id">;
-          setFollows((prev) =>
-            prev.filter((follow) => follow.id !== deletedFollow.id)
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "communities" },
-        (payload) => {
-          const newCommunity = payload.new as CommunityRecord;
-
-          setCommunities((prev) => {
-            const exists = prev.some(
-              (community) => community.id === newCommunity.id
-            );
-            if (exists) return prev;
-            return [newCommunity, ...prev];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "communities" },
-        (payload) => {
-          const updatedCommunity = payload.new as CommunityRecord;
-
-          setCommunities((prev) =>
-            prev.map((community) =>
-              community.id === updatedCommunity.id ? updatedCommunity : community
-            )
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "communities" },
-        (payload) => {
-          const deletedCommunity = payload.old as Pick<CommunityRecord, "id">;
-          setCommunities((prev) =>
-            prev.filter((community) => community.id !== deletedCommunity.id)
-          );
-          setCommunityMembers((prev) =>
-            prev.filter((member) => member.community_id !== deletedCommunity.id)
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "community_members" },
-        (payload) => {
-          const newMember = payload.new as CommunityMemberRecord;
-
-          setCommunityMembers((prev) => {
-            const exists = prev.some((member) => member.id === newMember.id);
-            if (exists) return prev;
-            return [...prev, newMember];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "community_members" },
-        (payload) => {
-          const deletedMember = payload.old as Pick<CommunityMemberRecord, "id">;
-          setCommunityMembers((prev) =>
-            prev.filter((member) => member.id !== deletedMember.id)
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "videos" },
-        (payload) => {
-          const newVideo = payload.new as VideoRecord;
-
-          setVideos((prev) => {
-            const exists = prev.some((video) => video.id === newVideo.id);
-            if (exists) return prev;
-            return sortVideosByNewest([newVideo, ...prev]);
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "videos" },
-        (payload) => {
-          const updatedVideo = payload.new as VideoRecord;
-
-          setVideos((prev) =>
-            sortVideosByNewest(
-              prev.map((video) =>
-                video.id === updatedVideo.id ? updatedVideo : video
-              )
-            )
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "videos" },
-        (payload) => {
-          const deletedVideo = payload.old as Pick<VideoRecord, "id">;
-          setVideos((prev) => prev.filter((video) => video.id !== deletedVideo.id));
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "profiles" },
-        (payload) => {
-          const updatedProfile = payload.new as ProfileRecord;
-
-          setProfiles((prev) =>
-            prev.map((profile) =>
-              profile.id === updatedProfile.id ? updatedProfile : profile
-            )
-          );
-
-          if (updatedProfile.id === userId) {
-            setUserName(updatedProfile.full_name || "FaceGrem User");
-            setUserAvatar(
-              updatedProfile.avatar_url ||
-                getAvatarUrl(updatedProfile.full_name || "FaceGrem User")
-            );
-          }
+          const deletedSaved = payload.old as Partial<SavedPostRecord>;
+          setSavedPosts((prev) => prev.filter((saved) => saved.id !== deletedSaved.id));
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(realtimeChannel);
+      void supabase.removeChannel(postsChannel);
+      void supabase.removeChannel(likesChannel);
+      void supabase.removeChannel(commentsChannel);
+      void supabase.removeChannel(savedChannel);
     };
   }, [userId]);
 
-  const isFollowingUser = (targetUserId: string) =>
-    follows.some(
-      (follow) =>
-        follow.follower_id === userId && follow.following_id === targetUserId
-    );
-
-  const myCommunityIds = useMemo(() => {
-    return communityMembers
-      .filter((member) => member.user_id === userId)
-      .map((member) => member.community_id);
-  }, [communityMembers, userId]);
-
-  const unreadNotificationsCount = notifications.filter(
-    (notification) => !notification.is_read
-  ).length;
-
-  const suggestedPeople = useMemo(() => {
-    return profiles
-      .filter((profile) => profile.id !== userId && !isFollowingUser(profile.id))
-      .slice(0, 6);
-  }, [profiles, userId, follows]);
-
-  const onlinePeople = useMemo(() => {
-    const followedIds = follows
-      .filter((follow) => follow.follower_id === userId)
-      .map((follow) => follow.following_id);
-
-    return profiles
-      .filter((profile) => followedIds.includes(profile.id))
-      .slice(0, 6);
-  }, [profiles, follows, userId]);
-
-  const yourFriends = useMemo(() => {
-    const relatedIds = new Set<string>();
-
-    follows.forEach((follow) => {
-      if (follow.follower_id === userId) relatedIds.add(follow.following_id);
-      if (follow.following_id === userId) relatedIds.add(follow.follower_id);
-    });
-
-    return profiles.filter((profile) => relatedIds.has(profile.id)).slice(0, 8);
-  }, [profiles, follows, userId]);
-
-  const suggestedCommunities = useMemo(() => {
-    return communities
-      .filter((community) => !myCommunityIds.includes(community.id))
-      .slice(0, 5);
-  }, [communities, myCommunityIds]);
-
-  const latestVideoCards = useMemo(() => videos.slice(0, 4), [videos]);
-  const latestActivity = useMemo(() => notifications.slice(0, 5), [notifications]);
-
   const filteredPosts = useMemo(() => {
-    let result = [...posts];
-
-    switch (activeFeedTab) {
-      case "Following":
-        result = result.filter((post) => isFollowingUser(post.user_id));
-        break;
-      case "Creators":
-        result = result.filter((post) => {
-          const profile = getProfileById(post.user_id);
-          return !!profile?.username;
-        });
-        break;
-      case "Faith":
-        result = result.filter((post) => {
-          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
-          return (
-            text.includes("faith") ||
-            text.includes("jesus") ||
-            text.includes("church") ||
-            text.includes("gospel")
-          );
-        });
-        break;
-      case "Business":
-        result = result.filter((post) => {
-          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
-          return (
-            text.includes("business") ||
-            text.includes("money") ||
-            text.includes("brand") ||
-            text.includes("market")
-          );
-        });
-        break;
-      case "Videos":
-        result = result.filter((post) => !!post.video_url);
-        break;
-      case "For You":
-      default:
-        break;
-    }
-
     const term = searchText.trim().toLowerCase();
-    if (!term) return result;
+    if (!term) return posts;
 
-    return result.filter((post) => {
-      const author = getBestNameForUser(post.user_id, post.full_name).toLowerCase();
+    return posts.filter((post) => {
+      const author = getBestNameForUser(post.user_id, post.full_name);
       const text = `${post.content} ${author}`.toLowerCase();
       return text.includes(term);
     });
-  }, [activeFeedTab, posts, searchText, profiles, follows, userId]);
+  }, [posts, searchText, profiles]);
 
-  const storyGroups = useMemo(() => {
-    const grouped = new Map<string, StoryRecord[]>();
+  const suggestedProfiles = useMemo(() => {
+    const followedIds = new Set(
+      follows
+        .filter((follow) => follow.follower_id === userId)
+        .map((follow) => follow.following_id)
+    );
 
-    for (const story of stories) {
-      if (!grouped.has(story.user_id)) grouped.set(story.user_id, []);
-      grouped.get(story.user_id)?.push(story);
-    }
+    return profiles
+      .filter((profile) => profile.id !== userId && !followedIds.has(profile.id))
+      .slice(0, 4);
+  }, [profiles, follows, userId]);
 
-    const items = Array.from(grouped.entries()).map(([storyUserId, userStories]) => ({
-      userId: storyUserId,
-      stories: userStories
-        .slice()
-        .sort(
-          (a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        ),
-      latestCreatedAt: userStories
-        .slice()
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        )[0]?.created_at,
-    }));
+  const onlineProfiles = useMemo(() => {
+    return profiles.filter((profile) => profile.id !== userId).slice(0, 8);
+  }, [profiles, userId]);
 
-    items.sort((a, b) => {
-      if (a.userId === userId) return -1;
-      if (b.userId === userId) return 1;
-      return (
-        new Date(b.latestCreatedAt || 0).getTime() -
-        new Date(a.latestCreatedAt || 0).getTime()
-      );
-    });
-
-    return items;
+  const myStories = useMemo(() => {
+    return stories.filter((story) => story.user_id === userId);
   }, [stories, userId]);
 
-  const highlightedProfiles = useMemo(() => {
-    const storyUserIds = new Set(storyGroups.map((group) => group.userId));
-    return profiles
-      .filter((profile) => profile.id !== userId && !storyUserIds.has(profile.id))
-      .slice(0, 6);
-  }, [profiles, userId, storyGroups]);
+  const getPostLikesCount = (postId: string) =>
+    likes.filter((like) => like.post_id === postId).length;
 
-  const activeStoryGroup = useMemo(() => {
-    if (!activeStoryUserId) return null;
-    return storyGroups.find((group) => group.userId === activeStoryUserId) || null;
-  }, [activeStoryUserId, storyGroups]);
+  const getPostComments = (postId: string) =>
+    comments.filter((comment) => comment.post_id === postId);
 
-  const activeStory = useMemo(() => {
-    if (!activeStoryGroup) return null;
-    return activeStoryGroup.stories[activeStoryIndex] || null;
-  }, [activeStoryGroup, activeStoryIndex]);
+  const getPostCommentsCount = (postId: string) => getPostComments(postId).length;
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
+  const getSavedRecord = (postId: string) =>
+    savedPosts.find((saved) => saved.post_id === postId && saved.user_id === userId);
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const diffMs = Date.now() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / 60000);
+
+    if (diffMinutes < 1) return "now";
+    if (diffMinutes < 60) return `${diffMinutes}m`;
+    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h`;
+    return date.toLocaleDateString();
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    router.push("/");
+  };
+
+  const handlePostImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
     setImageFile(file);
 
     if (!file) {
@@ -1016,8 +424,19 @@ export default function FeedPage() {
       return;
     }
 
-    const previewUrl = URL.createObjectURL(file);
-    setImagePreview(previewUrl);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleStoryImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setStoryFile(file);
+
+    if (!file) {
+      setStoryPreview("");
+      return;
+    }
+
+    setStoryPreview(URL.createObjectURL(file));
   };
 
   const uploadPostImage = async () => {
@@ -1041,17 +460,17 @@ export default function FeedPage() {
     return data.publicUrl;
   };
 
-  const uploadStoryImage = async (file: File) => {
-    if (!userId) return null;
+  const uploadStoryImage = async () => {
+    if (!storyFile || !userId) return null;
 
-    const fileExt = file.name.split(".").pop() || "jpg";
+    const fileExt = storyFile.name.split(".").pop() || "jpg";
     const filePath = `${userId}/${Date.now()}-${Math.random()
       .toString(36)
       .slice(2)}.${fileExt.toLowerCase()}`;
 
     const { error: uploadError } = await supabase.storage
       .from("stories")
-      .upload(filePath, file, {
+      .upload(filePath, storyFile, {
         cacheControl: "3600",
         upsert: false,
       });
@@ -1076,10 +495,10 @@ export default function FeedPage() {
     setPosting(true);
 
     try {
-      let imageUrl: string | null = null;
+      let uploadedImageUrl: string | null = null;
 
       if (imageFile) {
-        imageUrl = await uploadPostImage();
+        uploadedImageUrl = await uploadPostImage();
       }
 
       const { data, error } = await supabase
@@ -1090,7 +509,7 @@ export default function FeedPage() {
             content: trimmedContent,
             full_name: userName,
             avatar_url: userAvatar,
-            image_url: imageUrl,
+            image_url: uploadedImageUrl,
             video_url: trimmedVideoUrl || null,
           },
         ])
@@ -1112,7 +531,6 @@ export default function FeedPage() {
       setVideoUrl("");
       setImageFile(null);
       setImagePreview("");
-      setActiveComposerAction("Photo");
     } catch (error) {
       alert(error instanceof Error ? error.message : "Could not create post.");
     }
@@ -1120,18 +538,16 @@ export default function FeedPage() {
     setPosting(false);
   };
 
-  const handleCreateStory = async (file: File) => {
-    if (!userId) return;
+  const handleCreateStory = async () => {
+    if (!userId || !storyFile) {
+      alert("Choose a story image first.");
+      return;
+    }
 
-    setStoryUploading(true);
+    setSavingStory(true);
 
     try {
-      const imageUrl = await uploadStoryImage(file);
-
-      if (!imageUrl) {
-        throw new Error("Could not upload story image.");
-      }
-
+      const uploadedStoryUrl = await uploadStoryImage();
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
       const { data, error } = await supabase
@@ -1139,8 +555,8 @@ export default function FeedPage() {
         .insert([
           {
             user_id: userId,
-            image_url: imageUrl,
-            caption: "",
+            image_url: uploadedStoryUrl,
+            caption: storyCaption.trim() || null,
             expires_at: expiresAt,
           },
         ])
@@ -1148,43 +564,40 @@ export default function FeedPage() {
 
       if (error) {
         alert(error.message);
-        setStoryUploading(false);
+        setSavingStory(false);
         return;
       }
 
       if (data && data.length > 0) {
         setStories((prev) => [data[0], ...prev]);
       }
+
+      setStoryFile(null);
+      setStoryPreview("");
+      setStoryCaption("");
     } catch (error) {
       alert(error instanceof Error ? error.message : "Could not create story.");
     }
 
-    setStoryUploading(false);
+    setSavingStory(false);
   };
 
-  const handleStoryInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleToggleLike = async (postId: string) => {
+    if (!userId) return;
 
-    await handleCreateStory(file);
-    e.target.value = "";
-  };
-
-  const handleOpenStoryCreator = () => {
-    if (storyUploading) return;
-    storyInputRef.current?.click();
-  };
-
-  const handleToggleLike = async (postId: string, ownerId: string) => {
     const existingLike = likes.find(
       (like) => like.post_id === postId && like.user_id === userId
     );
 
     if (existingLike) {
       const { error } = await supabase.from("likes").delete().eq("id", existingLike.id);
-      if (!error) {
-        setLikes((prev) => prev.filter((like) => like.id !== existingLike.id));
+
+      if (error) {
+        alert(error.message);
+        return;
       }
+
+      setLikes((prev) => prev.filter((like) => like.id !== existingLike.id));
       return;
     }
 
@@ -1201,24 +614,12 @@ export default function FeedPage() {
     if (data && data.length > 0) {
       setLikes((prev) => [...prev, data[0]]);
     }
-
-    if (ownerId !== userId) {
-      await supabase.from("notifications").insert([
-        {
-          user_id: ownerId,
-          actor_id: userId,
-          type: "like",
-          post_id: postId,
-          actor_name: userName,
-        },
-      ]);
-    }
   };
 
   const handleToggleSave = async (postId: string) => {
-    const existingSaved = savedPosts.find(
-      (saved) => saved.post_id === postId && saved.user_id === userId
-    );
+    if (!userId) return;
+
+    const existingSaved = getSavedRecord(postId);
 
     if (existingSaved) {
       const { error } = await supabase
@@ -1226,9 +627,12 @@ export default function FeedPage() {
         .delete()
         .eq("id", existingSaved.id);
 
-      if (!error) {
-        setSavedPosts((prev) => prev.filter((saved) => saved.id !== existingSaved.id));
+      if (error) {
+        alert(error.message);
+        return;
       }
+
+      setSavedPosts((prev) => prev.filter((saved) => saved.id !== existingSaved.id));
       return;
     }
 
@@ -1247,53 +651,28 @@ export default function FeedPage() {
     }
   };
 
-  const handleDeletePost = async (postId: string) => {
-    const confirmed = window.confirm("Are you sure you want to delete this post?");
-    if (!confirmed) return;
+  const handleAddComment = async (event: FormEvent, postId: string) => {
+    event.preventDefault();
 
-    const { error } = await supabase.from("posts").delete().eq("id", postId);
+    const content = (commentDrafts[postId] || "").trim();
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+    if (!content) return;
 
-    setPosts((prev) => prev.filter((post) => post.id !== postId));
-    setLikes((prev) => prev.filter((like) => like.post_id !== postId));
-    setComments((prev) => prev.filter((comment) => comment.post_id !== postId));
-    setSavedPosts((prev) => prev.filter((saved) => saved.post_id !== postId));
-  };
-
-  const handleToggleFollow = async (targetUserId: string) => {
-    const existingFollow = follows.find(
-      (follow) =>
-        follow.follower_id === userId && follow.following_id === targetUserId
-    );
-
-    if (existingFollow) {
-      const { error } = await supabase
-        .from("follows")
-        .delete()
-        .eq("id", existingFollow.id);
-
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      setFollows((prev) => prev.filter((follow) => follow.id !== existingFollow.id));
-      return;
-    }
+    setCommentingPostId(postId);
 
     const { data, error } = await supabase
-      .from("follows")
+      .from("comments")
       .insert([
         {
-          follower_id: userId,
-          following_id: targetUserId,
+          post_id: postId,
+          user_id: userId,
+          full_name: userName,
+          content,
         },
       ])
-      .select("id, follower_id, following_id");
+      .select("id, post_id, user_id, full_name, content, created_at");
+
+    setCommentingPostId("");
 
     if (error) {
       alert(error.message);
@@ -1301,72 +680,42 @@ export default function FeedPage() {
     }
 
     if (data && data.length > 0) {
+      setComments((prev) => [...prev, data[0]]);
+    }
+
+    setCommentDrafts((prev) => ({ ...prev, [postId]: "" }));
+  };
+
+  const handleToggleFollow = async (profileId: string) => {
+    if (!userId || userId === profileId) return;
+
+    setFollowingUserId(profileId);
+
+    const existingFollow = follows.find(
+      (follow) => follow.follower_id === userId && follow.following_id === profileId
+    );
+
+    if (existingFollow) {
+      const { error } = await supabase.from("follows").delete().eq("id", existingFollow.id);
+
+      if (!error) {
+        setFollows((prev) => prev.filter((follow) => follow.id !== existingFollow.id));
+      }
+
+      setFollowingUserId("");
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("follows")
+      .insert([{ follower_id: userId, following_id: profileId }])
+      .select("id, follower_id, following_id");
+
+    if (!error && data && data.length > 0) {
       setFollows((prev) => [...prev, data[0]]);
     }
-  };
 
-  const getPostLikesCount = (postId: string) =>
-    likes.filter((like) => like.post_id === postId).length;
-
-  const getPostCommentsCount = (postId: string) =>
-    comments.filter((comment) => comment.post_id === postId).length;
-
-  const isSaved = (postId: string) =>
-    savedPosts.some((saved) => saved.user_id === userId && saved.post_id === postId);
-
-  const isLiked = (postId: string) =>
-    likes.some((like) => like.user_id === userId && like.post_id === postId);
-
-  const openStoryViewer = (storyUserId: string) => {
-    setActiveStoryUserId(storyUserId);
-    setActiveStoryIndex(0);
-    setStoryViewerOpen(true);
-  };
-
-  const closeStoryViewer = () => {
-    setStoryViewerOpen(false);
-    setActiveStoryUserId("");
-    setActiveStoryIndex(0);
-  };
-
-  const goToNextStory = () => {
-    if (!activeStoryGroup) return;
-
-    if (activeStoryIndex < activeStoryGroup.stories.length - 1) {
-      setActiveStoryIndex((prev) => prev + 1);
-      return;
-    }
-
-    const currentGroupIndex = storyGroups.findIndex(
-      (group) => group.userId === activeStoryGroup.userId
-    );
-
-    if (currentGroupIndex >= 0 && currentGroupIndex < storyGroups.length - 1) {
-      setActiveStoryUserId(storyGroups[currentGroupIndex + 1].userId);
-      setActiveStoryIndex(0);
-      return;
-    }
-
-    closeStoryViewer();
-  };
-
-  const goToPreviousStory = () => {
-    if (!activeStoryGroup) return;
-
-    if (activeStoryIndex > 0) {
-      setActiveStoryIndex((prev) => prev - 1);
-      return;
-    }
-
-    const currentGroupIndex = storyGroups.findIndex(
-      (group) => group.userId === activeStoryGroup.userId
-    );
-
-    if (currentGroupIndex > 0) {
-      const prevGroup = storyGroups[currentGroupIndex - 1];
-      setActiveStoryUserId(prevGroup.userId);
-      setActiveStoryIndex(prevGroup.stories.length - 1);
-    }
+    setFollowingUserId("");
   };
 
   if (loading) {
@@ -1378,183 +727,66 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#020817] pb-24 text-white xl:pb-0">
-      <style jsx>{`
-        @keyframes blobFloatA {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-          }
-          50% {
-            transform: translate3d(34px, -24px, 0) scale(1.08);
-          }
-        }
+    <div className="min-h-screen bg-[#f0f2f5] text-[#050505]">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
+        <div className="flex h-14 items-center gap-3 px-3 sm:px-4">
+          <Link href="/feed" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xl font-bold text-white shadow-sm">
+            F
+          </Link>
 
-        @keyframes blobFloatB {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-          }
-          50% {
-            transform: translate3d(-28px, 28px, 0) scale(1.06);
-          }
-        }
+          <div className="hidden w-[280px] items-center gap-2 rounded-full bg-slate-100 px-4 py-2 md:flex">
+            <span className="text-slate-500">⌕</span>
+            <input
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              placeholder="Search FaceGrem"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
+            />
+          </div>
 
-        @keyframes blobFloatC {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-          }
-          50% {
-            transform: translate3d(18px, 20px, 0) scale(1.05);
-          }
-        }
+          <nav className="mx-auto hidden h-full items-center gap-2 lg:flex">
+            <Link href="/feed" className="flex h-12 w-24 items-center justify-center border-b-4 border-blue-600 text-blue-600">🏠</Link>
+            <Link href="/videos" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100">🎬</Link>
+            <Link href="/communities" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100">👥</Link>
+            <Link href="/groups" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100">🫂</Link>
+            <Link href="/messages" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100">💬</Link>
+          </nav>
 
-        @keyframes ambientPulse {
-          0%,
-          100% {
-            opacity: 0.55;
-          }
-          50% {
-            opacity: 0.85;
-          }
-        }
-
-        .blob-a {
-          animation: blobFloatA 18s ease-in-out infinite;
-        }
-
-        .blob-b {
-          animation: blobFloatB 22s ease-in-out infinite;
-        }
-
-        .blob-c {
-          animation: blobFloatC 20s ease-in-out infinite;
-        }
-
-        .ambient-pulse {
-          animation: ambientPulse 10s ease-in-out infinite;
-        }
-      `}</style>
-
-      <input
-        ref={storyInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleStoryInputChange}
-        className="hidden"
-      />
-
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,#020817_0%,#03101f_38%,#020817_100%)]" />
-
-        <div className="absolute inset-0 opacity-70 ambient-pulse bg-[radial-gradient(circle_at_12%_18%,rgba(34,211,238,0.09),transparent_24%),radial-gradient(circle_at_85%_14%,rgba(59,130,246,0.08),transparent_22%),radial-gradient(circle_at_50%_82%,rgba(168,85,247,0.07),transparent_20%)]" />
-
-        <div className="absolute blob-a -left-24 top-10 h-[24rem] w-[24rem] rounded-full bg-cyan-400/[0.08] blur-[110px]" />
-        <div className="absolute blob-b right-[-7rem] top-[-2rem] h-[26rem] w-[26rem] rounded-full bg-blue-500/[0.08] blur-[120px]" />
-        <div className="absolute blob-c bottom-[-7rem] left-1/3 h-[22rem] w-[22rem] rounded-full bg-fuchsia-500/[0.06] blur-[110px]" />
-
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:120px_120px] opacity-[0.08]" />
-
-        <div className="absolute inset-0 bg-black/10" />
-      </div>
-
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/40 backdrop-blur-3xl">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsMenuOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-base text-white transition hover:bg-white/[0.06]"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl transition hover:bg-slate-200"
               aria-label="Open menu"
             >
               ☰
             </button>
 
-            <Link href="/feed" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-[15px] text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)] sm:h-11 sm:w-11">
-                F
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
-                <p className="text-xs text-slate-400">{t.brandTagline}</p>
-              </div>
-            </Link>
-          </div>
-
-          <div className="hidden flex-1 lg:block">
-            <div className="mx-auto max-w-xl">
-              <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
-                <span className="text-sm text-slate-400">⌕</span>
-                <input
-                  type="text"
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder={t.searchPlaceholder}
-                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="ml-auto flex items-center gap-2">
-            <div ref={languageMenuRef} className="relative hidden lg:block">
-              <button
-                type="button"
-                onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
-                className="inline-flex h-9 items-center rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06]"
-                aria-label="Language"
-                title="Language"
-              >
-                🌐 {languageLabels[selectedLanguage]}
-              </button>
-
-              {isLanguageMenuOpen && (
-                <div className="absolute right-0 top-11 z-[90] w-44 rounded-2xl border border-white/[0.08] bg-[#07111f]/95 p-2 shadow-2xl backdrop-blur-2xl">
-                  {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
-                    <button
-                      key={language}
-                      type="button"
-                      onClick={() => handleLanguageChange(language)}
-                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
-                        selectedLanguage === language
-                          ? "bg-cyan-400/[0.14] text-cyan-100"
-                          : "text-white hover:bg-white/[0.06]"
-                      }`}
-                    >
-                      <span>{languageLabels[language]}</span>
-                      {selectedLanguage === language && <span>✓</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <LanguageMenu compact />
 
             <NotificationDropdown
-              iconClassName="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-[13px] text-slate-200 transition hover:bg-white/[0.06]"
+              iconClassName="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-base transition hover:bg-slate-200"
             />
 
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="hidden rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06] lg:inline-flex"
-            >
-              ↩️ {t.logout}
-            </button>
-
-            <Link
-              href="/profile"
-              className="hidden items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:flex sm:px-2 sm:pr-3"
-            >
+            <Link href="/profile" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-100">
               <img
-                src={userAvatar}
+                src={userAvatar || getAvatarUrl(userName)}
                 alt={userName}
-                className="h-8 w-8 rounded-xl object-cover ring-1 ring-cyan-400/15"
+                className="h-full w-full object-cover"
               />
-              <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
-                {userName}
-              </span>
             </Link>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-100 px-3 py-2 md:hidden">
+          <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2">
+            <span className="text-slate-500">⌕</span>
+            <input
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              placeholder="Search FaceGrem"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
+            />
           </div>
         </div>
       </header>
@@ -1562,1269 +794,480 @@ export default function FeedPage() {
       {isMenuOpen && (
         <>
           <div
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[80] bg-black/35"
             onClick={() => setIsMenuOpen(false)}
           />
-          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col overflow-y-auto overscroll-contain border-r border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
+          <aside className="fixed left-0 top-0 z-[90] flex h-full w-[320px] flex-col overflow-y-auto bg-white p-4 shadow-2xl">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)]">
-                  F
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">FaceGrem</h2>
-                  <p className="text-xs text-slate-400">{t.navigation}</p>
-                </div>
-              </div>
-
+              <h2 className="text-xl font-bold">Menu</h2>
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white transition hover:bg-white/[0.08]"
-                aria-label="Close menu"
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-lg hover:bg-slate-200"
               >
                 ✕
               </button>
             </div>
 
-            <div className="mt-6 space-y-2">
-              <Link
-                href="/feed"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
-              >
-                🏠 {t.homeFeed}
-              </Link>
-              <Link
-                href="/videos"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
-              >
-                🎬 {t.videos}
-              </Link>
-              <Link
-                href="/communities"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
-              >
-                👥 {t.communities}
-              </Link>
-              <Link
-                href="/groups"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
-              >
-                🫂 {t.groups}
-              </Link>
-              <Link
-                href="/messages"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
-              >
-                💬 {t.messages}
-              </Link>
-              <Link
-                href="/saved"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
-              >
-                🔖 {t.saved}
-              </Link>
+            <div className="mt-4 rounded-2xl bg-slate-50 p-3">
               <Link
                 href="/profile"
                 onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"
+                className="flex items-center gap-3 rounded-xl p-2 hover:bg-white"
               >
-                👤 {t.profile}
+                <img
+                  src={userAvatar || getAvatarUrl(userName)}
+                  alt={userName}
+                  className="h-11 w-11 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-semibold">{userName}</p>
+                  <p className="text-xs text-slate-500">View your profile</p>
+                </div>
               </Link>
             </div>
 
-            <div className="pt-5 mt-8 border-t border-white/10">
-              <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                More
-              </p>
-
-              <div className="space-y-2">
-                <Link
-                  href="/settings"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
-                >
-                  ⚙️ {t.settings}
-                </Link>
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
-                    className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
-                  >
-                    🌐 {t.language}: {languageLabels[selectedLanguage]}
-                  </button>
-
-                  {isLanguageMenuOpen && (
-                    <div className="mt-2 space-y-1 px-2 pb-2">
-                      {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
-                        <button
-                          key={language}
-                          type="button"
-                          onClick={() => handleLanguageChange(language)}
-                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
-                            selectedLanguage === language
-                              ? "bg-cyan-400/[0.14] text-cyan-100"
-                              : "text-white hover:bg-white/[0.06]"
-                          }`}
-                        >
-                          <span>{languageLabels[language]}</span>
-                          {selectedLanguage === language && <span>✓</span>}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  🔒 {t.privacy}
-                </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  ❓ {t.help}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="block w-full rounded-2xl px-4 py-3 text-left text-rose-100 transition hover:bg-rose-400/[0.10]"
-                >
-                  ↩️ {t.logout}
-                </button>
-              </div>
+            <div className="mt-4 grid gap-2">
+              <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">🏠 Home Feed</Link>
+              <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">🎬 Videos</Link>
+              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">👥 Communities</Link>
+              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">🫂 Groups</Link>
+              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">💬 Messages</Link>
+              <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">🔖 Saved</Link>
+              <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="rounded-xl p-3 font-medium hover:bg-slate-100">⚙️ Settings</Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="rounded-xl p-3 text-left font-medium text-red-600 hover:bg-red-50"
+              >
+                ↩️ Log out
+              </button>
             </div>
           </aside>
         </>
       )}
 
-      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
-        <aside className="hidden xl:block">
-          <div className="sticky top-[104px] space-y-4">
-            <div className={`overflow-hidden rounded-[30px] p-4 ${glassCard}`}>
-              <button
-                type="button"
-                onClick={() => setIsProfileCardOpen(!isProfileCardOpen)}
-                className="flex items-center w-full gap-3 text-left"
-              >
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="object-cover h-14 w-14 rounded-2xl ring-1 ring-white/10"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white truncate">{userName}</p>
-                  <p className="text-sm truncate text-slate-400">{t.quickDetails}</p>
-                </div>
-                <div className="text-xl text-white">{isProfileCardOpen ? "−" : "+"}</div>
-              </button>
+      <main className="mx-auto grid max-w-[1460px] gap-5 px-3 py-4 lg:grid-cols-[280px_minmax(0,680px)_320px]">
+        <aside className="hidden lg:block">
+          <div className="sticky top-[72px] space-y-2">
+            <Link href="/profile" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">
+              <img
+                src={userAvatar || getAvatarUrl(userName)}
+                alt={userName}
+                className="h-9 w-9 rounded-full object-cover"
+              />
+              <span className="font-medium">{userName}</span>
+            </Link>
+            <Link href="/friends" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">👫 Friends</Link>
+            <Link href="/saved" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">🔖 Saved</Link>
+            <Link href="/groups" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">🫂 Groups</Link>
+            <Link href="/communities" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">👥 Communities</Link>
+            <Link href="/videos" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">🎬 Videos</Link>
+            <Link href="/settings" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">⚙️ Settings</Link>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-xl p-3 text-left text-red-600 hover:bg-red-50"
+            >
+              ↩️ Log out
+            </button>
 
-              {isProfileCardOpen && (
-                <div className="pt-4 mt-4 space-y-3 border-t border-white/10">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
-                      <p className="text-[11px] text-slate-400">{t.savedStat}</p>
-                      <p className="mt-1 text-sm font-semibold text-white">{savedPosts.length}</p>
-                    </div>
-                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
-                      <p className="text-[11px] text-slate-400">{t.alertsStat}</p>
-                      <p className="mt-1 text-sm font-semibold text-white">
-                        {unreadNotificationsCount}
-                      </p>
-                    </div>
-                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
-                      <p className="text-[11px] text-slate-400">{t.groupsStat}</p>
-                      <p className="mt-1 text-sm font-semibold text-white">
-                        {myCommunityIds.length}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Link
-                      href="/profile"
-                      className={`rounded-2xl px-4 py-3 text-center text-sm text-white transition hover:bg-white/[0.08] ${softCard}`}
-                    >
-                      {t.openProfile}
-                    </Link>
-                    <Link
-                      href="/saved"
-                      className={`rounded-2xl px-4 py-3 text-center text-sm text-white transition hover:bg-white/[0.08] ${softCard}`}
-                    >
-                      {t.savedPosts}
-                    </Link>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className={`w-full rounded-2xl px-4 py-3 text-center text-sm text-rose-100 transition hover:bg-rose-400/[0.10] ${softCard}`}
+            <div className="mt-4 border-t border-slate-300 pt-4">
+              <p className="px-3 text-sm font-semibold text-slate-600">Your communities</p>
+              <div className="mt-2 space-y-1">
+                {communities.slice(0, 4).map((community) => (
+                  <Link
+                    key={community.id}
+                    href={`/communities/${community.id}`}
+                    className="block truncate rounded-xl px-3 py-2 text-sm hover:bg-white"
                   >
-                    ↩️ {t.logout}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <div className={`rounded-[28px] p-4 ${glassCard}`}>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-cyan-200">{t.yourCommunities}</p>
-                <Link
-                  href="/communities"
-                  className="text-xs transition text-cyan-300 hover:text-cyan-200"
-                >
-                  {t.viewAll}
-                </Link>
-              </div>
-
-              <div className="mt-4 space-y-3">
-                {communities.filter((community) => myCommunityIds.includes(community.id))
-                  .length === 0 ? (
-                  <p className="text-sm leading-7 text-slate-400">
-                    {t.joinCommunitiesText}
-                  </p>
-                ) : (
-                  communities
-                    .filter((community) => myCommunityIds.includes(community.id))
-                    .slice(0, 4)
-                    .map((community) => (
-                      <Link
-                        key={community.id}
-                        href={`/communities/${community.id}`}
-                        className={`block rounded-2xl px-4 py-3 transition hover:bg-white/[0.08] ${softCard}`}
-                      >
-                        <p className="font-medium text-white">{community.name}</p>
-                        <p className="mt-1 text-xs text-slate-400/90">
-                          {community.category || t.communityFallback}
-                        </p>
-                      </Link>
-                    ))
-                )}
+                    # {community.name}
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
         </aside>
 
-        <section className="min-w-0 space-y-5 sm:space-y-6">
-          <div className="overflow-hidden rounded-[32px] border border-white/[0.06] bg-[linear-gradient(135deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015)_38%,rgba(255,255,255,0.025)_100%)] p-6 backdrop-blur-[28px] shadow-[0_24px_80px_rgba(2,8,23,0.14)]">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold text-cyan-200">{t.welcomeBack}</p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">
-                {t.goodToSeeYou}, {userName.split(" ")[0]}.
-              </h2>
-              <p className="max-w-xl mt-4 text-sm leading-8 text-slate-300 sm:text-base">
-                {t.discoverText}
-              </p>
+        <section className="min-w-0 space-y-4">
+          <div className="rounded-xl bg-white p-4 shadow-sm">
+            <div className="flex gap-3">
+              <Link href="/profile" className="shrink-0">
+                <img
+                  src={userAvatar || getAvatarUrl(userName)}
+                  alt={userName}
+                  className="h-11 w-11 rounded-full object-cover"
+                />
+              </Link>
+              <button
+                type="button"
+                onClick={() => document.getElementById("feed-composer-textarea")?.focus()}
+                className="flex-1 rounded-full bg-slate-100 px-4 text-left text-slate-500 hover:bg-slate-200"
+              >
+                What&apos;s on your mind, {userName.split(" ")[0] || "Friend"}?
+              </button>
+            </div>
+
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <textarea
+                id="feed-composer-textarea"
+                value={postText}
+                onChange={(event) => setPostText(event.target.value)}
+                placeholder="Share something with FaceGrem..."
+                rows={3}
+                className="w-full resize-none rounded-2xl bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+              />
+
+              {imagePreview && (
+                <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200">
+                  <img src={imagePreview} alt="Preview" className="max-h-[420px] w-full object-cover" />
+                </div>
+              )}
+
+              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                <input
+                  value={videoUrl}
+                  onChange={(event) => setVideoUrl(event.target.value)}
+                  placeholder="Paste video link..."
+                  className="rounded-xl bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleCreatePost}
+                  disabled={posting}
+                  className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {posting ? "Posting..." : "Post"}
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
+                🖼️ Photo
+                <input type="file" accept="image/*" onChange={handlePostImageChange} className="hidden" />
+              </label>
+              <button
+                type="button"
+                onClick={() => setVideoUrl((prev) => prev || "https://")}
+                className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+              >
+                🎥 Video
+              </button>
+              <button
+                type="button"
+                onClick={handleCreatePost}
+                disabled={posting}
+                className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
+              >
+                😊 Feeling
+              </button>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-[30px] border border-white/[0.05] bg-white/[0.018] p-3 backdrop-blur-[30px] shadow-[0_18px_50px_rgba(2,8,23,0.14)] sm:rounded-[32px] sm:p-4">
-            <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="rounded-xl bg-white p-4 shadow-sm">
+            <div className="mb-3 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">{t.stories}</p>
-                <p className="text-xs text-slate-400/90">{t.storiesSubtitle}</p>
+                <p className="font-semibold">Stories</p>
+                <p className="text-sm text-slate-500">Quick moments from your people</p>
               </div>
-
-              <button
-                type="button"
-                onClick={handleOpenStoryCreator}
-                disabled={storyUploading}
-                className="rounded-full border border-white/[0.06] bg-white/[0.025] px-4 py-2 text-xs font-medium text-slate-300 transition hover:bg-white/[0.045] disabled:opacity-70"
-              >
-                {storyUploading ? t.uploading : t.createStory}
-              </button>
+              <label className="cursor-pointer rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold hover:bg-slate-200">
+                Create story
+                <input type="file" accept="image/*" onChange={handleStoryImageChange} className="hidden" />
+              </label>
             </div>
 
-            <div className="flex gap-3 min-w-max sm:gap-4">
-              <button
-                type="button"
-                onClick={handleOpenStoryCreator}
-                disabled={storyUploading}
-                className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.022] p-1 text-left backdrop-blur-[24px] transition duration-300 hover:-translate-y-1 disabled:opacity-70 sm:h-52 sm:w-36"
-              >
-                <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0b1220]/42">
-                  <img
-                    src={userAvatar}
-                    alt={userName}
-                    className="absolute inset-0 h-full w-full object-cover opacity-24"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-[#020817]/20 to-transparent" />
-
-                  <div className="relative flex flex-col justify-between h-full p-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.08] text-2xl font-semibold text-white shadow-[0_10px_26px_rgba(2,8,23,0.16)]">
-                      +
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-semibold text-white">
-                        {storyUploading ? t.uploading : t.createStory}
-                      </p>
-                      <p className="mt-1 text-xs text-white/75">{t.shareQuickMoment}</p>
-                    </div>
-                  </div>
-                </div>
-              </button>
-
-              {storyGroups.map((group, index) => {
-                const storyProfile = getProfileById(group.userId);
-                const storyUserName = storyProfile?.full_name || "FaceGrem User";
-                const storyUserAvatar =
-                  storyProfile?.avatar_url || getAvatarUrl(storyUserName);
-                const previewStory =
-                  group.stories[group.stories.length - 1] || group.stories[0];
-
-                return (
-                  <button
-                    key={group.userId}
-                    type="button"
-                    onClick={() => openStoryViewer(group.userId)}
-                    className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.022] p-1 text-left backdrop-blur-[24px] transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36"
-                  >
-                    <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0b1220]/40">
-                      <img
-                        src={previewStory.image_url}
-                        alt={storyUserName}
-                        className="absolute inset-0 h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#020817]/88 via-[#020817]/10 to-transparent" />
-
-                      <div className="relative flex flex-col justify-between h-full p-4">
-                        <img
-                          src={storyUserAvatar}
-                          alt={storyUserName}
-                          className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/12 shadow-[0_8px_20px_rgba(2,8,23,0.16)]"
-                        />
-
-                        <div>
-                          <p className="text-sm font-semibold text-white line-clamp-2">
-                            {storyUserName}
-                          </p>
-                          <p className="mt-1 text-xs text-white/75">
-                            {group.userId === userId
-                              ? t.yourStory
-                              : `@${storyProfile?.username || "member"}`}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-
-              {highlightedProfiles.map((profile, index) => (
-                <Link
-                  key={profile.id}
-                  href={`/profile?id=${profile.id}`}
-                  className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.022] p-1 backdrop-blur-[24px] transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36"
+            {storyPreview && (
+              <div className="mb-3 rounded-2xl border border-blue-100 bg-blue-50 p-3">
+                <img src={storyPreview} alt="Story preview" className="h-40 w-full rounded-xl object-cover" />
+                <input
+                  value={storyCaption}
+                  onChange={(event) => setStoryCaption(event.target.value)}
+                  placeholder="Story caption..."
+                  className="mt-3 w-full rounded-xl bg-white px-3 py-2 text-sm outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateStory}
+                  disabled={savingStory}
+                  className="mt-3 w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                 >
-                  <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0b1220]/40">
-                    <img
-                      src={
-                        profile.avatar_url ||
-                        getAvatarUrl(profile.full_name || "FaceGrem User")
-                      }
-                      alt={profile.full_name}
-                      className="absolute inset-0 h-full w-full object-cover opacity-72 transition duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020817]/88 via-[#020817]/10 to-transparent" />
+                  {savingStory ? "Creating story..." : "Share story"}
+                </button>
+              </div>
+            )}
 
-                    <div className="relative flex flex-col justify-between h-full p-4">
-                      <img
-                        src={
-                          profile.avatar_url ||
-                          getAvatarUrl(profile.full_name || "FaceGrem User")
-                        }
-                        alt={profile.full_name}
-                        className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/12 shadow-[0_8px_20px_rgba(2,8,23,0.16)]"
-                      />
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              <div className="relative h-48 w-28 shrink-0 overflow-hidden rounded-2xl bg-slate-900 text-white">
+                <img src={userAvatar || getAvatarUrl(userName)} alt={userName} className="h-32 w-full object-cover opacity-80" />
+                <div className="absolute left-1/2 top-[112px] flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full border-4 border-white bg-blue-600 text-xl">+</div>
+                <p className="absolute bottom-3 left-2 right-2 text-center text-sm font-semibold">Create story</p>
+              </div>
 
-                      <div>
-                        <p className="text-sm font-semibold text-white line-clamp-2">
-                          {profile.full_name}
-                        </p>
-                        <p className="mt-1 text-xs text-white/75">
-                          @{profile.username || "member"}
-                        </p>
-                      </div>
-                    </div>
+              {stories.map((story) => (
+                <Link
+                  key={story.id}
+                  href={`/profile?id=${story.user_id}`}
+                  className="relative h-48 w-28 shrink-0 overflow-hidden rounded-2xl bg-slate-900 text-white"
+                >
+                  <img src={story.image_url} alt={story.caption || "Story"} className="h-full w-full object-cover opacity-90" />
+                  <img
+                    src={getBestAvatarForUser(story.user_id)}
+                    alt={getBestNameForUser(story.user_id)}
+                    className="absolute left-2 top-2 h-9 w-9 rounded-full border-4 border-blue-600 object-cover"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-10">
+                    <p className="line-clamp-2 text-xs font-semibold">
+                      {story.caption || getBestNameForUser(story.user_id)}
+                    </p>
                   </div>
                 </Link>
               ))}
             </div>
-          </div>
-
-          <div className="overflow-hidden rounded-[30px] border border-white/[0.05] bg-white/[0.018] backdrop-blur-[30px] shadow-[0_18px_50px_rgba(2,8,23,0.14)]">
-            <div className="border-b border-white/[0.05] px-4 py-4 sm:px-6">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">{t.createPost}</p>
-                  <p className="mt-1 text-xs text-slate-400/90">
-                    {t.createPostSubtitle}
-                  </p>
-                </div>
-
-                <div className="items-center hidden gap-2 sm:flex">
-                  <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs text-slate-300">
-                    Public post
-                  </span>
-                  <span className="rounded-full border border-cyan-300/10 bg-cyan-400/[0.08] px-3 py-1.5 text-xs text-cyan-100">
-                    Live composer
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 sm:p-6">
-              <div className="flex items-start gap-3 sm:gap-4">
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/[0.08] sm:h-14 sm:w-14"
-                />
-
-                <div className="flex-1 min-w-0">
-                  <div className="rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-[22px]">
-                    <div className="flex flex-wrap items-center gap-2 mb-3 sm:gap-3">
-                      <p className="font-medium text-white">{userName}</p>
-                      <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2.5 py-1 text-[11px] text-slate-300">
-                        Posting to everyone
-                      </span>
-                    </div>
-
-                    <textarea
-                      value={postText}
-                      onChange={(e) => setPostText(e.target.value)}
-                      rows={4}
-                      placeholder={t.whatsOnMind}
-                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-white placeholder:text-slate-400/90 outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-5 sm:gap-3">
-                {quickActions.map((action) => (
-                  <button
-                    key={quickActionLabels[selectedLanguage][action]}
-                    type="button"
-                    onClick={() => {
-                      setActiveComposerAction(action);
-                      if (action === "Story") handleOpenStoryCreator();
-                    }}
-                    className={`rounded-full px-4 py-2.5 text-sm font-medium transition sm:px-5 sm:py-3 ${
-                      activeComposerAction === action
-                        ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
-                        : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
-                    }`}
-                  >
-                    {quickActionLabels[selectedLanguage][action]}
-                  </button>
-                ))}
-              </div>
-
-              {(activeComposerAction === "Photo" || activeComposerAction === "Story") && (
-                <div className="mt-5 rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-[22px]">
-                  <div>
-                    <p className="text-sm font-medium text-white">
-                      {activeComposerAction === "Story" ? t.storyImage : t.photoUpload}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400/90">
-                      {activeComposerAction === "Story"
-                        ? t.useCreateStory
-                        : t.addVisual}
-                    </p>
-                  </div>
-
-                  {activeComposerAction === "Photo" && (
-                    <>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="mt-4 block w-full rounded-2xl text-sm text-white file:mr-4 file:rounded-xl file:border file:border-white/[0.06] file:bg-white/[0.04] file:px-4 file:py-2.5 file:text-slate-200"
-                      />
-
-                      {imagePreview && (
-                        <div className="mt-4 overflow-hidden rounded-[20px] border border-white/10">
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="object-cover w-full max-h-96"
-                          />
-                        </div>
-                      )}
-                    </>
-                  )}
-
-                  {activeComposerAction === "Story" && (
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        onClick={handleOpenStoryCreator}
-                        disabled={storyUploading}
-                        className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.08] px-4 py-3 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/[0.12] disabled:opacity-70"
-                      >
-                        {storyUploading ? t.uploadingStory : t.chooseStoryImage}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {(activeComposerAction === "Video" || activeComposerAction === "Live") && (
-                <div className="mt-5 rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4 backdrop-blur-[22px]">
-                  <div>
-                    <p className="text-sm font-medium text-white">
-                      {activeComposerAction === "Live" ? t.liveStreamLink : t.videoLink}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400/90">
-                      {t.pasteVideoHelp}
-                    </p>
-                  </div>
-
-                  <input
-                    type="text"
-                    value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
-                    placeholder={
-                      activeComposerAction === "Live"
-                        ? t.pasteLivePlaceholder
-                        : t.pasteVideoPlaceholder
-                    }
-                    className="mt-4 w-full rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white placeholder:text-slate-400/90 outline-none transition focus:border-cyan-300/20"
-                  />
-                </div>
-              )}
-
-              <div className="mt-5 flex flex-col gap-4 border-t border-white/[0.05] pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs text-slate-300">
-                    Text
-                  </span>
-                  {imagePreview && (
-                    <span className="rounded-full border border-fuchsia-300/10 bg-fuchsia-400/[0.08] px-3 py-1.5 text-xs text-fuchsia-100">
-                      Image attached
-                    </span>
-                  )}
-                  {videoUrl.trim() && (
-                    <span className="rounded-full border border-cyan-300/10 bg-cyan-400/[0.08] px-3 py-1.5 text-xs text-cyan-100">
-                      Video linked
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPostText("");
-                      setVideoUrl("");
-                      setImageFile(null);
-                      setImagePreview("");
-                      setActiveComposerAction("Photo");
-                    }}
-                    className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm font-medium text-slate-300 transition hover:bg-white/[0.045]"
-                  >
-                    Clear
-                  </button>
-
-                  <button
-                    onClick={handleCreatePost}
-                    disabled={posting}
-                    className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-6 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/[0.14] disabled:opacity-70"
-                  >
-                    {posting ? t.posting : t.post}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            {feedTabs.map((tab) => (
-              <button
-                key={feedTabLabels[selectedLanguage][tab]}
-                type="button"
-                onClick={() => {
-                  setActiveFeedTab(tab);
-                  if (tab === "Videos") router.push("/videos");
-                }}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  activeFeedTab === tab
-                    ? "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                    : "border border-white/10 bg-white/[0.05] text-slate-300 hover:bg-white/[0.08]"
-                }`}
-              >
-                {feedTabLabels[selectedLanguage][tab]}
-              </button>
-            ))}
           </div>
 
           {filteredPosts.length === 0 ? (
-            <div className={`rounded-[30px] p-8 text-center ${glassCard}`}>
-              <p className="text-lg font-medium text-white">{t.noPosts}</p>
-              <p className="mt-2 text-sm text-slate-400">
-                {t.tryAnotherTab}
-              </p>
+            <div className="rounded-xl bg-white p-8 text-center shadow-sm">
+              <p className="text-lg font-semibold">No posts found.</p>
+              <p className="mt-2 text-sm text-slate-500">Try a different search or create the first post.</p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {filteredPosts.map((post) => {
-                const authorProfile = getProfileById(post.user_id);
-                const authorName = getBestNameForUser(post.user_id, post.full_name);
-                const authorAvatar = getBestAvatarForUser(
-                  post.user_id,
-                  post.full_name,
-                  post.avatar_url
-                );
-                const likesCount = getPostLikesCount(post.id);
-                const commentsCount = getPostCommentsCount(post.id);
+            filteredPosts.map((post) => {
+              const authorName = getBestNameForUser(post.user_id, post.full_name);
+              const authorAvatar = getBestAvatarForUser(
+                post.user_id,
+                post.full_name,
+                post.avatar_url
+              );
+              const postLikesCount = getPostLikesCount(post.id);
+              const postComments = getPostComments(post.id);
+              const isLiked = likes.some(
+                (like) => like.post_id === post.id && like.user_id === userId
+              );
+              const isSaved = !!getSavedRecord(post.id);
 
-                const latestComments = comments
-                  .filter((comment) => comment.post_id === post.id)
-                  .sort(
-                    (a, b) =>
-                      new Date(b.created_at).getTime() -
-                      new Date(a.created_at).getTime()
-                  )
-                  .slice(0, 2);
-
-                return (
-                  <article
-                    key={post.id}
-                    className="overflow-hidden rounded-[32px] border border-white/[0.05] bg-white/[0.018] backdrop-blur-[30px] shadow-[0_18px_50px_rgba(2,8,23,0.14)]"
-                  >
-                    <div className="p-5 sm:p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <Link
-                          href={`/profile?id=${post.user_id}`}
-                          className="flex items-center min-w-0 gap-3 hover:opacity-90"
-                        >
-                          <img
-                            src={authorAvatar}
-                            alt={authorName}
-                            className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/[0.08]"
-                          />
-
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-white truncate">{authorName}</p>
-
-                              {authorProfile?.username && (
-                                <span className="text-sm truncate text-slate-400">
-                                  @{authorProfile.username}
-                                </span>
-                              )}
-
-                              <span className="hidden w-1 h-1 rounded-full bg-slate-500 sm:block" />
-
-                              <span className="text-xs text-slate-400">
-                                {new Date(post.created_at).toLocaleString()}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2.5 py-1 text-[11px] text-slate-300">
-                                Public
-                              </span>
-
-                              {post.video_url && (
-                                <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
-                                  Video post
-                                </span>
-                              )}
-
-                              {post.image_url && !post.video_url && (
-                                <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-2.5 py-1 text-[11px] text-fuchsia-200">
-                                  Photo post
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </Link>
-
-                        {post.user_id === userId && (
-                          <button
-                            onClick={() => handleDeletePost(post.id)}
-                            className="rounded-2xl border border-red-300/10 bg-red-400/[0.07] px-4 py-2 text-xs text-red-100 transition hover:bg-red-400/[0.11]"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </div>
-
-                      {post.content && (
-                        <div className="mt-5">
-                          <p className="text-[15px] leading-8 text-slate-200/95">{post.content}</p>
-
-                          <div className="mt-3 flex flex-wrap items-center gap-3">
-                            <button
-                              type="button"
-                              onClick={() => handleTogglePostTranslation(post.id, post.content)}
-                              disabled={translatingPosts[post.id]}
-                              className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/[0.045] disabled:opacity-70"
-                            >
-                              {translatingPosts[post.id]
-                                ? t.translating
-                                : translatedPosts[post.id]
-                                ? t.translateShowOriginal
-                                : `Translate to ${languageLabels[selectedLanguage]}`}
-                            </button>
-
-                            {translatedPosts[post.id] && (
-                              <span className="text-xs text-cyan-200/90">
-                                {t.translatedTo} {languageLabels[selectedLanguage]}
-                              </span>
-                            )}
-                          </div>
-
-                          {translatedPosts[post.id] && (
-                            <div className="mt-3 rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.06] px-4 py-3">
-                              <p className="text-[15px] leading-8 text-cyan-50">
-                                {translatedPosts[post.id]}
-                              </p>
-                            </div>
-                          )}
+              return (
+                <article key={post.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <Link href={`/profile?id=${post.user_id}`} className="flex min-w-0 items-center gap-3">
+                        <img src={authorAvatar} alt={authorName} className="h-11 w-11 rounded-full object-cover" />
+                        <div className="min-w-0">
+                          <p className="truncate font-semibold">{authorName}</p>
+                          <p className="text-xs text-slate-500">{formatTime(post.created_at)} · 🌍</p>
                         </div>
-                      )}
+                      </Link>
+
+                      <Link href={`/post/${post.id}`} className="rounded-full px-3 py-1 text-xl text-slate-500 hover:bg-slate-100">…</Link>
                     </div>
 
-                    {post.image_url && (
-                      <div className="border-y border-white/[0.05] bg-black/10 px-3 pb-3 sm:px-4 sm:pb-4">
-                        <div className="overflow-hidden rounded-[28px] border border-white/[0.05]">
-                          <img
-                            src={post.image_url}
-                            alt="Post"
-                            className="max-h-[720px] w-full object-cover"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {post.video_url && (
-                      <div className="border-y border-white/[0.05] bg-black/12 px-3 pb-3 sm:px-4 sm:pb-4">
-                        <div className="overflow-hidden rounded-[28px] border border-white/[0.05]">
-                          {isYouTubeUrl(post.video_url) ? (
-                            <iframe
-                              src={getYouTubeEmbedUrl(post.video_url)}
-                              title={`feed-video-${post.id}`}
-                              className="h-80 w-full md:h-[480px]"
-                              allowFullScreen
-                            />
-                          ) : (
-                            <video
-                              controls
-                              className="h-80 w-full bg-black md:h-[480px]"
-                              src={post.video_url}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="p-5 sm:p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.05] pb-4">
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="flex items-center gap-2 rounded-full border border-white/[0.05] bg-white/[0.022] px-3 py-1.5">
-                            <span className="text-base">❤️</span>
-                            <span className="text-slate-200">
-                              {likesCount} {likesCount === 1 ? "like" : "likes"}
-                            </span>
-                          </div>
-
-                          <div className="rounded-full border border-white/[0.05] bg-white/[0.022] px-3 py-1.5 text-slate-300">
-                            {commentsCount} {commentsCount === 1 ? "comment" : "comments"}
-                          </div>
-                        </div>
-
-                        <Link
-                          href={`/post/${post.id}`}
-                          className="text-sm font-medium transition text-cyan-300 hover:text-cyan-200"
-                        >
-                          {t.viewDiscussion}
-                        </Link>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
-                        <button
-                          onClick={() => handleToggleLike(post.id, post.user_id)}
-                          className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                            isLiked(post.id)
-                              ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
-                              : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
-                          }`}
-                        >
-                          {isLiked(post.id) ? t.liked : t.like}
-                        </button>
-
-                        <Link
-                          href={`/post/${post.id}`}
-                          className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-center text-sm font-medium text-slate-300 transition hover:bg-white/[0.08]"
-                        >
-                          Comment
-                        </Link>
-
-                        <button
-                          onClick={() => handleToggleSave(post.id)}
-                          className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                            isSaved(post.id)
-                              ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
-                              : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
-                          }`}
-                        >
-                          {isSaved(post.id) ? "Saved" : "Save"}
-                        </button>
-
-                        <Link
-                          href={`/post/${post.id}`}
-                          className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-center text-sm font-medium text-cyan-300 transition hover:bg-white/[0.08]"
-                        >
-                          Open
-                        </Link>
-                      </div>
-
-                      {latestComments.length > 0 && (
-                        <div className="mt-5 space-y-3 border-t border-white/[0.05] pt-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                            Recent comments
-                          </p>
-
-                          {latestComments.map((comment) => {
-                            const commentAuthorName = getBestNameForUser(
-                              comment.user_id,
-                              comment.full_name
-                            );
-                            const commentAuthorAvatar = getBestAvatarForUser(
-                              comment.user_id,
-                              comment.full_name,
-                              null
-                            );
-
-                            return (
-                              <div
-                                key={comment.id}
-                                className="flex items-start gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.02] px-3 py-3 backdrop-blur-[20px]"
-                              >
-                                <img
-                                  src={commentAuthorAvatar}
-                                  alt={commentAuthorName}
-                                  className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/[0.08]"
-                                />
-
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <p className="text-sm font-medium text-white">
-                                      {commentAuthorName}
-                                    </p>
-                                    <span className="text-[11px] text-slate-400">
-                                      {new Date(comment.created_at).toLocaleString()}
-                                    </span>
-                                  </div>
-
-                                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-300/95">
-                                    {comment.content}
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        <aside className="space-y-5">
-          <div className="rounded-[30px] border border-white/[0.05] bg-white/[0.018] p-5 backdrop-blur-[30px] shadow-[0_18px_50px_rgba(2,8,23,0.14)]">
-            {activeRightPanel === "friends" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">Friends</p>
-                  <p className="mt-1 text-xs text-slate-400/90">
-                    Online, suggestions, and your friends
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveFriendsTab("online")}
-                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
-                      activeFriendsTab === "online"
-                        ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
-                        : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
-                    }`}
-                  >
-                    Online
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveFriendsTab("suggestions")}
-                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
-                      activeFriendsTab === "suggestions"
-                        ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
-                        : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
-                    }`}
-                  >
-                    Suggestions
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveFriendsTab("your_friends")}
-                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
-                      activeFriendsTab === "your_friends"
-                        ? "border border-cyan-300/10 bg-cyan-400/[0.10] text-cyan-100 shadow-[0_6px_20px_rgba(34,211,238,0.08)]"
-                        : "border border-white/[0.06] bg-white/[0.025] text-slate-300 hover:bg-white/[0.045]"
-                    }`}
-                  >
-                    Your Friends
-                  </button>
-                </div>
-
-                {activeFriendsTab === "online" && (
-                  <div className="space-y-4">
-                    {onlinePeople.length === 0 ? (
-                      <p className="text-sm text-slate-400">No online friends to show yet.</p>
-                    ) : (
-                      onlinePeople.map((person) => (
-                        <div key={person.id} className="rounded-[24px] border border-white/[0.05] bg-white/[0.022] p-4 backdrop-blur-[24px] shadow-[0_10px_28px_rgba(2,8,23,0.10)]">
-                          <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
-                            <div className="relative">
-                              <img
-                                src={
-                                  person.avatar_url ||
-                                  getAvatarUrl(person.full_name || "FaceGrem User")
-                                }
-                                alt={person.full_name}
-                                className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
-                              />
-                              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#08111d] bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.35)]" />
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-white truncate">{person.full_name}</p>
-                              <p className="truncate text-xs text-slate-400/85">
-                                @{person.username || "member"} • online
-                              </p>
-                            </div>
-                          </Link>
-
-                          <div className="grid grid-cols-2 gap-2 mt-3">
-                            <Link
-                              href={`/messages?user=${person.id}`}
-                              className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-4 py-2.5 text-center text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/[0.14]"
-                            >
-                              Message
-                            </Link>
-
-                            <Link
-                              href={`/profile?id=${person.id}`}
-                              className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/[0.045]"
-                            >
-                              View
-                            </Link>
-                          </div>
-                        </div>
-                      ))
+                    {post.content && (
+                      <p className="mt-4 whitespace-pre-wrap text-[15px] leading-7 text-slate-800">{post.content}</p>
                     )}
                   </div>
-                )}
 
-                {activeFriendsTab === "suggestions" && (
-                  <div className="space-y-4">
-                    {suggestedPeople.length === 0 ? (
-                      <p className="text-sm text-slate-400">No suggestions yet.</p>
-                    ) : (
-                      suggestedPeople.map((person) => {
-                        const following = isFollowingUser(person.id);
+                  {post.image_url && (
+                    <img src={post.image_url} alt="Post" className="max-h-[720px] w-full object-cover" />
+                  )}
+
+                  {post.video_url && (
+                    <div className="bg-black">
+                      {isYouTubeUrl(post.video_url) ? (
+                        <iframe
+                          src={getYouTubeEmbedUrl(post.video_url)}
+                          title={`post-video-${post.id}`}
+                          className="h-80 w-full md:h-[460px]"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video controls src={post.video_url} className="h-80 w-full bg-black md:h-[460px]" />
+                      )}
+                    </div>
+                  )}
+
+                  <div className="px-4 py-3">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-3 text-sm text-slate-500">
+                      <span>❤️ {postLikesCount} {postLikesCount === 1 ? "like" : "likes"}</span>
+                      <Link href={`/post/${post.id}`} className="hover:underline">
+                        {postComments.length} {postComments.length === 1 ? "comment" : "comments"}
+                      </Link>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-1 border-b border-slate-100 py-1">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleLike(post.id)}
+                        className={`rounded-lg px-2 py-2 text-sm font-semibold hover:bg-slate-50 ${
+                          isLiked ? "text-blue-600" : "text-slate-600"
+                        }`}
+                      >
+                        👍 Like
+                      </button>
+                      <Link href={`/post/${post.id}`} className="rounded-lg px-2 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                        💬 Comment
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleSave(post.id)}
+                        className={`rounded-lg px-2 py-2 text-sm font-semibold hover:bg-slate-50 ${
+                          isSaved ? "text-blue-600" : "text-slate-600"
+                        }`}
+                      >
+                        🔖 Save
+                      </button>
+                      <Link href={`/messages?user=${post.user_id}`} className="rounded-lg px-2 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                        ✉️ Send
+                      </Link>
+                    </div>
+
+                    <div className="mt-3 space-y-3">
+                      {postComments.slice(-2).map((comment) => {
+                        const commentAuthorName = getBestNameForUser(
+                          comment.user_id,
+                          comment.full_name
+                        );
 
                         return (
-                          <div key={person.id} className="rounded-[24px] border border-white/[0.05] bg-white/[0.022] p-4 backdrop-blur-[24px] shadow-[0_10px_28px_rgba(2,8,23,0.10)]">
-                            <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
-                              <img
-                                src={
-                                  person.avatar_url ||
-                                  getAvatarUrl(person.full_name || "FaceGrem User")
-                                }
-                                alt={person.full_name}
-                                className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-white truncate">{person.full_name}</p>
-                                <p className="truncate text-xs text-slate-400/85">
-                                  @{person.username || "member"}
-                                </p>
-                              </div>
-                            </Link>
-
-                            <div className="flex gap-2 mt-3">
-                              <button
-                                onClick={() => handleToggleFollow(person.id)}
-                                className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
-                                  following
-                                    ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                                    : "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
-                                }`}
-                              >
-                                {following ? "Following" : "Follow"}
-                              </button>
-
-                              <Link
-                                href={`/profile?id=${person.id}`}
-                                className="rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-2.5 text-sm text-slate-300 transition hover:bg-white/[0.08]"
-                              >
-                                View
-                              </Link>
+                          <div key={comment.id} className="flex gap-2">
+                            <img
+                              src={getBestAvatarForUser(comment.user_id, comment.full_name)}
+                              alt={commentAuthorName}
+                              className="h-8 w-8 rounded-full object-cover"
+                            />
+                            <div className="rounded-2xl bg-slate-100 px-3 py-2">
+                              <p className="text-xs font-semibold">{commentAuthorName}</p>
+                              <p className="text-sm text-slate-700">{comment.content}</p>
                             </div>
                           </div>
                         );
-                      })
-                    )}
-                  </div>
-                )}
+                      })}
 
-                {activeFriendsTab === "your_friends" && (
-                  <div className="space-y-4">
-                    {yourFriends.length === 0 ? (
-                      <p className="text-sm text-slate-400">You have no friends to show yet.</p>
-                    ) : (
-                      yourFriends.map((person) => (
-                        <div key={person.id} className="rounded-[24px] border border-white/[0.05] bg-white/[0.022] p-4 backdrop-blur-[24px] shadow-[0_10px_28px_rgba(2,8,23,0.10)]">
-                          <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
-                            <img
-                              src={
-                                person.avatar_url ||
-                                getAvatarUrl(person.full_name || "FaceGrem User")
-                              }
-                              alt={person.full_name}
-                              className="h-12 w-12 rounded-2xl object-cover ring-1 ring-white/10"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-white truncate">{person.full_name}</p>
-                              <p className="truncate text-xs text-slate-400/85">
-                                @{person.username || "member"}
-                              </p>
-                            </div>
-                          </Link>
-
-                          <div className="grid grid-cols-2 gap-2 mt-3">
-                            <Link
-                              href={`/messages?user=${person.id}`}
-                              className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-4 py-2.5 text-center text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/[0.14]"
-                            >
-                              Message
-                            </Link>
-
-                            <Link
-                              href={`/profile?id=${person.id}`}
-                              className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-2.5 text-center text-sm text-slate-300 transition hover:bg-white/[0.045]"
-                            >
-                              View
-                            </Link>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeRightPanel === "communities" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-cyan-200">Communities</p>
-                  <p className="mt-1 text-xs text-slate-400/90">
-                    Discover and open communities
-                  </p>
-                </div>
-
-                {suggestedCommunities.length === 0 ? (
-                  <p className="text-sm text-slate-400">No communities to show yet.</p>
-                ) : (
-                  suggestedCommunities.map((community) => {
-                    const memberCount = communityMembers.filter(
-                      (member) => member.community_id === community.id
-                    ).length;
-
-                    return (
-                      <Link
-                        key={community.id}
-                        href={`/communities/${community.id}`}
-                        className={`block rounded-2xl p-4 transition hover:bg-white/[0.08] ${softCard}`}
-                      >
-                        <p className="font-medium text-white">{community.name}</p>
-                        <p className="mt-1 text-xs text-slate-400/90">
-                          {community.category || t.communityFallback} • {memberCount} members
-                        </p>
-                      </Link>
-                    );
-                  })
-                )}
-
-                <Link
-                  href="/communities"
-                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20"
-                >
-                  Open communities page
-                </Link>
-              </div>
-            )}
-
-            {activeRightPanel === "messages" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-cyan-200">Messages</p>
-                  <p className="mt-1 text-xs text-slate-400/90">
-                    Recent activity and quick access
-                  </p>
-                </div>
-
-                {latestActivity.length === 0 ? (
-                  <p className="text-sm text-slate-400">No activity yet.</p>
-                ) : (
-                  latestActivity.map((notification) => (
-                    <div key={notification.id} className={`rounded-2xl px-4 py-3 ${softCard}`}>
-                      <p className="text-sm leading-6 text-white">
-                        <span className="font-medium">
-                          {notification.actor_name || "Someone"}
-                        </span>{" "}
-                        {notification.type}
-                        {notification.content ? `: ${notification.content}` : ""}
-                      </p>
-                      <p className="mt-2 text-xs text-slate-400">
-                        {new Date(notification.created_at).toLocaleString()}
-                      </p>
+                      <form onSubmit={(event) => handleAddComment(event, post.id)} className="flex gap-2">
+                        <img
+                          src={userAvatar || getAvatarUrl(userName)}
+                          alt={userName}
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                        <input
+                          value={commentDrafts[post.id] || ""}
+                          onChange={(event) =>
+                            setCommentDrafts((prev) => ({
+                              ...prev,
+                              [post.id]: event.target.value,
+                            }))
+                          }
+                          placeholder="Write a comment..."
+                          className="flex-1 rounded-full bg-slate-100 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
+                        />
+                        <button
+                          type="submit"
+                          disabled={commentingPostId === post.id}
+                          className="rounded-full bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
+                        >
+                          {commentingPostId === post.id ? "..." : "Post"}
+                        </button>
+                      </form>
                     </div>
-                  ))
-                )}
+                  </div>
+                </article>
+              );
+            })
+          )}
+        </section>
 
-                <Link
-                  href="/messages"
-                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20"
-                >
-                  Open messages
-                </Link>
+        <aside className="hidden xl:block">
+          <div className="sticky top-[72px] space-y-4">
+            <section className="rounded-xl bg-white p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="font-semibold text-slate-600">Friend requests</p>
+                <Link href="/friends" className="text-sm text-blue-600">See all</Link>
               </div>
-            )}
 
-            {activeRightPanel === "videos" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-cyan-200">Videos</p>
-                  <p className="mt-1 text-xs text-slate-400/90">
-                    Trending and recent videos
-                  </p>
+              {suggestedProfiles.length === 0 ? (
+                <p className="text-sm text-slate-500">No new suggestions right now.</p>
+              ) : (
+                <div className="space-y-3">
+                  {suggestedProfiles.slice(0, 2).map((profile) => (
+                    <div key={profile.id} className="flex gap-3">
+                      <img
+                        src={profile.avatar_url || getAvatarUrl(profile.full_name)}
+                        alt={profile.full_name}
+                        className="h-12 w-12 rounded-full object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">{profile.full_name}</p>
+                        <p className="text-xs text-slate-500">@{profile.username || "facegrem"}</p>
+                        <div className="mt-2 grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFollow(profile.id)}
+                            disabled={followingUserId === profile.id}
+                            className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+              )}
+            </section>
 
-                {latestVideoCards.length === 0 ? (
-                  <p className="text-sm text-slate-400">No videos published yet.</p>
-                ) : (
-                  latestVideoCards.map((video) => (
-                    <Link
-                      key={video.id}
-                      href="/videos"
-                      className={`block rounded-2xl p-4 transition hover:bg-white/[0.08] ${softCard}`}
-                    >
-                      <p className="font-medium text-white">{video.title}</p>
-                      <p className="mt-1 text-xs text-slate-400/90">
-                        {(video.views_count || 0).toLocaleString()} views
-                      </p>
-                    </Link>
-                  ))
-                )}
-
-                <Link
-                  href="/videos"
-                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20"
-                >
-                  Open videos page
-                </Link>
+            <section className="rounded-xl bg-white p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="font-semibold text-slate-600">Contacts</p>
+                <span className="text-sm text-slate-400">Online</span>
               </div>
-            )}
+
+              <div className="space-y-1">
+                {onlineProfiles.map((profile) => (
+                  <Link
+                    key={profile.id}
+                    href={`/messages?user=${profile.id}`}
+                    className="flex items-center gap-3 rounded-xl p-2 hover:bg-slate-50"
+                  >
+                    <div className="relative">
+                      <img
+                        src={profile.avatar_url || getAvatarUrl(profile.full_name)}
+                        alt={profile.full_name}
+                        className="h-9 w-9 rounded-full object-cover"
+                      />
+                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
+                    </div>
+                    <span className="truncate text-sm font-medium">{profile.full_name}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+
+            <section className="rounded-xl bg-white p-4 shadow-sm">
+              <p className="mb-3 font-semibold text-slate-600">Suggested communities</p>
+              <div className="space-y-2">
+                {communities.slice(0, 4).map((community) => (
+                  <Link
+                    key={community.id}
+                    href={`/communities/${community.id}`}
+                    className="block rounded-xl bg-slate-50 p-3 hover:bg-slate-100"
+                  >
+                    <p className="truncate text-sm font-semibold">{community.name}</p>
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+                      {community.description || community.category || "Community on FaceGrem"}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </section>
           </div>
         </aside>
       </main>
-
-      {storyViewerOpen && activeStory && activeStoryGroup && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 px-4 backdrop-blur-md">
-          <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-[#07111f] shadow-2xl">
-            <div className="absolute inset-x-0 top-0 z-10 flex gap-1 px-4 pt-4">
-              {activeStoryGroup.stories.map((story, index) => (
-                <div key={story.id} className="flex-1 h-1 rounded-full bg-white/20">
-                  <div
-                    className={`h-1 rounded-full ${
-                      index <= activeStoryIndex ? "bg-white" : "bg-transparent"
-                    }`}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={closeStoryViewer}
-              className="absolute z-20 px-3 py-1 text-sm text-white border rounded-full right-4 top-6 border-white/10 bg-black/30"
-            >
-              ✕
-            </button>
-
-            <div className="relative">
-              <img
-                src={activeStory.image_url}
-                alt={getBestNameForUser(activeStory.user_id)}
-                className="h-[72vh] w-full object-cover"
-              />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-
-              <button
-                type="button"
-                onClick={goToPreviousStory}
-                className="absolute top-0 left-0 w-1/3 h-full"
-                aria-label="Previous story"
-              />
-              <button
-                type="button"
-                onClick={goToNextStory}
-                className="absolute top-0 right-0 w-1/3 h-full"
-                aria-label="Next story"
-              />
-
-              <div className="absolute z-10 flex items-center gap-3 pt-4 left-4 top-6">
-                <img
-                  src={getBestAvatarForUser(activeStory.user_id)}
-                  alt={getBestNameForUser(activeStory.user_id)}
-                  className="object-cover border h-11 w-11 rounded-2xl border-white/20"
-                />
-                <div>
-                  <p className="font-medium text-white">
-                    {getBestNameForUser(activeStory.user_id)}
-                  </p>
-                  <p className="text-xs text-white/75">
-                    {new Date(activeStory.created_at).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
-              {activeStory.caption && (
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <p className="text-sm leading-7 text-white">{activeStory.caption}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }
