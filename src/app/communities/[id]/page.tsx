@@ -536,15 +536,17 @@ export default function CommunityDetailPage() {
               ☰
             </button>
 
-            <Link href="/feed" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-[15px] text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)] sm:h-11 sm:w-11">
-                F
-              </div>
+            <div className="flex items-center gap-3">
+              <FaceGremLogo
+                href="/feed"
+                showWordmark={false}
+                markClassName="h-10 w-10 rounded-2xl ring-0 shadow-[0_10px_30px_rgba(34,211,238,0.12)] sm:h-11 sm:w-11"
+              />
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
                 <p className="text-xs text-slate-400">{t.community}</p>
               </div>
-            </Link>
+            </div>
           </div>
 
           <div className="min-w-0 flex-1">
@@ -642,7 +644,7 @@ export default function CommunityDetailPage() {
             className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
             onClick={() => setIsMenuOpen(false)}
           />
-          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col overflow-y-auto overscroll-contain border-r border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
+          <aside className="fixed right-0 top-0 z-[70] flex h-full w-[290px] flex-col overflow-y-auto overscroll-contain border-l border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)]">
