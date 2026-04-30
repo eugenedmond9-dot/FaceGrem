@@ -1,3 +1,6 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+
 const protectedRoutes = [
   "/feed",
   "/messages",
@@ -29,17 +32,10 @@ const suspiciousQueryPatterns = [
   /etc\/passwd/i,
 ];
 
-function getCookieHeader(request: Request) {
-  return request.headers.get("cookie") || "";
-}
-
-function hasSupabaseSession(request: Request) {
-  const cookieHeader = getCookieHeader(request);
-
-  return (
-    cookieHeader.includes("sb-") ||
-    cookieHeader.includes("supabase-auth-token")
-  );
+function hasSupabaseSession(request: NextRequest) {
+  return request.cookies.getAll().some((cookie: { name: string }) => {
+    return cookie.name.startsWith("sb-") || cookie.name === "supabase-auth-token";
+  });
 }
 
 function isProtectedRoute(pathname: string) {
@@ -48,9 +44,8 @@ function isProtectedRoute(pathname: string) {
   );
 }
 
-function isSuspiciousRequest(request: Request) {
-  const url = new URL(request.url);
-  const { pathname, search } = url;
+function isSuspiciousRequest(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
 
   if (blockedPathPatterns.some((pattern) => pattern.test(pathname))) {
     return true;
@@ -69,40 +64,26 @@ function isSuspiciousRequest(request: Request) {
   return false;
 }
 
-export function middleware(request: Request) {
-  const url = new URL(request.url);
-
+export function proxy(request: NextRequest) {
   if (isSuspiciousRequest(request)) {
-    return new Response("Forbidden", {
-      status: 403,
-      headers: {
-        "X-Robots-Tag": "noindex, nofollow",
-      },
-    });
+    return new NextResponse("Forbidden", { status: 403 });
   }
 
-  if (!isProtectedRoute(url.pathname)) {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        "X-Robots-Tag": "noindex, nofollow",
-      },
-    });
+  const response = NextResponse.next();
+
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+
+  if (!isProtectedRoute(request.nextUrl.pathname)) {
+    return response;
   }
 
   if (!hasSupabaseSession(request)) {
     const loginUrl = new URL("/", request.url);
-    loginUrl.searchParams.set("next", url.pathname);
-
-    return Response.redirect(loginUrl, 307);
+    loginUrl.searchParams.set("next", request.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  return new Response(null, {
-    status: 200,
-    headers: {
-      "X-Robots-Tag": "noindex, nofollow",
-    },
-  });
+  return response;
 }
 
 export const config = {
