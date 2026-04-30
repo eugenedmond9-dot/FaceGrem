@@ -528,9 +528,11 @@ export default function PostDetailPage() {
         <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
           <div className="flex items-center gap-3">
             <Link href="/feed" className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-sky-500 to-blue-600 font-bold text-white shadow-[0_12px_40px_rgba(34,211,238,0.28)] sm:h-12 sm:w-12">
-                F
-              </div>
+              <FaceGremLogo
+              href=""
+              showWordmark={false}
+              markClassName="h-12 w-12 rounded-2xl ring-0 shadow-sm"
+            />
               <div className="hidden sm:block">
                 <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
                 <p className="text-xs text-slate-400">{t.viewDiscussion}</p>

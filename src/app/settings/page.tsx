@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "../../components/LanguageProvider";
 import { supabase } from "../../lib/supabase";
 import FaceGremLogo from "../../components/FaceGremLogo";
+import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
 
 type PreferenceKey =
   | "emailAlerts"
@@ -462,7 +463,7 @@ export default function SettingsPage() {
                     <p className="mt-1 text-[11px] text-slate-400">Alerts</p>
                   </div>
                   <div className="rounded-2xl bg-white/[0.04] p-3 text-center">
-                    <p className="text-xl">🌐</p>
+                    <TranslateLanguageIcon className="h-6 w-6" />
                     <p className="mt-1 text-[11px] text-slate-400">Global</p>
                   </div>
                   <div className="rounded-2xl bg-white/[0.04] p-3 text-center">

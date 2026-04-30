@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import FaceGremLogo from "../../components/FaceGremLogo";
+import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
 
 type VideoRecord = {
   id: string;
@@ -411,7 +412,7 @@ export default function VideosPage() {
                 aria-label="Language"
                 title="Language"
               >
-                🌐 {languageLabels[selectedLanguage]}
+                <TranslateLanguageIcon className="mr-2 h-4 w-4" /> {languageLabels[selectedLanguage]}
               </button>
 
               {isLanguageMenuOpen && (
@@ -496,9 +497,9 @@ export default function VideosPage() {
             <div className="mt-6 space-y-2">
               <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🏠 {t.homeFeed}</Link>
               <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🎬 {t.videos}</Link>
-              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">👥 {t.communities}</Link>
-              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🫂 {t.groups}</Link>
-              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">💬 {t.messages}</Link>
+              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"><span className="inline-flex items-center gap-3"><CommunityCircleIcon className="h-5 w-5" /> <span>{t.communities}</span></span></Link>
+              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"><span className="inline-flex items-center gap-3"><GroupPeopleIcon className="h-5 w-5" /> <span>{t.groups}</span></span></Link>
+              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"><span className="inline-flex items-center gap-3"><MessageBubblesIcon className="h-5 w-5" /> <span>{t.messages}</span></span></Link>
               <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🔖 {t.saved}</Link>
               <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">👤 {t.profile}</Link>
             </div>
@@ -523,7 +524,7 @@ export default function VideosPage() {
                     onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
                     className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
                   >
-                    🌐 {t.language}: {languageLabels[selectedLanguage]}
+                    <TranslateLanguageIcon className="mr-2 h-4 w-4" /> {t.language}: {languageLabels[selectedLanguage]}
                   </button>
 
                   {isLanguageMenuOpen && (

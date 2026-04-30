@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import ToastContainer, { ToastItem } from "../../components/ToastContainer";
+import FaceGremLogo from "../../components/FaceGremLogo";
 
 type NotificationRecord = {
   id: string;
@@ -285,9 +286,11 @@ export default function NotificationsPage() {
       <header className="border-b border-white/10 bg-[#07111f]/85 backdrop-blur-xl">
         <div className="flex items-center justify-between max-w-5xl px-6 py-4 mx-auto">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center font-bold shadow-lg h-11 w-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 shadow-cyan-500/20">
-              F
-            </div>
+            <FaceGremLogo
+              href=""
+              showWordmark={false}
+              markClassName="h-11 w-11 rounded-2xl ring-0 shadow-sm"
+            />
             <div>
               <h1 className="text-xl font-bold tracking-tight">FaceGrem</h1>
               <p className="text-xs text-slate-400">{t.notifications}</p>

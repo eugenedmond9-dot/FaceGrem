@@ -4,6 +4,7 @@ import Link from "next/link";
 import LanguageMenu from "../../components/LanguageMenu";
 import { useLanguage } from "../../components/LanguageProvider";
 import { TranslationLanguage } from "../../lib/language";
+import FaceGremLogo from "../../components/FaceGremLogo";
 
 const termsTranslations: Record<
   TranslationLanguage,
@@ -173,9 +174,11 @@ export default function TermsPage() {
       <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/55 backdrop-blur-3xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.95),rgba(8,15,28,0.75))] font-bold text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)]">
-              F
-            </div>
+            <FaceGremLogo
+              href=""
+              showWordmark={false}
+              markClassName="h-10 w-10 rounded-2xl ring-0 shadow-sm"
+            />
             <div>
               <h1 className="text-lg font-bold tracking-tight text-white">FaceGrem</h1>
               <p className="text-xs text-slate-400">{pageText.eyebrow}</p>

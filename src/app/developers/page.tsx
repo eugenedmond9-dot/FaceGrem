@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FaceGremLogo from "../../components/FaceGremLogo";
 
 export default function DevelopersPage() {
   return (
@@ -15,9 +16,11 @@ export default function DevelopersPage() {
 
         <div className="rounded-[28px] border border-black/10 bg-white p-6 shadow-sm sm:p-8">
           <div className="flex items-center gap-3 mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#1877f2] text-lg font-bold text-white">
-              F
-            </div>
+            <FaceGremLogo
+              href=""
+              showWordmark={false}
+              markClassName="h-10 w-10 rounded-full ring-0 shadow-sm"
+            />
             <span className="text-2xl font-semibold text-[#111827]">FaceGrem</span>
           </div>
 

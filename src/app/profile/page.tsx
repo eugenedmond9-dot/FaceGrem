@@ -8,6 +8,7 @@ import { useLanguage } from "../../components/LanguageProvider";
 import LanguageMenu from "../../components/LanguageMenu";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import FaceGremLogo from "../../components/FaceGremLogo";
+import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
 import { languageLabels } from "../../lib/language";
 
 type Profile = {

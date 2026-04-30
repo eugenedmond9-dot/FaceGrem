@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import FaceGremLogo from "../../components/FaceGremLogo";
+import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
 
 type SavedPostRecord = {
   id: string;

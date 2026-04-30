@@ -8,6 +8,7 @@ import { useLanguage } from "../../components/LanguageProvider";
 import LanguageMenu from "../../components/LanguageMenu";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import FaceGremLogo from "../../components/FaceGremLogo";
+import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
 
 type ProfileRecord = {
   id: string;
@@ -96,33 +97,19 @@ function VideoIcon({ className = "h-5 w-5" }: IconProps) {
 }
 
 function CommunitiesIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16 21v-1.5A3.5 3.5 0 0 0 12.5 16H6.5A3.5 3.5 0 0 0 3 19.5V21" />
-      <circle cx="9.5" cy="8" r="3" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21v-1.5a3.5 3.5 0 0 0-2.5-3.35" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 5.2a3 3 0 0 1 0 5.6" />
-    </svg>
-  );
+  return <CommunityCircleIcon className={className} />;
 }
 
 function GroupsIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <circle cx="8" cy="8.5" r="2.5" />
-      <circle cx="16" cy="8.5" r="2.5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 19a4.5 4.5 0 0 1 9 0" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11.5 19a4.5 4.5 0 0 1 9 0" />
-    </svg>
-  );
+  return <GroupPeopleIcon className={className} />;
 }
 
 function MessageIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 18.5 3.5 20V6.75A2.75 2.75 0 0 1 6.25 4h11.5A2.75 2.75 0 0 1 20.5 6.75v7.5A2.75 2.75 0 0 1 17.75 17H9.5L7 18.5Z" />
-    </svg>
-  );
+  return <MessageBubblesIcon className={className} />;
+}
+
+function FriendsIcon({ className = "h-5 w-5" }: IconProps) {
+  return <FriendsFistIcon className={className} />;
 }
 
 function BookmarkIcon({ className = "h-5 w-5" }: IconProps) {
@@ -1223,7 +1210,7 @@ export default function FeedPage() {
               />
               <span className="font-medium">{userName}</span>
             </Link>
-            <Link href="/friends" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> {ft.friends}</Link>
+            <Link href="/friends" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><FriendsIcon className="h-5 w-5 text-slate-500" /> {ft.friends}</Link>
             <Link href="/saved" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><BookmarkIcon className="h-5 w-5 text-slate-500" /> {ft.saved}</Link>
             <Link href="/groups" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><GroupsIcon className="h-5 w-5 text-slate-500" /> {ft.groups}</Link>
             <Link href="/communities" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> {ft.communities}</Link>
