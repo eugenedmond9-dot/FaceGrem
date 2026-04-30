@@ -75,6 +75,24 @@ type CommunityRecord = {
   created_at: string;
 };
 
+type NotificationRecord = {
+  id: string;
+  user_id: string;
+  actor_id: string | null;
+  type: string;
+  post_id: string | null;
+  actor_name: string | null;
+  content: string | null;
+  is_read: boolean | null;
+  created_at: string;
+};
+
+type VideoRecord = {
+  id: string;
+  user_id: string;
+  created_at: string;
+};
+
 type IconProps = { className?: string };
 
 function HomeIcon({ className = "h-5 w-5" }: IconProps) {
@@ -224,6 +242,26 @@ function SendIcon({ className = "h-5 w-5" }: IconProps) {
       <path strokeLinecap="round" strokeLinejoin="round" d="M21 3 10 14" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M21 3 14 21l-4-7-7-4L21 3Z" />
     </svg>
+  );
+}
+
+function BellIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.5h-7.5A2.25 2.25 0 0 1 6 15.25v-3.4a6 6 0 0 1 12 0v3.4a2.25 2.25 0 0 1-2.25 2.25Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10 20a2.25 2.25 0 0 0 4 0" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 9.7V8.9A6.75 6.75 0 0 0 12 2.15" />
+    </svg>
+  );
+}
+
+function NavBadge({ count, max = 15 }: { count: number; max?: number }) {
+  if (!count || count < 1) return null;
+
+  return (
+    <span className="absolute -right-1 -top-1 flex min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white ring-2 ring-white">
+      {count > max ? `${max}+` : count}
+    </span>
   );
 }
 
@@ -439,6 +477,8 @@ export default function FeedPage() {
   const [stories, setStories] = useState<StoryRecord[]>([]);
   const [follows, setFollows] = useState<FollowRecord[]>([]);
   const [communities, setCommunities] = useState<CommunityRecord[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
+  const [videos, setVideos] = useState<VideoRecord[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
@@ -535,6 +575,8 @@ export default function FeedPage() {
         { data: storiesData },
         { data: followsData },
         { data: communitiesData },
+        { data: notificationsData },
+        { data: videosData },
       ] = await Promise.all([
         supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
         supabase
@@ -562,6 +604,17 @@ export default function FeedPage() {
           .select("id, creator_id, name, category, description, created_at")
           .order("created_at", { ascending: false })
           .limit(6),
+        supabase
+          .from("notifications")
+          .select("id, user_id, actor_id, type, post_id, actor_name, content, is_read, created_at")
+          .eq("user_id", currentUserId)
+          .order("created_at", { ascending: false })
+          .limit(80),
+        supabase
+          .from("videos")
+          .select("id, user_id, created_at")
+          .order("created_at", { ascending: false })
+          .limit(80),
       ]);
 
       const allProfiles = profilesData || [];
@@ -575,6 +628,8 @@ export default function FeedPage() {
       setStories(storiesData || []);
       setFollows(followsData || []);
       setCommunities(communitiesData || []);
+      setNotifications(notificationsData || []);
+      setVideos(videosData || []);
       setUserAvatar(
         currentProfile?.avatar_url || getAvatarUrl(currentProfile?.full_name || currentUserName)
       );
@@ -693,11 +748,70 @@ export default function FeedPage() {
       )
       .subscribe();
 
+    const notificationsChannel = supabase
+      .channel(`facegrem-feed-notifications-live-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const newNotification = payload.new as NotificationRecord;
+          setNotifications((prev) => {
+            if (prev.some((notification) => notification.id === newNotification.id)) {
+              return prev;
+            }
+
+            return [newNotification, ...prev];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const updatedNotification = payload.new as NotificationRecord;
+          setNotifications((prev) =>
+            prev.map((notification) =>
+              notification.id === updatedNotification.id
+                ? updatedNotification
+                : notification
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    const videosChannel = supabase
+      .channel("facegrem-feed-videos-live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "videos" },
+        (payload) => {
+          const newVideo = payload.new as VideoRecord;
+          setVideos((prev) => {
+            if (prev.some((video) => video.id === newVideo.id)) return prev;
+            return [newVideo, ...prev];
+          });
+        }
+      )
+      .subscribe();
+
     return () => {
       void supabase.removeChannel(postsChannel);
       void supabase.removeChannel(likesChannel);
       void supabase.removeChannel(commentsChannel);
       void supabase.removeChannel(savedChannel);
+      void supabase.removeChannel(notificationsChannel);
+      void supabase.removeChannel(videosChannel);
     };
   }, [userId]);
 
@@ -1068,6 +1182,37 @@ export default function FeedPage() {
     setFollowingUserId("");
   };
 
+  const recentActivityCutoff = useMemo(() => Date.now() - 24 * 60 * 60 * 1000, []);
+
+  const homeBadgeCount = useMemo(() => {
+    return posts.filter(
+      (post) =>
+        post.user_id !== userId &&
+        new Date(post.created_at).getTime() >= recentActivityCutoff
+    ).length;
+  }, [posts, userId, recentActivityCutoff]);
+
+  const videoBadgeCount = useMemo(() => {
+    return videos.filter(
+      (video) =>
+        video.user_id !== userId &&
+        new Date(video.created_at).getTime() >= recentActivityCutoff
+    ).length;
+  }, [videos, userId, recentActivityCutoff]);
+
+  const messageBadgeCount = useMemo(() => {
+    return notifications.filter(
+      (notification) => !notification.is_read && notification.type === "message"
+    ).length;
+  }, [notifications]);
+
+  const notificationBadgeCount = useMemo(() => {
+    return notifications.filter((notification) => !notification.is_read).length;
+  }, [notifications]);
+
+  const friendBadgeCount = suggestedProfiles.length;
+  const communityBadgeCount = suggestedProfiles.length > 0 ? Math.min(communities.length, 15) : 0;
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
@@ -1080,11 +1225,16 @@ export default function FeedPage() {
     <div className="min-h-screen bg-[#f0f2f5] text-[#050505]">
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
         <div className="flex h-14 items-center gap-3 px-3 sm:px-4">
-          <FaceGremLogo
-            href="/feed"
-            showWordmark={false}
-            markClassName="h-10 w-10 rounded-full ring-0 shadow-none"
-          />
+          <div className="flex items-center gap-2">
+            <FaceGremLogo
+              href="/feed"
+              showWordmark={false}
+              markClassName="h-10 w-10 rounded-full ring-0 shadow-none"
+            />
+            <Link href="/feed" className="hidden text-2xl font-extrabold tracking-tight text-blue-600 sm:block md:hidden">
+              FaceGrem
+            </Link>
+          </div>
 
           <div className="hidden w-[280px] items-center gap-2 rounded-full bg-slate-100 px-4 py-2 md:flex">
             <SearchIcon className="h-4 w-4 text-slate-500" />
@@ -1097,11 +1247,26 @@ export default function FeedPage() {
           </div>
 
           <nav className="mx-auto hidden h-full items-center gap-2 lg:flex">
-            <Link href="/feed" className="flex h-12 w-24 items-center justify-center border-b-4 border-blue-600 text-blue-600"><HomeIcon className="h-6 w-6" /></Link>
-            <Link href="/videos" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"><VideoIcon className="h-6 w-6" /></Link>
-            <Link href="/communities" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"><CommunitiesIcon className="h-6 w-6" /></Link>
-            <Link href="/groups" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"><GroupsIcon className="h-6 w-6" /></Link>
-            <Link href="/messages" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"><MessageIcon className="h-6 w-6" /></Link>
+            <Link href="/feed" className="relative flex h-12 w-24 items-center justify-center border-b-4 border-blue-600 text-blue-600">
+              <HomeIcon className="h-6 w-6" />
+              <NavBadge count={homeBadgeCount} />
+            </Link>
+            <Link href="/friends" className="relative flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+              <FriendsIcon className="h-6 w-6" />
+              <NavBadge count={friendBadgeCount} />
+            </Link>
+            <Link href="/messages" className="relative flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+              <MessageIcon className="h-6 w-6" />
+              <NavBadge count={messageBadgeCount} />
+            </Link>
+            <Link href="/videos" className="relative flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+              <VideoIcon className="h-6 w-6" />
+              <NavBadge count={videoBadgeCount} />
+            </Link>
+            <Link href="/communities" className="relative flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
+              <CommunitiesIcon className="h-6 w-6" />
+              <NavBadge count={communityBadgeCount} />
+            </Link>
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
@@ -1128,6 +1293,33 @@ export default function FeedPage() {
               />
             </Link>
           </div>
+        </div>
+
+        <div className="grid grid-cols-6 border-t border-slate-100 bg-white px-2 py-1 md:hidden">
+          <Link href="/feed" className="relative flex h-11 items-center justify-center text-blue-600">
+            <HomeIcon className="h-6 w-6" />
+            <NavBadge count={homeBadgeCount} />
+          </Link>
+          <Link href="/friends" className="relative flex h-11 items-center justify-center text-slate-600">
+            <FriendsIcon className="h-6 w-6" />
+            <NavBadge count={friendBadgeCount} />
+          </Link>
+          <Link href="/messages" className="relative flex h-11 items-center justify-center text-slate-600">
+            <MessageIcon className="h-6 w-6" />
+            <NavBadge count={messageBadgeCount} />
+          </Link>
+          <Link href="/videos" className="relative flex h-11 items-center justify-center text-slate-600">
+            <VideoIcon className="h-6 w-6" />
+            <NavBadge count={videoBadgeCount} />
+          </Link>
+          <Link href="/notifications" className="relative flex h-11 items-center justify-center text-slate-600">
+            <BellIcon className="h-6 w-6" />
+            <NavBadge count={notificationBadgeCount} max={20} />
+          </Link>
+          <Link href="/communities" className="relative flex h-11 items-center justify-center text-slate-600">
+            <CommunitiesIcon className="h-6 w-6" />
+            <NavBadge count={communityBadgeCount} />
+          </Link>
         </div>
 
         <div className="border-t border-slate-100 px-3 py-2 md:hidden">
