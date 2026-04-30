@@ -14,24 +14,6 @@ const protectedRoutes = [
   "/notifications",
 ];
 
-const blockedPathPatterns = [
-  /\/wp-admin/i,
-  /\/wp-login/i,
-  /\/phpmyadmin/i,
-  /\/\.env/i,
-  /\/\.git/i,
-  /\/server-status/i,
-];
-
-const suspiciousQueryPatterns = [
-  /<script/i,
-  /javascript:/i,
-  /union\s+select/i,
-  /select\s+.+\s+from/i,
-  /\.\.\//i,
-  /etc\/passwd/i,
-];
-
 function hasSupabaseSession(request: NextRequest) {
   return request.cookies.getAll().some((cookie: { name: string }) => {
     return cookie.name.startsWith("sb-") || cookie.name === "supabase-auth-token";
@@ -44,50 +26,34 @@ function isProtectedRoute(pathname: string) {
   );
 }
 
-function isSuspiciousRequest(request: NextRequest) {
-  const { pathname, search } = request.nextUrl;
-
-  if (blockedPathPatterns.some((pattern) => pattern.test(pathname))) {
-    return true;
-  }
-
-  if (suspiciousQueryPatterns.some((pattern) => pattern.test(search))) {
-    return true;
-  }
-
-  const userAgent = request.headers.get("user-agent") || "";
-
-  if (!userAgent || userAgent.length > 512) {
-    return true;
-  }
-
-  return false;
-}
-
 export function proxy(request: NextRequest) {
-  if (isSuspiciousRequest(request)) {
-    return new NextResponse("Forbidden", { status: 403 });
-  }
+  const { pathname } = request.nextUrl;
 
-  const response = NextResponse.next();
-
-  response.headers.set("X-Robots-Tag", "noindex, nofollow");
-
-  if (!isProtectedRoute(request.nextUrl.pathname)) {
-    return response;
+  // Do not interfere with the home/login/signup pages, Next.js assets, images, or API routes.
+  if (!isProtectedRoute(pathname)) {
+    return NextResponse.next();
   }
 
   if (!hasSupabaseSession(request)) {
     const loginUrl = new URL("/", request.url);
-    loginUrl.searchParams.set("next", request.nextUrl.pathname);
+    loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|facegrem-logo-mark.png|facegrem-logo-full.png).*)",
+    "/feed/:path*",
+    "/messages/:path*",
+    "/profile/:path*",
+    "/settings/:path*",
+    "/saved/:path*",
+    "/groups/:path*",
+    "/communities/:path*",
+    "/friends/:path*",
+    "/videos/:path*",
+    "/notifications/:path*",
   ],
 };
