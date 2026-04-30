@@ -1371,18 +1371,109 @@ export default function FeedPage() {
               </Link>
             </div>
 
-            <div className="mt-4 grid gap-2">
-              <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><HomeIcon className="h-5 w-5 text-slate-500" /> {ft.homeFeed}</Link>
-              <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><VideoIcon className="h-5 w-5 text-slate-500" /> {ft.videos}</Link>
-              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> {ft.communities}</Link>
-              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><GroupsIcon className="h-5 w-5 text-slate-500" /> {ft.groups}</Link>
-              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><MessageIcon className="h-5 w-5 text-slate-500" /> {ft.messages}</Link>
-              <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><BookmarkIcon className="h-5 w-5 text-slate-500" /> {ft.saved}</Link>
-              <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"><SettingsIcon className="h-5 w-5 text-slate-500" /> {ft.settings}</Link>
+            <div className="mt-4 space-y-5">
+              <section>
+                <p className="px-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                  Main
+                </p>
+                <div className="mt-2 grid gap-1">
+                  <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <HomeIcon className="h-5 w-5 text-slate-500" /> {ft.homeFeed}
+                  </Link>
+                  <Link href="/friends" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <FriendsIcon className="h-5 w-5 text-slate-500" /> {ft.friends}
+                  </Link>
+                  <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <MessageIcon className="h-5 w-5 text-slate-500" /> {ft.messages}
+                  </Link>
+                  <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <VideoIcon className="h-5 w-5 text-slate-500" /> {ft.videos}
+                  </Link>
+                  <Link href="/notifications" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-between rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="inline-flex items-center gap-3">
+                      <BellIcon className="h-5 w-5 text-slate-500" /> Notifications
+                    </span>
+                    <NavBadge count={notificationBadgeCount} max={20} />
+                  </Link>
+                  <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <CommunitiesIcon className="h-5 w-5 text-slate-500" /> {ft.communities}
+                  </Link>
+                  <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <GroupsIcon className="h-5 w-5 text-slate-500" /> {ft.groups}
+                  </Link>
+                  <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <BookmarkIcon className="h-5 w-5 text-slate-500" /> {ft.saved}
+                  </Link>
+                  <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <SettingsIcon className="h-5 w-5 text-slate-500" /> {ft.settings}
+                  </Link>
+                </div>
+              </section>
+
+              <section>
+                <p className="px-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                  Privacy & legal
+                </p>
+                <div className="mt-2 grid gap-1">
+                  <Link href="/privacy" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">🔒</span> Privacy
+                  </Link>
+                  <Link href="/privacy-centre" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">🛡️</span> Privacy Centre
+                  </Link>
+                  <Link href="/terms" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">📄</span> Terms
+                  </Link>
+                  <Link href="/cookies" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">🍪</span> Cookies
+                  </Link>
+                  <Link href="/ad-choices" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">🎯</span> AdChoices
+                  </Link>
+                </div>
+              </section>
+
+              <section>
+                <p className="px-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                  Create & explore
+                </p>
+                <div className="mt-2 grid gap-1">
+                  <Link href="/create-page" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">➕</span> Create Page
+                  </Link>
+                  <Link href="/create-ad" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">📣</span> Create Ad
+                  </Link>
+                  <Link href="/threads" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <MessageIcon className="h-5 w-5 text-slate-500" /> Threads
+                  </Link>
+                </div>
+              </section>
+
+              <section>
+                <p className="px-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+                  Support & company
+                </p>
+                <div className="mt-2 grid gap-1">
+                  <Link href="/help" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">❓</span> Help
+                  </Link>
+                  <Link href="/about" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">ℹ️</span> About FaceGrem
+                  </Link>
+                  <Link href="/careers" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">💼</span> Careers
+                  </Link>
+                  <Link href="/developers" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
+                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">⌘</span> Developers
+                  </Link>
+                </div>
+              </section>
+
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-xl p-3 text-left font-medium text-red-600 hover:bg-red-50"
+                className="w-full rounded-xl p-3 text-left font-medium text-red-600 hover:bg-red-50"
               >
                 <span className="inline-flex items-center gap-3"><LogoutIcon className="h-5 w-5" /> {ft.logout}</span>
               </button>
