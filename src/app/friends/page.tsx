@@ -8,7 +8,7 @@ import { useLanguage } from "../../components/LanguageProvider";
 import LanguageMenu from "../../components/LanguageMenu";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import FaceGremLogo from "../../components/FaceGremLogo";
-import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 type ProfileRecord = {
   id: string;
@@ -196,19 +196,33 @@ function VideoIcon({ className = "h-5 w-5" }: IconProps) {
 }
 
 function PeopleIcon({ className = "h-5 w-5" }: IconProps) {
-  return <FriendsFistIcon className={className} />;
-}
-
-function CommunityIcon({ className = "h-5 w-5" }: IconProps) {
-  return <CommunityCircleIcon className={className} />;
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M16 21v-1.5A3.5 3.5 0 0 0 12.5 16H6.5A3.5 3.5 0 0 0 3 19.5V21" />
+      <circle cx="9.5" cy="8" r="3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21v-1.5a3.5 3.5 0 0 0-2.5-3.35" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.5 5.2a3 3 0 0 1 0 5.6" />
+    </svg>
+  );
 }
 
 function GroupsIcon({ className = "h-5 w-5" }: IconProps) {
-  return <GroupPeopleIcon className={className} />;
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <circle cx="8" cy="8.5" r="2.5" />
+      <circle cx="16" cy="8.5" r="2.5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 19a4.5 4.5 0 0 1 9 0" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M11.5 19a4.5 4.5 0 0 1 9 0" />
+    </svg>
+  );
 }
 
 function MessageIcon({ className = "h-5 w-5" }: IconProps) {
-  return <MessageBubblesIcon className={className} />;
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 18.5 3.5 20V6.75A2.75 2.75 0 0 1 6.25 4h11.5A2.75 2.75 0 0 1 20.5 6.75v7.5A2.75 2.75 0 0 1 17.75 17H9.5L7 18.5Z" />
+    </svg>
+  );
 }
 
 function BookmarkIcon({ className = "h-5 w-5" }: IconProps) {
@@ -508,7 +522,7 @@ export default function FriendsPage() {
   const menuItems = [
     { href: "/feed", label: ft.homeFeed, icon: <HomeIcon className="h-5 w-5 text-slate-500" /> },
     { href: "/videos", label: ft.videos, icon: <VideoIcon className="h-5 w-5 text-slate-500" /> },
-    { href: "/communities", label: ft.communities, icon: <CommunityIcon className="h-5 w-5 text-slate-500" /> },
+    { href: "/communities", label: ft.communities, icon: <PeopleIcon className="h-5 w-5 text-slate-500" /> },
     { href: "/groups", label: ft.groups, icon: <GroupsIcon className="h-5 w-5 text-slate-500" /> },
     { href: "/messages", label: ft.messages, icon: <MessageIcon className="h-5 w-5 text-slate-500" /> },
     { href: "/saved", label: ft.saved, icon: <BookmarkIcon className="h-5 w-5 text-slate-500" /> },
@@ -554,7 +568,7 @@ export default function FriendsPage() {
               <VideoIcon className="h-6 w-6" />
             </Link>
             <Link href="/communities" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
-              <CommunityIcon className="h-6 w-6" />
+              <PeopleIcon className="h-6 w-6" />
             </Link>
             <Link href="/messages" className="flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
               <MessageIcon className="h-6 w-6" />
@@ -600,69 +614,13 @@ export default function FriendsPage() {
         </div>
       </header>
 
-      {isMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[80] bg-black/35"
-            onClick={() => setIsMenuOpen(false)}
-          />
-          <aside className="fixed right-0 top-0 z-[90] flex h-full w-[320px] max-w-[88vw] flex-col overflow-y-auto bg-white p-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">{ft.menu}</h2>
-              <button
-                type="button"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-sm transition hover:bg-slate-200 hover:text-slate-900"
-              >
-                <CloseIcon className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="mt-4 rounded-2xl bg-slate-50 p-3">
-              <Link
-                href="/profile"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 rounded-xl p-2 hover:bg-white"
-              >
-                <img
-                  src={userAvatar || getAvatarUrl(userName)}
-                  alt={userName}
-                  className="h-11 w-11 rounded-full object-cover"
-                />
-                <div>
-                  <p className="font-semibold">{userName}</p>
-                  <p className="text-xs text-slate-500">{ft.viewProfile}</p>
-                </div>
-              </Link>
-            </div>
-
-            <div className="mt-4 grid gap-2">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100"
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="rounded-xl p-3 text-left font-medium text-red-600 hover:bg-red-50"
-              >
-                <span className="inline-flex items-center gap-3">
-                  <LogoutIcon className="h-5 w-5" />
-                  {ft.logout}
-                </span>
-              </button>
-            </div>
-          </aside>
-        </>
-      )}
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        userName={userName}
+        userAvatar={userAvatar}
+        onLogout={handleLogout}
+      />
 
       <main className="mx-auto grid max-w-[1460px] gap-5 px-3 py-4 lg:grid-cols-[280px_minmax(0,1fr)_320px]">
         <aside className="hidden lg:block">
@@ -693,7 +651,7 @@ export default function FriendsPage() {
               {ft.groups}
             </Link>
             <Link href="/communities" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900">
-              <CommunityIcon className="h-5 w-5 text-slate-500" />
+              <PeopleIcon className="h-5 w-5 text-slate-500" />
               {ft.communities}
             </Link>
             <Link href="/videos" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900">

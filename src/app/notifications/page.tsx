@@ -6,6 +6,7 @@ import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import ToastContainer, { ToastItem } from "../../components/ToastContainer";
 import FaceGremLogo from "../../components/FaceGremLogo";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 type NotificationRecord = {
   id: string;
@@ -28,6 +29,8 @@ type ProfileRecord = {
 };
 
 export default function NotificationsPage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -283,7 +286,24 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-[#07111f] text-white">
-      <header className="border-b border-white/10 bg-[#07111f]/85 backdrop-blur-xl">
+      
+      
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onLogout={undefined}
+      />
+
+<button
+        type="button"
+        onClick={() => setIsMenuOpen(true)}
+        className="fixed right-4 top-4 z-[75] flex h-11 w-11 items-center justify-center rounded-full bg-white text-2xl text-slate-800 shadow-lg ring-1 ring-black/10 transition hover:bg-slate-100"
+        aria-label="Open menu"
+      >
+        ≡
+      </button>
+
+<header className="border-b border-white/10 bg-[#07111f]/85 backdrop-blur-xl">
         <div className="flex items-center justify-between max-w-5xl px-6 py-4 mx-auto">
           <div className="flex items-center gap-3">
             <FaceGremLogo

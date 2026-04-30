@@ -1,10 +1,33 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import FaceGremLogo from "../../components/FaceGremLogo";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 export default function CareersPage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#f2f4f7] text-[#101828]">
-      <main className="max-w-4xl px-5 py-10 mx-auto sm:px-6">
+      
+      
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onLogout={undefined}
+      />
+
+<button
+        type="button"
+        onClick={() => setIsMenuOpen(true)}
+        className="fixed right-4 top-4 z-[75] flex h-11 w-11 items-center justify-center rounded-full bg-white text-2xl text-slate-800 shadow-lg ring-1 ring-black/10 transition hover:bg-slate-100"
+        aria-label="Open menu"
+      >
+        ≡
+      </button>
+
+<main className="max-w-4xl px-5 py-10 mx-auto sm:px-6">
         <div className="mb-6">
           <Link
             href="/"

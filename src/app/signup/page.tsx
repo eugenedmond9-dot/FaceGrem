@@ -9,6 +9,7 @@ import LanguageMenu from "../../components/LanguageMenu";
 import { useLanguage } from "../../components/LanguageProvider";
 import { TranslationLanguage } from "../../lib/language";
 import FaceGremLogo from "../../components/FaceGremLogo";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
 
@@ -279,6 +280,8 @@ const signupTranslations: Record<
 };
 
 export default function SignupPage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const router = useRouter();
   const { language } = useLanguage();
 
@@ -356,7 +359,24 @@ export default function SignupPage() {
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#020817] text-white">
-      <AuthBackground />
+      
+      
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onLogout={undefined}
+      />
+
+<button
+        type="button"
+        onClick={() => setIsMenuOpen(true)}
+        className="fixed right-4 top-4 z-[75] flex h-11 w-11 items-center justify-center rounded-full bg-white text-2xl text-slate-800 shadow-lg ring-1 ring-black/10 transition hover:bg-slate-100"
+        aria-label="Open menu"
+      >
+        ≡
+      </button>
+
+<AuthBackground />
 
       <header className="relative z-20 border-b border-white/[0.06] bg-[#020817]/55 backdrop-blur-3xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">

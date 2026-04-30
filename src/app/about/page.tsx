@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import FaceGremLogo from "../../components/FaceGremLogo";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 const values = [
   {
@@ -29,9 +33,28 @@ const features = [
 ];
 
 export default function AboutPage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen overflow-hidden bg-[#020817] text-white">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      
+      
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onLogout={undefined}
+      />
+
+<button
+        type="button"
+        onClick={() => setIsMenuOpen(true)}
+        className="fixed right-4 top-4 z-[75] flex h-11 w-11 items-center justify-center rounded-full bg-white text-2xl text-slate-800 shadow-lg ring-1 ring-black/10 transition hover:bg-slate-100"
+        aria-label="Open menu"
+      >
+        ≡
+      </button>
+
+<div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_30%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.10),transparent_25%),linear-gradient(to_bottom,#020817,#07111f_46%,#020817)]" />
         <div className="absolute -left-24 top-20 h-80 w-80 rounded-full bg-cyan-400/10 blur-3xl" />
         <div className="absolute -right-24 top-0 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />

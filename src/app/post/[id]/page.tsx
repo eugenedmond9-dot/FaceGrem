@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../components/LanguageProvider";
 import FaceGremLogo from "../../../components/FaceGremLogo";
+import FaceGremHamburgerMenu from "../../../components/FaceGremHamburgerMenu";
 
 type PostRecord = {
   id: string;
@@ -58,6 +59,8 @@ type CommunityRecord = {
 };
 
 export default function PostDetailPage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const router = useRouter();
   const { t } = useLanguage();
   const params = useParams<{ id: string }>();
@@ -511,7 +514,24 @@ export default function PostDetailPage() {
   if (loading || !post) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
-        Loading post...
+        
+      
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        onLogout={undefined}
+      />
+
+<button
+        type="button"
+        onClick={() => setIsMenuOpen(true)}
+        className="fixed right-4 top-4 z-[75] flex h-11 w-11 items-center justify-center rounded-full bg-white text-2xl text-slate-800 shadow-lg ring-1 ring-black/10 transition hover:bg-slate-100"
+        aria-label="Open menu"
+      >
+        ≡
+      </button>
+
+Loading post...
       </div>
     );
   }

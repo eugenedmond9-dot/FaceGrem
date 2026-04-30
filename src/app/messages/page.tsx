@@ -15,7 +15,7 @@ import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import FaceGremLogo from "../../components/FaceGremLogo";
-import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 type ProfileRecord = {
   id: string;
@@ -1284,7 +1284,7 @@ function MessagesPageContent() {
                 aria-label="Language"
                 title="Language"
               >
-                <TranslateLanguageIcon className="mr-2 h-4 w-4" /> {languageLabels[selectedLanguage]}
+                🌐 {languageLabels[selectedLanguage]}
               </button>
 
               {isLanguageMenuOpen && (
@@ -1338,103 +1338,14 @@ function MessagesPageContent() {
         </div>
       </header>
 
-      {isMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
-            onClick={() => setIsMenuOpen(false)}
-          />
-          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col overflow-y-auto overscroll-contain border-r border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)]">
-                  F
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">FaceGrem</h2>
-                  <p className="text-xs text-slate-400">{t.navigation}</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white transition hover:bg-white/[0.08]"
-                aria-label="Close menu"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-6 space-y-2">
-              <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🏠 {t.homeFeed}</Link>
-              <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🎬 {t.videos}</Link>
-              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"><span className="inline-flex items-center gap-3"><CommunityCircleIcon className="h-5 w-5" /> <span>{t.communities}</span></span></Link>
-              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"><span className="inline-flex items-center gap-3"><GroupPeopleIcon className="h-5 w-5" /> <span>{t.groups}</span></span></Link>
-              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]"><span className="inline-flex items-center gap-3"><MessageBubblesIcon className="h-5 w-5" /> <span>{t.messages}</span></span></Link>
-              <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">🔖 {t.saved}</Link>
-              <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">👤 {t.profile}</Link>
-            </div>
-
-            <div className="mt-8 border-t border-white/10 pt-5">
-              <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                More
-              </p>
-
-              <div className="space-y-2">
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  ⚙️ {t.settings}
-                </button>
-
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
-                    className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
-                  >
-                    <TranslateLanguageIcon className="mr-2 h-4 w-4" /> {t.language}: {languageLabels[selectedLanguage]}
-                  </button>
-
-                  {isLanguageMenuOpen && (
-                    <div className="mt-2 space-y-1 px-2 pb-2">
-                      {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
-                        <button
-                          key={language}
-                          type="button"
-                          onClick={() => handleLanguageChange(language)}
-                          className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
-                            selectedLanguage === language
-                              ? "bg-cyan-400/[0.14] text-cyan-100"
-                              : "text-white hover:bg-white/[0.06]"
-                          }`}
-                        >
-                          <span>{languageLabels[language]}</span>
-                          {selectedLanguage === language && <span>✓</span>}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  🔒 {t.privacy}
-                </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  ❓ {t.help}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  disabled={signingOut}
-                  className="block w-full rounded-2xl px-4 py-3 text-left text-red-100 transition hover:bg-red-500/10 disabled:opacity-70"
-                >
-                  ↩️ {signingOut ? t.signingOut : t.logout}
-                </button>
-              </div>
-            </div>
-          </aside>
-        </>
-      )}
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        userName={userName}
+        userAvatar={userAvatar}
+        onLogout={handleLogout}
+        notificationCount={unreadNotificationsCount}
+      />
 
       {incomingCall && (
         <div className="fixed inset-x-4 top-24 z-[80] mx-auto max-w-md rounded-[30px] border border-white/10 bg-[#07111f]/95 p-5 text-white shadow-2xl backdrop-blur-2xl">

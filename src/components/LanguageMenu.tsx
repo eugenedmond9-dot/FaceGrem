@@ -275,8 +275,8 @@ export default function LanguageMenu({ compact = false, className = "" }: Langua
         <div
           className={
             compact
-              ? "absolute right-0 top-12 z-[100] w-72 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
-              : "absolute right-0 top-12 z-[100] w-72 rounded-2xl border border-white/[0.08] bg-[#07111f]/95 p-2 shadow-2xl backdrop-blur-2xl"
+              ? "fixed left-3 right-3 top-24 z-[100] max-h-[70vh] rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-80"
+              : "fixed left-3 right-3 top-24 z-[100] max-h-[70vh] rounded-2xl border border-white/[0.08] bg-[#07111f]/95 p-2 shadow-2xl backdrop-blur-2xl sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-80"
           }
         >
           <div className="p-2">
@@ -292,7 +292,7 @@ export default function LanguageMenu({ compact = false, className = "" }: Langua
             />
           </div>
 
-          <div className="max-h-80 overflow-y-auto p-1">
+          <div className="max-h-[56vh] overflow-y-auto p-1 sm:max-h-80">
             {filteredLanguages.map((language) => (
               <button
                 key={language.code}
@@ -312,7 +312,7 @@ export default function LanguageMenu({ compact = false, className = "" }: Langua
                       }`
                 }
               >
-                <span>
+                <span className="min-w-0 flex-1 truncate pr-3">
                   <span className="font-medium">{language.nativeName}</span>
                   <span className={compact ? "ml-2 text-xs text-slate-500" : "ml-2 text-xs text-slate-400"}>
                     {language.name}

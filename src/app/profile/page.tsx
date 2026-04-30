@@ -8,8 +8,8 @@ import { useLanguage } from "../../components/LanguageProvider";
 import LanguageMenu from "../../components/LanguageMenu";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import FaceGremLogo from "../../components/FaceGremLogo";
-import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
 import { languageLabels } from "../../lib/language";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 type Profile = {
   id: string;
@@ -560,96 +560,14 @@ function ProfilePageContent() {
         </div>
       </header>
 
-      {isMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
-            onClick={() => setIsMenuOpen(false)}
-          />
-          <aside className="fixed left-0 top-0 z-[70] flex h-full w-[290px] flex-col overflow-y-auto overscroll-contain border-r border-white/10 bg-[#07111f]/90 p-5 backdrop-blur-2xl shadow-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)]">
-                  F
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">FaceGrem</h2>
-                  <p className="text-xs text-slate-400">{t.navigation}</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-1.5 text-sm text-white transition hover:bg-white/[0.08]"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-6 space-y-2">
-              <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">
-                🏠 {t.homeFeed}
-              </Link>
-              <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">
-                🎬 {t.videos}
-              </Link>
-              <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">
-                👥 {t.communities}
-              </Link>
-              <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">
-                🫂 {t.groups}
-              </Link>
-              <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">
-                💬 {t.messages}
-              </Link>
-              <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">
-                🔖 {t.saved}
-              </Link>
-              <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="block rounded-2xl px-4 py-3 text-white transition hover:bg-white/[0.08]">
-                👤 {t.profile}
-              </Link>
-            </div>
-
-            <div className="mt-8 border-t border-white/10 pt-5">
-              <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                {t.more}
-              </p>
-
-              <div className="space-y-2">
-                <Link
-                  href="/settings"
-                  onClick={() => setIsMenuOpen(false)}
-                  className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]"
-                >
-                  ⚙️ {t.settings}
-                </Link>
-
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-2">
-                  <div className="px-2 py-2">
-                    <LanguageMenu />
-                  </div>
-                </div>
-
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  🔒 {t.privacy}
-                </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-white transition hover:bg-white/[0.08]">
-                  ❓ {t.help}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="block w-full rounded-2xl px-4 py-3 text-left text-red-100 transition hover:bg-red-400/[0.10]"
-                >
-                  ↩️ {t.logout}
-                </button>
-              </div>
-            </div>
-          </aside>
-        </>
-      )}
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        userName={profile.full_name || sessionUserName || "FaceGrem User"}
+        userAvatar={currentAvatar}
+        onLogout={handleLogout}
+        notificationCount={unreadNotificationsCount}
+      />
 
       <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
         <aside className="hidden xl:block">
