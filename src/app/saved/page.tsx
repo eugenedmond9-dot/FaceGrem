@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../components/LanguageProvider";
 import NotificationDropdown from "../../components/NotificationDropdown";
 import FaceGremLogo from "../../components/FaceGremLogo";
-import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 type SavedPostRecord = {
   id: string;
@@ -51,6 +51,7 @@ type CommentRecord = {
 };
 
 export default function SavedPage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -212,46 +213,56 @@ export default function SavedPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] text-[#050505]">
         Loading saved posts...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020817] pb-24 text-white xl:pb-0">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.10),transparent_25%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_22%),linear-gradient(to_bottom,#020817,#07111f_45%,#020817)]" />
-        <div className="absolute left-0 rounded-full top-10 h-72 w-72 bg-cyan-400/10 blur-3xl" />
-        <div className="absolute top-0 right-0 rounded-full h-96 w-96 bg-blue-500/10 blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-[#f0f2f5] pb-24 text-[#050505] xl:pb-0">
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        userName={userName}
+        userAvatar={userAvatar}
+      />
 
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#020817]/75 backdrop-blur-2xl">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
         <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(true)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-700 shadow-sm transition hover:bg-slate-200"
+              aria-label="Open menu"
+            >
+              ≡
+            </button>
+
             <div className="flex items-center gap-3">
               <FaceGremLogo
                 href="/feed"
                 showWordmark={false}
-                markClassName="h-11 w-11 rounded-2xl ring-0 shadow-[0_12px_40px_rgba(34,211,238,0.18)] sm:h-12 sm:w-12"
+                markClassName="h-11 w-11 rounded-2xl ring-0 shadow-sm sm:h-12 sm:w-12"
               />
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
-                <p className="text-xs text-slate-400">{t.savedPosts}</p>
+                <h1 className="text-xl font-bold tracking-tight text-[#050505]">FaceGrem</h1>
+                <p className="text-xs text-slate-500">{t.savedPosts}</p>
               </div>
             </div>
           </div>
 
           <div className="flex-1 hidden lg:block">
             <div className="max-w-xl mx-auto">
-              <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.18)] transition focus-within:border-cyan-400/40">
-                <span className="text-sm text-slate-400">⌕</span>
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-cyan-400/40">
+                <span className="text-sm text-slate-500">⌕</span>
                 <input
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder={t.searchPlaceholder}
-                  className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
+                  className="w-full text-sm text-slate-900 bg-transparent outline-none placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -260,25 +271,25 @@ export default function SavedPage() {
           <div className="flex items-center gap-2 ml-auto">
             <Link
               href="/feed"
-              className="hidden rounded-2xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 md:inline-flex"
+              className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 md:inline-flex"
             >
               Feed
             </Link>
 
             <NotificationDropdown
-              iconClassName="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm text-slate-200 transition hover:bg-white/10"
+              iconClassName="relative inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-700 transition hover:bg-slate-100"
             />
 
             <Link
               href="/profile"
-              className="flex items-center gap-2 px-2 py-2 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 sm:px-2 sm:pr-3"
+              className="flex items-center gap-2 px-2 py-2 transition border rounded-2xl border-slate-200 bg-white hover:bg-slate-100 sm:px-2 sm:pr-3"
             >
               <img
                 src={userAvatar}
                 alt={userName}
                 className="object-cover h-9 w-9 rounded-xl ring-1 ring-cyan-400/20"
               />
-              <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
+              <span className="hidden max-w-[120px] truncate text-sm font-medium text-slate-900 lg:inline-block">
                 {userName}
               </span>
             </Link>
@@ -287,39 +298,39 @@ export default function SavedPage() {
 
         <div className="px-4 pb-4 sm:px-6 lg:hidden">
           <div className="mx-auto space-y-3 max-w-7xl">
-            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_10px_35px_rgba(15,23,42,0.18)] transition focus-within:border-cyan-400/40">
-              <span className="text-sm text-slate-400">⌕</span>
+            <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-cyan-400/40">
+              <span className="text-sm text-slate-500">⌕</span>
               <input
                 type="text"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder={t.searchPlaceholder}
-                className="w-full text-sm text-white bg-transparent outline-none placeholder:text-slate-400"
+                className="w-full text-sm text-slate-900 bg-transparent outline-none placeholder:text-slate-500"
               />
             </div>
 
             <div className="grid grid-cols-4 gap-2">
               <Link
                 href="/feed"
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="px-3 py-3 text-xs font-medium text-center text-slate-700 transition border rounded-2xl border-slate-200 bg-white hover:bg-slate-100"
               >
                 Feed
               </Link>
               <Link
                 href="/videos"
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="px-3 py-3 text-xs font-medium text-center text-slate-700 transition border rounded-2xl border-slate-200 bg-white hover:bg-slate-100"
               >
                 Videos
               </Link>
               <Link
                 href="/communities"
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="px-3 py-3 text-xs font-medium text-center text-slate-700 transition border rounded-2xl border-slate-200 bg-white hover:bg-slate-100"
               >
                 Groups
               </Link>
               <Link
                 href="/messages"
-                className="px-3 py-3 text-xs font-medium text-center text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="px-3 py-3 text-xs font-medium text-center text-slate-700 transition border rounded-2xl border-slate-200 bg-white hover:bg-slate-100"
               >
                 Chat
               </Link>
@@ -331,7 +342,7 @@ export default function SavedPage() {
       <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
         <aside className="hidden xl:block">
           <div className="sticky top-[104px] space-y-4">
-            <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.12),rgba(15,23,42,0.94)_45%,rgba(30,41,59,0.94))] p-4 shadow-[0_20px_60px_rgba(6,182,212,0.10)] backdrop-blur-xl">
+            <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-white p-4 shadow-sm backdrop-blur-xl">
               <div className="flex items-center gap-3">
                 <img
                   src={userAvatar}
@@ -339,36 +350,36 @@ export default function SavedPage() {
                   className="object-cover h-14 w-14 rounded-2xl ring-2 ring-cyan-400/20"
                 />
                 <div className="min-w-0">
-                  <p className="font-semibold text-white truncate">{userName}</p>
-                  <p className="text-sm truncate text-slate-400">Your saved collection</p>
+                  <p className="font-semibold text-slate-900 truncate">{userName}</p>
+                  <p className="text-sm truncate text-slate-500">Your saved collection</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">{t.saved}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{savedPosts.length}</p>
+                <div className="px-3 py-3 text-center border rounded-2xl border-slate-200 bg-white">
+                  <p className="text-[11px] text-slate-500">{t.saved}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{savedPosts.length}</p>
                 </div>
-                <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Visible</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{savedPostItems.length}</p>
+                <div className="px-3 py-3 text-center border rounded-2xl border-slate-200 bg-white">
+                  <p className="text-[11px] text-slate-500">Visible</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{savedPostItems.length}</p>
                 </div>
-                <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Type</p>
-                  <p className="mt-1 text-sm font-semibold text-white">Mixed</p>
+                <div className="px-3 py-3 text-center border rounded-2xl border-slate-200 bg-white">
+                  <p className="text-[11px] text-slate-500">Type</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">Mixed</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-3 backdrop-blur-xl">
-              <p className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">
+            <div className="rounded-[28px] border border-slate-200 bg-white p-3 backdrop-blur-xl">
+              <p className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-600/80">
                 Navigate
               </p>
 
               <div className="space-y-1.5">
                 <Link
                   href="/feed"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
+                  className="flex items-center justify-between px-4 py-3 text-sm text-[#050505] transition rounded-2xl hover:bg-slate-100"
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-base">🏠</span>
@@ -379,7 +390,7 @@ export default function SavedPage() {
 
                 <Link
                   href="/videos"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
+                  className="flex items-center justify-between px-4 py-3 text-sm text-[#050505] transition rounded-2xl hover:bg-slate-100"
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-base">🎬</span>
@@ -390,7 +401,7 @@ export default function SavedPage() {
 
                 <Link
                   href="/communities"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
+                  className="flex items-center justify-between px-4 py-3 text-sm text-[#050505] transition rounded-2xl hover:bg-slate-100"
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-base">👥</span>
@@ -401,7 +412,7 @@ export default function SavedPage() {
 
                 <Link
                   href="/messages"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
+                  className="flex items-center justify-between px-4 py-3 text-sm text-[#050505] transition rounded-2xl hover:bg-slate-100"
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-base">💬</span>
@@ -412,7 +423,7 @@ export default function SavedPage() {
 
                 <Link
                   href="/profile"
-                  className="flex items-center justify-between px-4 py-3 text-sm text-white transition rounded-2xl hover:bg-white/10"
+                  className="flex items-center justify-between px-4 py-3 text-sm text-[#050505] transition rounded-2xl hover:bg-slate-100"
                 >
                   <span className="flex items-center gap-3">
                     <span className="text-base">👤</span>
@@ -423,10 +434,10 @@ export default function SavedPage() {
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-              <p className="text-sm font-semibold text-cyan-200">Collection note</p>
-              <div className="p-4 mt-4 border rounded-2xl border-white/10 bg-white/5">
-                <p className="text-sm leading-7 text-slate-300">
+            <div className="rounded-[28px] border border-slate-200 bg-white p-4 backdrop-blur-xl">
+              <p className="text-sm font-semibold text-blue-600">Collection note</p>
+              <div className="p-4 mt-4 border rounded-2xl border-slate-200 bg-white">
+                <p className="text-sm leading-7 text-slate-600">
                   Keep your favorite posts here so you can revisit them anytime.
                 </p>
               </div>
@@ -435,30 +446,30 @@ export default function SavedPage() {
         </aside>
 
         <section className="min-w-0 space-y-5 sm:space-y-6">
-          <section className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(8,47,73,0.95),rgba(15,23,42,0.95)_55%,rgba(30,41,59,0.95))] p-6 shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
+          <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,rgba(8,47,73,0.95),rgba(15,23,42,0.95)_55%,rgba(30,41,59,0.95))] p-6 shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
-                <p className="text-sm font-semibold text-cyan-200">Your collection</p>
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                <p className="text-sm font-semibold text-blue-600">Your collection</p>
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#050505] sm:text-4xl">
                   Saved posts you want to come back to.
                 </h2>
-                <p className="max-w-xl mt-3 text-sm leading-7 text-slate-300">
+                <p className="max-w-xl mt-3 text-sm leading-7 text-slate-600">
                   Keep useful ideas, inspiring posts, videos, and moments in one place.
                 </p>
               </div>
 
               <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">{t.saved}</p>
-                  <p className="mt-2 text-2xl font-bold text-white">{savedPosts.length}</p>
+                <div className="p-4 border rounded-2xl border-slate-200 bg-white">
+                  <p className="text-xs text-slate-500">{t.saved}</p>
+                  <p className="mt-2 text-2xl font-bold text-[#050505]">{savedPosts.length}</p>
                 </div>
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Visible</p>
-                  <p className="mt-2 text-2xl font-bold text-white">{savedPostItems.length}</p>
+                <div className="p-4 border rounded-2xl border-slate-200 bg-white">
+                  <p className="text-xs text-slate-500">Visible</p>
+                  <p className="mt-2 text-2xl font-bold text-[#050505]">{savedPostItems.length}</p>
                 </div>
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Search</p>
-                  <p className="mt-2 text-xl font-bold text-white">
+                <div className="p-4 border rounded-2xl border-slate-200 bg-white">
+                  <p className="text-xs text-slate-500">Search</p>
+                  <p className="mt-2 text-xl font-bold text-[#050505]">
                     {searchText.trim() ? "On" : "Off"}
                   </p>
                 </div>
@@ -466,24 +477,24 @@ export default function SavedPage() {
             </div>
           </section>
 
-          <section className="rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+          <section className="rounded-[28px] border border-slate-200 bg-white p-5 backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">{t.savedPosts}</p>
-                <h3 className="mt-1 text-2xl font-bold tracking-tight text-white">
+                <p className="text-sm font-semibold text-blue-600">{t.savedPosts}</p>
+                <h3 className="mt-1 text-2xl font-bold tracking-tight text-[#050505]">
                   Everything you bookmarked
                 </h3>
               </div>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600">
                 {savedPostItems.length} visible
               </span>
             </div>
           </section>
 
           {savedPostItems.length === 0 ? (
-            <div className="rounded-[30px] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
-              <p className="text-lg font-medium text-white">You have not saved any posts yet.</p>
-              <p className="mt-2 text-sm text-slate-400">
+            <div className="rounded-[30px] border border-slate-200 bg-white p-8 text-center backdrop-blur-xl">
+              <p className="text-lg font-medium text-slate-900">You have not saved any posts yet.</p>
+              <p className="mt-2 text-sm text-slate-500">
                 Posts you save from the feed will show up here.
               </p>
             </div>
@@ -513,7 +524,7 @@ export default function SavedPage() {
                 return (
                   <article
                     key={post.id}
-                    className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+                    className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl"
                   >
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4">
@@ -529,17 +540,17 @@ export default function SavedPage() {
 
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-white truncate">{authorName}</p>
+                              <p className="font-semibold text-slate-900 truncate">{authorName}</p>
 
                               {authorProfile?.username && (
-                                <span className="text-sm truncate text-slate-400">
+                                <span className="text-sm truncate text-slate-500">
                                   @{authorProfile.username}
                                 </span>
                               )}
 
                               <span className="hidden w-1 h-1 rounded-full bg-slate-500 sm:block" />
 
-                              <span className="text-xs text-slate-400">
+                              <span className="text-xs text-slate-500">
                                 {new Date(post.created_at).toLocaleString()}
                               </span>
                             </div>
@@ -550,7 +561,7 @@ export default function SavedPage() {
                               </span>
 
                               {post.video_url && (
-                                <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
+                                <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-blue-600">
                                   Video post
                                 </span>
                               )}
@@ -576,7 +587,7 @@ export default function SavedPage() {
 
                       {post.content && (
                         <div className="mt-5">
-                          <p className="text-[15px] leading-8 text-slate-200">
+                          <p className="text-[15px] leading-8 text-slate-700">
                             {post.content}
                           </p>
                         </div>
@@ -584,7 +595,7 @@ export default function SavedPage() {
                     </div>
 
                     {post.image_url && (
-                      <div className="px-3 pb-3 border-y border-white/10 bg-black/20 sm:px-4 sm:pb-4">
+                      <div className="px-3 pb-3 border-y border-slate-200 bg-black/20 sm:px-4 sm:pb-4">
                         <div className="overflow-hidden rounded-[28px]">
                           <img
                             src={post.image_url}
@@ -596,7 +607,7 @@ export default function SavedPage() {
                     )}
 
                     {post.video_url && (
-                      <div className="px-3 pb-3 border-y border-white/10 bg-black/30 sm:px-4 sm:pb-4">
+                      <div className="px-3 pb-3 border-y border-slate-200 bg-black/30 sm:px-4 sm:pb-4">
                         <div className="overflow-hidden rounded-[28px]">
                           {isYouTubeUrl(post.video_url) ? (
                             <iframe
@@ -617,16 +628,16 @@ export default function SavedPage() {
                     )}
 
                     <div className="p-5 sm:p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
+                      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
                         <div className="flex items-center gap-3 text-sm">
-                          <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5">
+                          <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5">
                             <span className="text-base">❤️</span>
-                            <span className="text-slate-200">
+                            <span className="text-slate-700">
                               {likesCount} {likesCount === 1 ? "like" : "likes"}
                             </span>
                           </div>
 
-                          <div className="rounded-full bg-white/5 px-3 py-1.5 text-slate-300">
+                          <div className="rounded-full bg-white px-3 py-1.5 text-slate-600">
                             {commentsCount}{" "}
                             {commentsCount === 1 ? "comment" : "comments"}
                           </div>
@@ -634,24 +645,24 @@ export default function SavedPage() {
 
                         <Link
                           href={`/post/${post.id}`}
-                          className="text-sm font-medium transition text-cyan-300 hover:text-cyan-200"
+                          className="text-sm font-medium transition text-cyan-300 hover:text-blue-600"
                         >
                           View discussion
                         </Link>
                       </div>
 
                       <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
-                        <div className="px-4 py-3 text-sm font-medium text-center border rounded-2xl border-white/10 bg-white/5 text-slate-300">
+                        <div className="px-4 py-3 text-sm font-medium text-center border rounded-2xl border-slate-200 bg-white text-slate-600">
                           Saved
                         </div>
 
-                        <div className="px-4 py-3 text-sm font-medium text-center border rounded-2xl border-white/10 bg-white/5 text-slate-300">
+                        <div className="px-4 py-3 text-sm font-medium text-center border rounded-2xl border-slate-200 bg-white text-slate-600">
                           {commentsCount} Comments
                         </div>
 
                         <Link
                           href={`/post/${post.id}`}
-                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-white/10 bg-white/5 text-cyan-300 hover:bg-white/10"
+                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-slate-200 bg-white text-cyan-300 hover:bg-slate-100"
                         >
                           Open
                         </Link>
@@ -667,8 +678,8 @@ export default function SavedPage() {
                       </div>
 
                       {latestComments.length > 0 && (
-                        <div className="pt-4 mt-5 space-y-3 border-t border-white/10">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        <div className="pt-4 mt-5 space-y-3 border-t border-slate-200">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                             Recent comments
                           </p>
 
@@ -686,7 +697,7 @@ export default function SavedPage() {
                             return (
                               <div
                                 key={comment.id}
-                                className="flex items-start gap-3 px-3 py-3 border rounded-2xl border-white/10 bg-white/5"
+                                className="flex items-start gap-3 px-3 py-3 border rounded-2xl border-slate-200 bg-white"
                               >
                                 <img
                                   src={commentAuthorAvatar}
@@ -696,15 +707,15 @@ export default function SavedPage() {
 
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <p className="text-sm font-medium text-white">
+                                    <p className="text-sm font-medium text-slate-900">
                                       {commentAuthorName}
                                     </p>
-                                    <span className="text-[11px] text-slate-400">
+                                    <span className="text-[11px] text-slate-500">
                                       {new Date(comment.created_at).toLocaleString()}
                                     </span>
                                   </div>
 
-                                  <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-300">
+                                  <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-600">
                                     {comment.content}
                                   </p>
                                 </div>
@@ -722,64 +733,64 @@ export default function SavedPage() {
         </section>
 
         <aside className="space-y-5 xl:space-y-5">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">Saved summary</p>
-                <p className="mt-1 text-xs text-slate-400">Quick view of your collection</p>
+                <p className="text-sm font-semibold text-blue-600">Saved summary</p>
+                <p className="mt-1 text-xs text-slate-500">Quick view of your collection</p>
               </div>
             </div>
 
             <div className="mt-4 space-y-4">
-              <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                <p className="text-xs text-slate-400">Total saved posts</p>
-                <p className="mt-2 text-2xl font-bold text-white">{savedPosts.length}</p>
+              <div className="p-4 border rounded-2xl border-slate-200 bg-white">
+                <p className="text-xs text-slate-500">Total saved posts</p>
+                <p className="mt-2 text-2xl font-bold text-[#050505]">{savedPosts.length}</p>
               </div>
 
-              <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                <p className="text-xs text-slate-400">Visible after search</p>
-                <p className="mt-2 text-2xl font-bold text-white">{savedPostItems.length}</p>
+              <div className="p-4 border rounded-2xl border-slate-200 bg-white">
+                <p className="text-xs text-slate-500">Visible after search</p>
+                <p className="mt-2 text-2xl font-bold text-[#050505]">{savedPostItems.length}</p>
               </div>
 
-              <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                <p className="text-xs text-slate-400">Search state</p>
-                <p className="mt-2 font-medium text-white">
+              <div className="p-4 border rounded-2xl border-slate-200 bg-white">
+                <p className="text-xs text-slate-500">Search state</p>
+                <p className="mt-2 font-medium text-slate-900">
                   {searchText.trim() ? "Filtering collection" : "Showing all"}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">Quick links</p>
-                <p className="mt-1 text-xs text-slate-400">Move around FaceGrem fast</p>
+                <p className="text-sm font-semibold text-blue-600">Quick links</p>
+                <p className="mt-1 text-xs text-slate-500">Move around FaceGrem fast</p>
               </div>
             </div>
 
             <div className="mt-4 space-y-3">
               <Link
                 href="/feed"
-                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="block px-4 py-3 text-sm text-[#050505] transition border rounded-2xl border-slate-200 bg-white hover:bg-slate-100"
               >
                 Back to feed
               </Link>
               <Link
                 href="/videos"
-                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="block px-4 py-3 text-sm text-[#050505] transition border rounded-2xl border-slate-200 bg-white hover:bg-slate-100"
               >
                 Open videos
               </Link>
               <Link
                 href="/communities"
-                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="block px-4 py-3 text-sm text-[#050505] transition border rounded-2xl border-slate-200 bg-white hover:bg-slate-100"
               >
                 Explore communities
               </Link>
               <Link
                 href="/messages"
-                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="block px-4 py-3 text-sm text-[#050505] transition border rounded-2xl border-slate-200 bg-white hover:bg-slate-100"
               >
                 Open messages
               </Link>

@@ -511,27 +511,23 @@ export default function CommunityDetailPage() {
 
   if (loading || !community) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] text-[#050505]">
         Loading community...
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#020817] pb-24 text-white xl:pb-0">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.10),transparent_25%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_22%),linear-gradient(to_bottom,#020817,#07111f_45%,#020817)]" />
-        <div className="absolute left-0 rounded-full top-10 h-72 w-72 bg-cyan-400/10 blur-3xl" />
-        <div className="absolute top-0 right-0 rounded-full h-96 w-96 bg-blue-500/10 blur-3xl" />
-      </div>
+  const activeCommunity = community;
 
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/40 backdrop-blur-3xl">
+  return (
+    <div className="min-h-screen bg-[#f0f2f5] pb-24 text-[#050505] xl:pb-0">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setIsMenuOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-base text-white transition hover:bg-white/[0.06]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-base text-slate-700 shadow-sm transition hover:bg-slate-200"
               aria-label="Open menu"
             >
               ☰
@@ -541,25 +537,25 @@ export default function CommunityDetailPage() {
               <FaceGremLogo
                 href="/feed"
                 showWordmark={false}
-                markClassName="h-10 w-10 rounded-2xl ring-0 shadow-[0_10px_30px_rgba(34,211,238,0.12)] sm:h-11 sm:w-11"
+                markClassName="h-10 w-10 rounded-2xl ring-0 shadow-sm sm:h-11 sm:w-11"
               />
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
-                <p className="text-xs text-slate-400">{t.community}</p>
+                <h1 className="text-xl font-bold tracking-tight text-[#050505]">FaceGrem</h1>
+                <p className="text-xs text-slate-500">{t.community}</p>
               </div>
             </div>
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="mx-auto max-w-xl">
-              <div className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-3 py-2.5 shadow-[0_10px_35px_rgba(15,23,42,0.14)] transition focus-within:border-cyan-400/40 sm:px-4 lg:py-3">
-                <span className="text-sm text-slate-400">⌕</span>
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition focus-within:border-cyan-400/40 sm:px-4 lg:py-3">
+                <span className="text-sm text-slate-500">⌕</span>
                 <input
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder={t.searchPlaceholder}
-                  className="w-full bg-transparent text-xs text-white outline-none placeholder:text-slate-400 sm:text-sm"
+                  className="w-full bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-500 sm:text-sm"
                 />
               </div>
             </div>
@@ -570,8 +566,8 @@ export default function CommunityDetailPage() {
               onClick={handleJoinOrLeaveCommunity}
               className={`hidden rounded-2xl px-4 py-2.5 text-sm font-semibold sm:inline-flex ${
                 isMember
-                  ? "border border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20"
-                  : "bg-gradient-to-r from-cyan-400 to-blue-600 text-white shadow-lg shadow-cyan-500/20"
+                  ? "border border-red-200 bg-red-50 text-red-200 hover:bg-red-100"
+                  : "bg-blue-600 text-white shadow-lg shadow-blue-200"
               }`}
             >
               {isMember ? t.leave : t.join}
@@ -581,7 +577,7 @@ export default function CommunityDetailPage() {
               <button
                 type="button"
                 onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
-                className="inline-flex h-9 items-center rounded-xl border border-white/[0.07] bg-white/[0.035] px-3 py-2 text-xs font-medium text-slate-200 transition hover:bg-white/[0.06]"
+                className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
                 aria-label="Language"
                 title="Language"
               >
@@ -589,7 +585,7 @@ export default function CommunityDetailPage() {
               </button>
 
               {isLanguageMenuOpen && (
-                <div className="absolute right-0 top-11 z-[90] w-44 rounded-2xl border border-white/[0.08] bg-[#07111f]/95 p-2 shadow-2xl backdrop-blur-2xl">
+                <div className="absolute right-0 top-11 z-[90] w-44 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl backdrop-blur-xl">
                   {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
                     <button
                       key={language}
@@ -597,8 +593,8 @@ export default function CommunityDetailPage() {
                       onClick={() => handleLanguageChange(language)}
                       className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
                         selectedLanguage === language
-                          ? "bg-cyan-400/[0.14] text-cyan-100"
-                          : "text-white hover:bg-white/[0.06]"
+                          ? "bg-blue-50 text-blue-700"
+                          : "text-[#050505] hover:bg-slate-100"
                       }`}
                     >
                       <span>{languageLabels[language]}</span>
@@ -610,19 +606,19 @@ export default function CommunityDetailPage() {
             </div>
 
             <NotificationDropdown
-              iconClassName="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-[13px] text-slate-200 transition hover:bg-white/[0.06]"
+              iconClassName="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-[13px] text-slate-700 transition hover:bg-slate-100"
             />
 
             <Link
               href="/profile"
-              className="hidden items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] md:flex md:px-2 md:pr-3"
+              className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-white px-2 py-1.5 transition hover:bg-slate-100 md:flex md:px-2 md:pr-3"
             >
               <img
                 src={userAvatar}
                 alt={userName}
                 className="h-8 w-8 rounded-xl object-cover ring-1 ring-cyan-400/15"
               />
-              <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
+              <span className="hidden max-w-[120px] truncate text-sm font-medium text-slate-900 lg:inline-block">
                 {userName}
               </span>
             </Link>
@@ -631,7 +627,7 @@ export default function CommunityDetailPage() {
               type="button"
               onClick={handleLogout}
               disabled={signingOut}
-              className="hidden rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-white/[0.06] disabled:opacity-70 lg:inline-flex"
+              className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-70 lg:inline-flex"
             >
               {signingOut ? t.signingOut : t.logout}
             </button>
@@ -651,7 +647,7 @@ export default function CommunityDetailPage() {
       <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
         <aside className="hidden xl:block">
           <div className="sticky top-[104px] space-y-4">
-            <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(135deg,rgba(34,211,238,0.12),rgba(15,23,42,0.94)_45%,rgba(30,41,59,0.94))] p-4 shadow-[0_20px_60px_rgba(6,182,212,0.10)] backdrop-blur-xl">
+            <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(135deg,rgba(34,211,238,0.12),rgba(15,23,42,0.94)_45%,rgba(30,41,59,0.94))] p-4 shadow-[0_20px_60px_rgba(6,182,212,0.10)] backdrop-blur-xl">
               <div className="flex items-center gap-3">
                 <img
                   src={creatorAvatar}
@@ -659,52 +655,52 @@ export default function CommunityDetailPage() {
                   className="object-cover h-14 w-14 rounded-2xl ring-2 ring-cyan-400/20"
                 />
                 <div className="min-w-0">
-                  <p className="font-semibold text-white truncate">{community.name}</p>
-                  <p className="text-sm truncate text-slate-400">
-                    {community.category || t.communityFallback}
+                  <p className="font-semibold text-slate-900 truncate">{activeCommunity.name}</p>
+                  <p className="text-sm truncate text-slate-500">
+                    {activeCommunity.category || t.communityFallback}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">{t.members}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{membersCount}</p>
+                <div className="px-3 py-3 text-center border rounded-2xl border-slate-200 bg-white/5">
+                  <p className="text-[11px] text-slate-500">{t.members}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{membersCount}</p>
                 </div>
-                <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">{t.posts}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{posts.length}</p>
+                <div className="px-3 py-3 text-center border rounded-2xl border-slate-200 bg-white/5">
+                  <p className="text-[11px] text-slate-500">{t.posts}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{posts.length}</p>
                 </div>
-                <div className="px-3 py-3 text-center border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-[11px] text-slate-400">Status</p>
-                  <p className="mt-1 text-sm font-semibold text-white">
+                <div className="px-3 py-3 text-center border rounded-2xl border-slate-200 bg-white/5">
+                  <p className="text-[11px] text-slate-500">Status</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">
                     {isMember ? t.joined : t.open}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+            <div className="rounded-[28px] border border-slate-200 bg-white/5 p-4 backdrop-blur-xl">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-cyan-200">{"About"}</p>
+                <p className="text-sm font-semibold text-blue-600">{"About"}</p>
               </div>
 
               <div className="mt-4 space-y-4">
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-sm leading-7 text-slate-300">
-                    {community.description || "No description yet."}
+                <div className="p-4 border rounded-2xl border-slate-200 bg-white/5">
+                  <p className="text-sm leading-7 text-slate-600">
+                    {activeCommunity.description || "No description yet."}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 p-4 border rounded-2xl border-white/10 bg-white/5">
+                <div className="flex items-center gap-3 p-4 border rounded-2xl border-slate-200 bg-white/5">
                   <img
                     src={creatorAvatar}
                     alt={creatorName}
                     className="object-cover w-10 h-10 rounded-2xl"
                   />
                   <div className="min-w-0">
-                    <p className="font-medium text-white truncate">{creatorName}</p>
-                    <p className="text-xs text-slate-400">{t.creator}</p>
+                    <p className="font-medium text-slate-900 truncate">{creatorName}</p>
+                    <p className="text-xs text-slate-500">{t.creator}</p>
                   </div>
                 </div>
               </div>
@@ -713,31 +709,31 @@ export default function CommunityDetailPage() {
         </aside>
 
         <section className="min-w-0 space-y-5 sm:space-y-6">
-          <div className="overflow-hidden rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(8,47,73,0.95),rgba(15,23,42,0.95)_55%,rgba(30,41,59,0.95))] p-6 shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
+          <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,rgba(8,47,73,0.95),rgba(15,23,42,0.95)_55%,rgba(30,41,59,0.95))] p-6 shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
-                <p className="text-sm font-semibold text-cyan-200">{t.community}</p>
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  {community.name}
+                <p className="text-sm font-semibold text-blue-600">{t.community}</p>
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#050505] sm:text-4xl">
+                  {activeCommunity.name}
                 </h2>
-                <p className="max-w-xl mt-3 text-sm leading-7 text-slate-300">
-                  {community.description ||
+                <p className="max-w-xl mt-3 text-sm leading-7 text-slate-600">
+                  {activeCommunity.description ||
                     "A space where people gather, talk, learn, and share together."}
                 </p>
               </div>
 
               <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">{t.members}</p>
-                  <p className="mt-2 text-2xl font-bold text-white">{membersCount}</p>
+                <div className="p-4 border rounded-2xl border-slate-200 bg-white/5">
+                  <p className="text-xs text-slate-500">{t.members}</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">{membersCount}</p>
                 </div>
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">{t.posts}</p>
-                  <p className="mt-2 text-2xl font-bold text-white">{posts.length}</p>
+                <div className="p-4 border rounded-2xl border-slate-200 bg-white/5">
+                  <p className="text-xs text-slate-500">{t.posts}</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">{posts.length}</p>
                 </div>
-                <div className="p-4 border rounded-2xl border-white/10 bg-white/5">
-                  <p className="text-xs text-slate-400">Status</p>
-                  <p className="mt-2 text-xl font-bold text-white">
+                <div className="p-4 border rounded-2xl border-slate-200 bg-white/5">
+                  <p className="text-xs text-slate-500">Status</p>
+                  <p className="mt-2 text-xl font-bold text-slate-900">
                     {isMember ? t.joined : t.open}
                   </p>
                 </div>
@@ -745,17 +741,17 @@ export default function CommunityDetailPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.92)_45%,rgba(15,23,42,0.96))] shadow-[0_25px_80px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:rounded-[34px]">
-            <div className="px-4 py-4 border-b border-white/10 sm:px-6">
+          <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.92)_45%,rgba(15,23,42,0.96))] shadow-[0_25px_80px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:rounded-[34px]">
+            <div className="px-4 py-4 border-b border-slate-200 sm:px-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-cyan-200">Create post</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="text-sm font-semibold text-blue-600">Create post</p>
+                  <p className="mt-1 text-xs text-slate-500">
                     Share with people inside this community
                   </p>
                 </div>
 
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+                <span className="rounded-full border border-slate-200 bg-white/5 px-3 py-1.5 text-xs text-slate-600">
                   {isMember ? "Members can post" : "Join to post"}
                 </span>
               </div>
@@ -770,11 +766,11 @@ export default function CommunityDetailPage() {
                 />
 
                 <div className="flex-1 min-w-0">
-                  <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-3 sm:rounded-[26px] sm:p-4">
+                  <div className="rounded-[22px] border border-slate-200 bg-white/[0.04] p-3 sm:rounded-[26px] sm:p-4">
                     <div className="flex flex-wrap items-center gap-2 mb-3 sm:gap-3">
-                      <p className="font-medium text-white">{userName}</p>
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
-                        Posting in {community.name}
+                      <p className="font-medium text-slate-900">{userName}</p>
+                      <span className="rounded-full border border-slate-200 bg-white/5 px-2.5 py-1 text-[11px] text-slate-600">
+                        Posting in {activeCommunity.name}
                       </span>
                     </div>
 
@@ -784,20 +780,20 @@ export default function CommunityDetailPage() {
                       rows={4}
                       placeholder={
                         isMember
-                          ? `What do you want to share with ${community.name}?`
+                          ? `What do you want to share with ${activeCommunity.name}?`
                           : "Join this community to post."
                       }
                       disabled={!isMember}
-                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-white placeholder:text-slate-400 outline-none disabled:opacity-60 sm:leading-8"
+                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-[#050505] placeholder:text-slate-500 outline-none disabled:opacity-60 sm:leading-8"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="grid gap-4 mt-4 md:grid-cols-2">
-                <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
-                  <p className="text-sm font-medium text-white">Image upload</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                <div className="rounded-[22px] border border-slate-200 bg-white/[0.04] p-4">
+                  <p className="text-sm font-medium text-slate-900">Image upload</p>
+                  <p className="mt-1 text-xs text-slate-500">
                     Add a visual to your community post
                   </p>
 
@@ -806,11 +802,11 @@ export default function CommunityDetailPage() {
                     accept="image/*"
                     onChange={handleImageChange}
                     disabled={!isMember}
-                    className="mt-4 block w-full rounded-2xl text-sm text-white file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-4 file:py-2.5 file:text-cyan-200 disabled:opacity-60"
+                    className="mt-4 block w-full rounded-2xl text-sm text-[#050505] file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-4 file:py-2.5 file:text-blue-600 disabled:opacity-60"
                   />
 
                   {imagePreview && (
-                    <div className="mt-4 overflow-hidden rounded-[20px] border border-white/10 sm:rounded-[24px]">
+                    <div className="mt-4 overflow-hidden rounded-[20px] border border-slate-200 sm:rounded-[24px]">
                       <img
                         src={imagePreview}
                         alt="Preview"
@@ -820,9 +816,9 @@ export default function CommunityDetailPage() {
                   )}
                 </div>
 
-                <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
-                  <p className="text-sm font-medium text-white">Video link</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                <div className="rounded-[22px] border border-slate-200 bg-white/[0.04] p-4">
+                  <p className="text-sm font-medium text-slate-900">Video link</p>
+                  <p className="mt-1 text-xs text-slate-500">
                     Paste a YouTube or direct video URL
                   </p>
 
@@ -832,14 +828,14 @@ export default function CommunityDetailPage() {
                     onChange={(e) => setVideoUrl(e.target.value)}
                     placeholder="Paste a YouTube or video URL"
                     disabled={!isMember}
-                    className="w-full px-4 py-3 mt-4 text-sm text-white transition border outline-none rounded-2xl border-white/10 bg-white/5 placeholder:text-slate-400 focus:border-cyan-400/40 disabled:opacity-60"
+                    className="w-full px-4 py-3 mt-4 text-sm text-slate-700 transition border outline-none rounded-2xl border-slate-200 bg-white/5 placeholder:text-slate-500 focus:border-cyan-400/40 disabled:opacity-60"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 pt-4 mt-5 border-t border-white/10 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:pt-5">
+              <div className="flex flex-col gap-4 pt-4 mt-5 border-t border-slate-200 sm:mt-6 sm:flex-row sm:items-center sm:justify-between sm:pt-5">
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+                  <span className="rounded-full border border-slate-200 bg-white/5 px-3 py-1.5 text-xs text-slate-600">
                     Community post
                   </span>
                   {imagePreview && (
@@ -848,7 +844,7 @@ export default function CommunityDetailPage() {
                     </span>
                   )}
                   {videoUrl.trim() && (
-                    <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
+                    <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-blue-600">
                       Video linked
                     </span>
                   )}
@@ -857,7 +853,7 @@ export default function CommunityDetailPage() {
                 <button
                   onClick={handleCreateCommunityPost}
                   disabled={posting || !isMember}
-                  className="px-6 py-3 text-sm font-semibold text-white shadow-lg rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 shadow-cyan-500/20 disabled:opacity-70"
+                  className="px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg rounded-2xl bg-blue-600 shadow-blue-200 disabled:opacity-70"
                 >
                   {posting ? "Posting..." : "Post to community"}
                 </button>
@@ -866,9 +862,9 @@ export default function CommunityDetailPage() {
           </div>
 
           {filteredPosts.length === 0 ? (
-            <div className="rounded-[30px] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
-              <p className="text-lg font-medium text-white">No posts in this community yet.</p>
-              <p className="mt-2 text-sm text-slate-400">
+            <div className="rounded-[30px] border border-slate-200 bg-white/5 p-8 text-center backdrop-blur-xl">
+              <p className="text-lg font-medium text-slate-900">No posts in this community yet.</p>
+              <p className="mt-2 text-sm text-slate-500">
                 Be the first to start the conversation.
               </p>
             </div>
@@ -897,7 +893,7 @@ export default function CommunityDetailPage() {
                 return (
                   <article
                     key={post.id}
-                    className="overflow-hidden rounded-[32px] border border-white/10 bg-white/5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+                    className="overflow-hidden rounded-[32px] border border-slate-200 bg-white/5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl"
                   >
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4">
@@ -913,30 +909,30 @@ export default function CommunityDetailPage() {
 
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-white truncate">
+                              <p className="font-semibold text-slate-900 truncate">
                                 {authorName}
                               </p>
 
                               {authorProfile?.username && (
-                                <span className="text-sm truncate text-slate-400">
+                                <span className="text-sm truncate text-slate-500">
                                   @{authorProfile.username}
                                 </span>
                               )}
 
                               <span className="hidden w-1 h-1 rounded-full bg-slate-500 sm:block" />
 
-                              <span className="text-xs text-slate-400">
+                              <span className="text-xs text-slate-500">
                                 {new Date(post.created_at).toLocaleString()}
                               </span>
                             </div>
 
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-slate-300">
-                                {community.name}
+                              <span className="rounded-full border border-slate-200 bg-white/5 px-2.5 py-1 text-[11px] text-slate-600">
+                                {activeCommunity.name}
                               </span>
 
                               {post.video_url && (
-                                <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-cyan-200">
+                                <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-blue-600">
                                   Video post
                                 </span>
                               )}
@@ -953,7 +949,7 @@ export default function CommunityDetailPage() {
 
                       {post.content && (
                         <div className="mt-5">
-                          <p className="text-[15px] leading-8 text-slate-200">
+                          <p className="text-[15px] leading-8 text-slate-700">
                             {post.content}
                           </p>
                         </div>
@@ -961,7 +957,7 @@ export default function CommunityDetailPage() {
                     </div>
 
                     {post.image_url && (
-                      <div className="px-3 pb-3 border-y border-white/10 bg-black/20 sm:px-4 sm:pb-4">
+                      <div className="px-3 pb-3 border-y border-slate-200 bg-black/20 sm:px-4 sm:pb-4">
                         <div className="overflow-hidden rounded-[28px]">
                           <img
                             src={post.image_url}
@@ -973,7 +969,7 @@ export default function CommunityDetailPage() {
                     )}
 
                     {post.video_url && (
-                      <div className="px-3 pb-3 border-y border-white/10 bg-black/30 sm:px-4 sm:pb-4">
+                      <div className="px-3 pb-3 border-y border-slate-200 bg-black/30 sm:px-4 sm:pb-4">
                         <div className="overflow-hidden rounded-[28px]">
                           {isYouTubeUrl(post.video_url) ? (
                             <iframe
@@ -994,16 +990,16 @@ export default function CommunityDetailPage() {
                     )}
 
                     <div className="p-5 sm:p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
+                      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
                         <div className="flex items-center gap-3 text-sm">
                           <div className="flex items-center gap-2 rounded-full bg-white/5 px-3 py-1.5">
                             <span className="text-base">❤️</span>
-                            <span className="text-slate-200">
+                            <span className="text-slate-700">
                               {likesCount} {likesCount === 1 ? "like" : "likes"}
                             </span>
                           </div>
 
-                          <div className="rounded-full bg-white/5 px-3 py-1.5 text-slate-300">
+                          <div className="rounded-full bg-white/5 px-3 py-1.5 text-slate-600">
                             {commentsCount}{" "}
                             {commentsCount === 1 ? "comment" : "comments"}
                           </div>
@@ -1011,7 +1007,7 @@ export default function CommunityDetailPage() {
 
                         <Link
                           href={`/post/${post.id}`}
-                          className="text-sm font-medium transition text-cyan-300 hover:text-cyan-200"
+                          className="text-sm font-medium transition text-cyan-300 hover:text-blue-600"
                         >
                           View discussion
                         </Link>
@@ -1022,8 +1018,8 @@ export default function CommunityDetailPage() {
                           onClick={() => handleToggleLike(post.id)}
                           className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
                             isLiked(post.id)
-                              ? "border border-cyan-400/20 bg-cyan-500/20 text-cyan-200"
-                              : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                              ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
+                              : "border border-slate-200 bg-white/5 text-slate-600 hover:bg-white/10"
                           }`}
                         >
                           {isLiked(post.id) ? "Liked" : "Like"}
@@ -1031,29 +1027,29 @@ export default function CommunityDetailPage() {
 
                         <Link
                           href={`/post/${post.id}`}
-                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-slate-200 bg-white/5 text-slate-600 hover:bg-white/10"
                         >
                           Comment
                         </Link>
 
                         <Link
                           href={`/post/${post.id}`}
-                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-white/10 bg-white/5 text-cyan-300 hover:bg-white/10"
+                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-slate-200 bg-white/5 text-cyan-300 hover:bg-white/10"
                         >
                           Open
                         </Link>
 
                         <Link
                           href={`/profile?id=${post.user_id}`}
-                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
+                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-slate-200 bg-white/5 text-slate-600 hover:bg-white/10"
                         >
                           Author
                         </Link>
                       </div>
 
                       {latestComments.length > 0 && (
-                        <div className="pt-4 mt-5 space-y-3 border-t border-white/10">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        <div className="pt-4 mt-5 space-y-3 border-t border-slate-200">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                             Recent comments
                           </p>
 
@@ -1071,7 +1067,7 @@ export default function CommunityDetailPage() {
                             return (
                               <div
                                 key={comment.id}
-                                className="flex items-start gap-3 px-3 py-3 border rounded-2xl border-white/10 bg-white/5"
+                                className="flex items-start gap-3 px-3 py-3 border rounded-2xl border-slate-200 bg-white/5"
                               >
                                 <img
                                   src={commentAuthorAvatar}
@@ -1081,15 +1077,15 @@ export default function CommunityDetailPage() {
 
                                 <div className="flex-1 min-w-0">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <p className="text-sm font-medium text-white">
+                                    <p className="text-sm font-medium text-slate-900">
                                       {commentAuthorName}
                                     </p>
-                                    <span className="text-[11px] text-slate-400">
+                                    <span className="text-[11px] text-slate-500">
                                       {new Date(comment.created_at).toLocaleString()}
                                     </span>
                                   </div>
 
-                                  <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-300">
+                                  <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-600">
                                     {comment.content}
                                   </p>
                                 </div>
@@ -1107,44 +1103,44 @@ export default function CommunityDetailPage() {
         </section>
 
         <aside className="space-y-5 xl:space-y-5">
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+          <div className="rounded-[28px] border border-slate-200 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">Creator spotlight</p>
-                <p className="mt-1 text-xs text-slate-400">Built by the community creator</p>
+                <p className="text-sm font-semibold text-blue-600">Creator spotlight</p>
+                <p className="mt-1 text-xs text-slate-500">Built by the community creator</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 mt-4 border rounded-2xl border-white/10 bg-white/5">
+            <div className="flex items-center gap-3 p-4 mt-4 border rounded-2xl border-slate-200 bg-white/5">
               <img
                 src={creatorAvatar}
                 alt={creatorName}
                 className="object-cover w-12 h-12 rounded-2xl"
               />
               <div className="min-w-0">
-                <p className="font-medium text-white truncate">{creatorName}</p>
-                <p className="text-xs truncate text-slate-400">{t.creator}</p>
+                <p className="font-medium text-slate-900 truncate">{creatorName}</p>
+                <p className="text-xs truncate text-slate-500">{t.creator}</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+          <div className="rounded-[28px] border border-slate-200 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">Recent members</p>
-                <p className="mt-1 text-xs text-slate-400">People joining this space</p>
+                <p className="text-sm font-semibold text-blue-600">Recent members</p>
+                <p className="mt-1 text-xs text-slate-500">People joining this space</p>
               </div>
             </div>
 
             <div className="mt-4 space-y-4">
               {recentMembers.length === 0 ? (
-                <p className="text-sm text-slate-400">No members to show yet.</p>
+                <p className="text-sm text-slate-500">No members to show yet.</p>
               ) : (
                 recentMembers.map((profile) => (
                   <Link
                     key={profile.id}
                     href={`/profile?id=${profile.id}`}
-                    className="flex items-center gap-3 p-4 transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                    className="flex items-center gap-3 p-4 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
                   >
                     <img
                       src={
@@ -1155,8 +1151,8 @@ export default function CommunityDetailPage() {
                       className="object-cover w-12 h-12 rounded-2xl"
                     />
                     <div className="min-w-0">
-                      <p className="font-medium text-white truncate">{profile.full_name}</p>
-                      <p className="text-xs truncate text-slate-400">
+                      <p className="font-medium text-slate-900 truncate">{profile.full_name}</p>
+                      <p className="text-xs truncate text-slate-500">
                         @{profile.username || "member"}
                       </p>
                     </div>
@@ -1166,36 +1162,36 @@ export default function CommunityDetailPage() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+          <div className="rounded-[28px] border border-slate-200 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">Quick links</p>
-                <p className="mt-1 text-xs text-slate-400">Move around FaceGrem fast</p>
+                <p className="text-sm font-semibold text-blue-600">Quick links</p>
+                <p className="mt-1 text-xs text-slate-500">Move around FaceGrem fast</p>
               </div>
             </div>
 
             <div className="mt-4 space-y-3">
               <Link
                 href="/communities"
-                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="block px-4 py-3 text-sm text-slate-700 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
               >
                 Back to communities
               </Link>
               <Link
                 href="/feed"
-                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="block px-4 py-3 text-sm text-slate-700 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
               >
                 Open feed
               </Link>
               <Link
                 href="/messages"
-                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="block px-4 py-3 text-sm text-slate-700 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
               >
                 Open messages
               </Link>
               <Link
                 href="/profile"
-                className="block px-4 py-3 text-sm text-white transition border rounded-2xl border-white/10 bg-white/5 hover:bg-white/10"
+                className="block px-4 py-3 text-sm text-slate-700 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
               >
                 Visit profile
               </Link>

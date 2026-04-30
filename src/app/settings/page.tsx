@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "../../components/LanguageProvider";
 import { supabase } from "../../lib/supabase";
 import FaceGremLogo from "../../components/FaceGremLogo";
-import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 type PreferenceKey =
   | "emailAlerts"
@@ -55,6 +55,7 @@ const defaultPreferences: PreferenceState = {
 const preferenceStorageKey = "facegrem_settings_preferences_v2";
 
 export default function SettingsPage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
   const { t } = useLanguage();
 
@@ -351,15 +352,15 @@ export default function SettingsPage() {
         className="flex items-center justify-between gap-4 px-3 py-4"
       >
         <div className="flex min-w-0 items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white">
             {item.icon}
           </div>
 
           <div className="min-w-0">
-            <p className="font-medium text-white">{item.title}</p>
-            <p className="mt-1 text-sm leading-6 text-slate-400">{item.text}</p>
+            <p className="font-medium text-[#050505]">{item.title}</p>
+            <p className="mt-1 text-sm leading-6 text-slate-500">{item.text}</p>
             {savingPreference === item.key && (
-              <p className="mt-1 text-xs text-cyan-200">Saved</p>
+              <p className="mt-1 text-xs text-blue-600">Saved</p>
             )}
           </div>
         </div>
@@ -370,7 +371,7 @@ export default function SettingsPage() {
           className={`relative h-7 w-12 shrink-0 rounded-full border transition ${
             isEnabled
               ? "border-cyan-300/30 bg-cyan-400/40"
-              : "border-white/[0.08] bg-white/[0.06]"
+              : "border-slate-200 bg-white/[0.06]"
           }`}
           aria-pressed={isEnabled}
           aria-label={item.title}
@@ -386,30 +387,41 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020817] text-white">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.12),transparent_28%),linear-gradient(to_bottom,#020817,#07111f_45%,#020817)]" />
-        <div className="absolute left-0 top-10 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="absolute right-0 top-0 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
-      </div>
+    <div className="min-h-screen bg-[#f0f2f5] text-[#050505]">
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        userName={profileSummary.fullName}
+        userAvatar={profileSummary.avatarUrl}
+        onLogout={handleLogout}
+      />
 
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/55 backdrop-blur-3xl">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(true)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-700 shadow-sm transition hover:bg-slate-200"
+              aria-label="Open menu"
+            >
+              ≡
+            </button>
+
             <FaceGremLogo
               href="/feed"
               showWordmark={false}
               markClassName="h-10 w-10 rounded-2xl ring-0 shadow-sm"
             />
             <div>
-              <h1 className="text-lg font-bold tracking-tight text-white">FaceGrem</h1>
-              <p className="text-xs text-slate-400">{t.settings}</p>
+              <h1 className="text-lg font-bold tracking-tight text-slate-900">FaceGrem</h1>
+              <p className="text-xs text-slate-500">{t.settings}</p>
             </div>
           </div>
 
           <Link
             href="/feed"
-            className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-2 text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
+            className="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
           >
             {t.homeFeed}
           </Link>
@@ -417,11 +429,11 @@ export default function SettingsPage() {
       </header>
 
       <main className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
-        <section className="overflow-hidden rounded-[34px] border border-white/[0.07] bg-white/[0.035] shadow-[0_25px_90px_rgba(2,8,23,0.35)] backdrop-blur-2xl">
-          <div className="border-b border-white/[0.07] bg-[linear-gradient(135deg,rgba(8,47,73,0.85),rgba(15,23,42,0.92)_55%,rgba(30,41,59,0.92))] p-6 sm:p-8">
+        <section className="overflow-hidden rounded-[34px] border border-slate-200 bg-white shadow-sm backdrop-blur-xl">
+          <div className="border-b border-slate-200 bg-white p-6 sm:p-8">
             <Link
               href="/feed"
-              className="mb-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-2xl text-slate-200 transition hover:bg-white/[0.06]"
+              className="mb-6 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-white text-2xl text-slate-700 transition hover:bg-slate-100"
               aria-label={t.homeFeed}
             >
               ‹
@@ -429,16 +441,16 @@ export default function SettingsPage() {
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">FaceGrem control center</p>
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-5xl">
+                <p className="text-sm font-semibold text-blue-600">FaceGrem control center</p>
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">
                   {t.settings}
                 </h2>
-                <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300">
+                <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600">
                   Manage your account, privacy, notifications, layout preferences, safety controls, and important FaceGrem links from one professional control panel.
                 </p>
               </div>
 
-              <div className="rounded-[28px] border border-white/[0.07] bg-white/[0.04] p-4">
+              <div className="rounded-[28px] border border-slate-200 bg-white p-4">
                 <div className="flex items-center gap-3">
                   <img
                     src={profileSummary.avatarUrl || getAvatarUrl(profileSummary.fullName)}
@@ -446,10 +458,10 @@ export default function SettingsPage() {
                     className="h-14 w-14 rounded-2xl object-cover ring-1 ring-cyan-300/20"
                   />
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-white">
+                    <p className="truncate font-semibold text-slate-900">
                       {profileSummary.fullName}
                     </p>
-                    <p className="truncate text-xs text-slate-400">
+                    <p className="truncate text-xs text-slate-500">
                       {profileSummary.username
                         ? `@${profileSummary.username}`
                         : profileSummary.email || "FaceGrem account"}
@@ -458,17 +470,17 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="mt-4 grid grid-cols-3 gap-2">
-                  <div className="rounded-2xl bg-white/[0.04] p-3 text-center">
+                  <div className="rounded-2xl bg-white p-3 text-center">
                     <p className="text-xl">🔔</p>
-                    <p className="mt-1 text-[11px] text-slate-400">Alerts</p>
+                    <p className="mt-1 text-[11px] text-slate-500">Alerts</p>
                   </div>
-                  <div className="rounded-2xl bg-white/[0.04] p-3 text-center">
-                    <TranslateLanguageIcon className="h-6 w-6" />
-                    <p className="mt-1 text-[11px] text-slate-400">Global</p>
+                  <div className="rounded-2xl bg-white p-3 text-center">
+                    <p className="text-xl">🌐</p>
+                    <p className="mt-1 text-[11px] text-slate-500">Global</p>
                   </div>
-                  <div className="rounded-2xl bg-white/[0.04] p-3 text-center">
+                  <div className="rounded-2xl bg-white p-3 text-center">
                     <p className="text-xl">{enabledPreferenceCount}</p>
-                    <p className="mt-1 text-[11px] text-slate-400">Enabled</p>
+                    <p className="mt-1 text-[11px] text-slate-500">Enabled</p>
                   </div>
                 </div>
               </div>
@@ -480,8 +492,8 @@ export default function SettingsPage() {
               <div>
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-cyan-200">Account shortcuts</p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="text-sm font-semibold text-blue-600">Account shortcuts</p>
+                    <p className="mt-1 text-xs text-slate-500">
                       Open the main places connected to your account.
                     </p>
                   </div>
@@ -492,21 +504,21 @@ export default function SettingsPage() {
                     <Link
                       key={card.title}
                       href={card.href}
-                      className="group rounded-[28px] border border-white/[0.07] bg-white/[0.035] p-5 transition hover:bg-white/[0.055]"
+                      className="group rounded-[28px] border border-slate-200 bg-white p-5 transition hover:bg-slate-50"
                     >
                       <div className="flex items-start gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-xl">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-xl">
                           {card.icon}
                         </div>
 
                         <div className="min-w-0">
-                          <h3 className="text-lg font-semibold text-white">
+                          <h3 className="text-lg font-semibold text-slate-900">
                             {card.title}
                           </h3>
-                          <p className="mt-2 text-sm leading-7 text-slate-300">
+                          <p className="mt-2 text-sm leading-7 text-slate-600">
                             {card.text}
                           </p>
-                          <span className="mt-4 inline-flex text-sm font-semibold text-cyan-200 transition group-hover:text-cyan-100">
+                          <span className="mt-4 inline-flex text-sm font-semibold text-blue-600 transition group-hover:text-blue-700">
                             {card.action} →
                           </span>
                         </div>
@@ -518,14 +530,14 @@ export default function SettingsPage() {
 
               <div>
                 <div className="mb-4">
-                  <p className="text-sm font-semibold text-cyan-200">Notification preferences</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="text-sm font-semibold text-blue-600">Notification preferences</p>
+                  <p className="mt-1 text-xs text-slate-500">
                     Choose what should get your attention.
                   </p>
                 </div>
 
-                <div className="rounded-[30px] border border-white/[0.07] bg-white/[0.025] p-3">
-                  <div className="divide-y divide-white/[0.06]">
+                <div className="rounded-[30px] border border-slate-200 bg-white/[0.025] p-3">
+                  <div className="divide-y divide-slate-100">
                     {notificationItems.map(renderToggleRow)}
                   </div>
                 </div>
@@ -533,14 +545,14 @@ export default function SettingsPage() {
 
               <div>
                 <div className="mb-4">
-                  <p className="text-sm font-semibold text-cyan-200">Privacy & safety</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="text-sm font-semibold text-blue-600">Privacy & safety</p>
+                  <p className="mt-1 text-xs text-slate-500">
                     Control your visibility and safety defaults.
                   </p>
                 </div>
 
-                <div className="rounded-[30px] border border-white/[0.07] bg-white/[0.025] p-3">
-                  <div className="divide-y divide-white/[0.06]">
+                <div className="rounded-[30px] border border-slate-200 bg-white/[0.025] p-3">
+                  <div className="divide-y divide-slate-100">
                     {privacyItems.map(renderToggleRow)}
                   </div>
                 </div>
@@ -548,14 +560,14 @@ export default function SettingsPage() {
 
               <div>
                 <div className="mb-4">
-                  <p className="text-sm font-semibold text-cyan-200">App experience</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="text-sm font-semibold text-blue-600">App experience</p>
+                  <p className="mt-1 text-xs text-slate-500">
                     Tune the way FaceGrem feels on phone and desktop.
                   </p>
                 </div>
 
-                <div className="rounded-[30px] border border-white/[0.07] bg-white/[0.025] p-3">
-                  <div className="divide-y divide-white/[0.06]">
+                <div className="rounded-[30px] border border-slate-200 bg-white/[0.025] p-3">
+                  <div className="divide-y divide-slate-100">
                     {experienceItems.map(renderToggleRow)}
                   </div>
                 </div>
@@ -563,7 +575,7 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={resetPreferences}
-                  className="mt-4 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-sm font-medium text-slate-200 transition hover:bg-white/[0.06]"
+                  className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
                 >
                   {savingPreference === "reset" ? "Reset saved" : "Reset preferences"}
                 </button>
@@ -571,20 +583,20 @@ export default function SettingsPage() {
             </section>
 
             <aside className="space-y-5">
-              <section className="rounded-[30px] border border-white/[0.07] bg-white/[0.035] p-5">
-                <p className="text-sm font-semibold text-cyan-200">Privacy & support</p>
+              <section className="rounded-[30px] border border-slate-200 bg-white p-5">
+                <p className="text-sm font-semibold text-blue-600">Privacy & support</p>
                 <div className="mt-4 space-y-3">
                   {supportCards.map((card) => (
                     <Link
                       key={card.title}
                       href={card.href}
-                      className="block rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4 transition hover:bg-white/[0.055]"
+                      className="block rounded-2xl border border-slate-200 bg-white/[0.03] p-4 transition hover:bg-slate-50"
                     >
                       <div className="flex items-start gap-3">
                         <span className="text-xl">{card.icon}</span>
                         <div>
-                          <p className="font-medium text-white">{card.title}</p>
-                          <p className="mt-1 text-xs leading-5 text-slate-400">
+                          <p className="font-medium text-[#050505]">{card.title}</p>
+                          <p className="mt-1 text-xs leading-5 text-slate-500">
                             {card.text}
                           </p>
                         </div>
@@ -594,27 +606,27 @@ export default function SettingsPage() {
                 </div>
               </section>
 
-              <section className="rounded-[30px] border border-white/[0.07] bg-white/[0.035] p-5">
-                <p className="text-sm font-semibold text-cyan-200">Data & device</p>
-                <div className="mt-4 space-y-3 text-sm leading-7 text-slate-300">
-                  <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
-                    <p className="font-medium text-white">Stored locally</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-400">
+              <section className="rounded-[30px] border border-slate-200 bg-white p-5">
+                <p className="text-sm font-semibold text-blue-600">Data & device</p>
+                <div className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+                  <div className="rounded-2xl border border-slate-200 bg-white/[0.03] p-4">
+                    <p className="font-medium text-[#050505]">Stored locally</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
                       These preference switches are saved in this browser for now.
                     </p>
                   </div>
-                  <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
-                    <p className="font-medium text-white">Future database sync</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-400">
+                  <div className="rounded-2xl border border-slate-200 bg-white/[0.03] p-4">
+                    <p className="font-medium text-[#050505]">Future database sync</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
                       Later, these controls can be connected to a Supabase user_settings table.
                     </p>
                   </div>
                 </div>
               </section>
 
-              <section className="rounded-[30px] border border-white/[0.07] bg-white/[0.035] p-5">
-                <p className="text-sm font-semibold text-cyan-200">Session</p>
-                <p className="mt-2 text-sm leading-7 text-slate-400">
+              <section className="rounded-[30px] border border-slate-200 bg-white p-5">
+                <p className="text-sm font-semibold text-blue-600">Session</p>
+                <p className="mt-2 text-sm leading-7 text-slate-500">
                   Sign out of this device when you are done using FaceGrem.
                 </p>
 
@@ -622,7 +634,7 @@ export default function SettingsPage() {
                   type="button"
                   onClick={handleLogout}
                   disabled={loggingOut}
-                  className="mt-5 w-full rounded-2xl border border-red-300/10 bg-red-400/[0.07] px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-400/[0.11] disabled:opacity-70"
+                  className="mt-5 w-full rounded-2xl border border-red-200 bg-red-400/[0.07] px-4 py-3 text-sm font-semibold text-red-100 transition hover:bg-red-400/[0.11] disabled:opacity-70"
                 >
                   {loggingOut ? "Signing out..." : `↩️ ${t.logout}`}
                 </button>

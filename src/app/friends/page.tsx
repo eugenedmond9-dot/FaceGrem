@@ -724,7 +724,7 @@ export default function FriendsPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
                       activeTab === tab.id
-                        ? "bg-blue-600 text-white shadow-sm"
+                        ? "bg-blue-600 text-slate-900 shadow-sm"
                         : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                     }`}
                   >
@@ -783,7 +783,7 @@ export default function FriendsPage() {
                             className={`rounded-xl px-3 py-2 text-sm font-semibold transition disabled:opacity-60 ${
                               isFollowing
                                 ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                : "bg-blue-600 text-white hover:bg-blue-700"
+                                : "bg-blue-600 text-slate-900 hover:bg-blue-700"
                             }`}
                           >
                             {isFollowing ? ft.unfollow : ft.follow}
@@ -860,7 +860,7 @@ export default function FriendsPage() {
                       type="button"
                       onClick={() => handleToggleFollow(profile.id)}
                       disabled={busyProfileId === profile.id}
-                      className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+                      className="rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-slate-900 transition hover:bg-blue-700 disabled:opacity-60"
                     >
                       {ft.follow}
                     </button>
@@ -890,7 +890,7 @@ export default function FriendsPage() {
             <section className="rounded-2xl bg-white p-4 shadow-sm">
               <div className="mb-3 flex items-center justify-between">
                 <p className="font-semibold text-slate-700">{ft.onlineFriends}</p>
-                <span className="text-sm text-slate-400">{ft.online}</span>
+                <span className="text-sm text-slate-500">{ft.online}</span>
               </div>
 
               <div className="space-y-1">

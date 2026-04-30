@@ -466,53 +466,47 @@ function ProfilePageContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] text-[#050505]">
         {t.loadingProfile}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020817] pb-10 text-white">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.10),transparent_25%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_25%),radial-gradient(circle_at_bottom_left,rgba(168,85,247,0.08),transparent_22%),linear-gradient(to_bottom,#020817,#07111f_45%,#020817)]" />
-        <div className="absolute left-0 rounded-full top-10 h-72 w-72 bg-cyan-400/10 blur-3xl" />
-        <div className="absolute top-0 right-0 rounded-full h-96 w-96 bg-blue-500/10 blur-3xl" />
-      </div>
-
-      <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#020817]/40 backdrop-blur-3xl">
+    <div className="min-h-screen bg-[#f0f2f5] pb-10 text-[#050505]">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setIsMenuOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-base text-white transition hover:bg-white/[0.06]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-base text-slate-700 shadow-sm transition hover:bg-slate-200"
               aria-label="Open menu"
             >
               ☰
             </button>
 
             <Link href="/feed" className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-[15px] text-cyan-100 shadow-[0_10px_30px_rgba(34,211,238,0.08)] sm:h-11 sm:w-11">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-cyan-300/10 bg-[linear-gradient(145deg,rgba(10,18,34,0.92),rgba(8,15,28,0.72))] font-bold text-[15px] text-blue-700 shadow-[0_10px_30px_rgba(34,211,238,0.08)] sm:h-11 sm:w-11">
                 F
               </div>
               <div className="hidden sm:block">
-                <h1 className="text-xl font-bold tracking-tight text-white">FaceGrem</h1>
-                <p className="text-xs text-slate-400">{t.profile}</p>
+                <h1 className="text-xl font-bold tracking-tight text-[#050505]">FaceGrem</h1>
+                <p className="text-xs text-slate-500">{t.profile}</p>
               </div>
             </Link>
           </div>
 
           <div className="flex-1">
             <div className="mx-auto max-w-xl">
-              <div className="flex items-center gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.02] px-4 py-3 backdrop-blur-[22px]">
-                <span className="text-sm text-slate-400">⌕</span>
+              <div className="flex items-center gap-3 rounded-2xl border border-white/[0.05] bg-white px-4 py-3 backdrop-blur-[22px]">
+                <span className="text-sm text-slate-500">⌕</span>
                 <input
                   type="text"
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   placeholder={t.searchPlaceholder}
-                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-400"
+                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -525,26 +519,26 @@ function ProfilePageContent() {
               <button
                 onClick={handleToggleFollow}
                 disabled={followLoading}
-                className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-4 py-2.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/[0.14] disabled:opacity-70"
+                className="rounded-2xl border border-cyan-300/10 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:opacity-70"
               >
                 {followLoading ? "Please wait..." : existingFollow ? "Unfollow" : "Follow"}
               </button>
             )}
 
             <NotificationDropdown
-              iconClassName="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-white/[0.07] bg-white/[0.035] text-[13px] text-slate-200 transition hover:bg-white/[0.06]"
+              iconClassName="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-[13px] text-slate-700 transition hover:bg-slate-100"
             />
 
             <Link
               href="/profile"
-              className="hidden items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-2 py-1.5 transition hover:bg-white/[0.06] sm:flex sm:px-2 sm:pr-3"
+              className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-white px-2 py-1.5 transition hover:bg-slate-100 sm:flex sm:px-2 sm:pr-3"
             >
               <img
                 src={currentAvatar}
                 alt={profile.full_name || "FaceGrem User"}
                 className="h-8 w-8 rounded-xl object-cover ring-1 ring-cyan-400/15"
               />
-              <span className="hidden max-w-[120px] truncate text-sm font-medium text-white lg:inline-block">
+              <span className="hidden max-w-[120px] truncate text-sm font-medium text-slate-900 lg:inline-block">
                 {profile.full_name || sessionUserName}
               </span>
             </Link>
@@ -552,7 +546,7 @@ function ProfilePageContent() {
             <button
               type="button"
               onClick={handleLogout}
-              className="hidden rounded-xl border border-red-300/10 bg-red-400/[0.07] px-3 py-2 text-xs font-semibold text-red-100 transition hover:bg-red-400/[0.11] lg:inline-flex"
+              className="hidden rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-100 transition hover:bg-red-50 lg:inline-flex"
             >
               ↩️ {t.logout}
             </button>
@@ -572,68 +566,68 @@ function ProfilePageContent() {
       <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
         <aside className="hidden xl:block">
           <div className="sticky top-[104px] space-y-4">
-            <div className="overflow-hidden rounded-[30px] border border-white/[0.06] bg-white/[0.028] p-4 backdrop-blur-[28px] shadow-[0_18px_50px_rgba(2,8,23,0.18)]">
+            <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-white p-4 backdrop-blur-[28px] shadow-sm">
               <button type="button" className="flex w-full items-center gap-3 text-left">
                 <img src={currentAvatar} alt={profile.full_name || "FaceGrem User"} className="h-14 w-14 rounded-2xl object-cover ring-1 ring-white/10" />
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-white">{profile.full_name || "FaceGrem User"}</p>
-                  <p className="truncate text-sm text-slate-400">{profile.username ? `@${profile.username}` : "@yourusername"}</p>
+                  <p className="truncate font-semibold text-slate-900">{profile.full_name || "FaceGrem User"}</p>
+                  <p className="truncate text-sm text-slate-500">{profile.username ? `@${profile.username}` : "@yourusername"}</p>
                 </div>
               </button>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] px-3 py-3 text-center backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]">
-                  <p className="text-[11px] text-slate-400">{"Followers"}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{followersCount}</p>
+                <div className="rounded-2xl border border-white/[0.05] bg-white px-3 py-3 text-center backdrop-blur-[24px] shadow-sm">
+                  <p className="text-[11px] text-slate-500">{"Followers"}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{followersCount}</p>
                 </div>
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] px-3 py-3 text-center backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]">
-                  <p className="text-[11px] text-slate-400">{"Following"}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{followingCount}</p>
+                <div className="rounded-2xl border border-white/[0.05] bg-white px-3 py-3 text-center backdrop-blur-[24px] shadow-sm">
+                  <p className="text-[11px] text-slate-500">{"Following"}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{followingCount}</p>
                 </div>
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] px-3 py-3 text-center backdrop-blur-[24px] shadow-[0_10px_30px_rgba(2,8,23,0.12)]">
-                  <p className="text-[11px] text-slate-400">{t.posts}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">{posts.length}</p>
+                <div className="rounded-2xl border border-white/[0.05] bg-white px-3 py-3 text-center backdrop-blur-[24px] shadow-sm">
+                  <p className="text-[11px] text-slate-500">{t.posts}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-900">{posts.length}</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-white/[0.06] bg-white/[0.028] p-3 backdrop-blur-[28px] shadow-[0_18px_50px_rgba(2,8,23,0.18)]">
-              <p className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200/80">{t.navigation}</p>
+            <div className="rounded-[28px] border border-slate-200 bg-white p-3 backdrop-blur-[28px] shadow-sm">
+              <p className="px-2 pb-2 pt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-blue-600/80">{t.navigation}</p>
               <div className="space-y-1.5">
-                <Link href="/feed" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">🏠</span>{t.homeFeed}</span><span className="text-slate-500">→</span></Link>
-                <Link href="/videos" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">🎬</span>{t.videos}</span><span className="text-slate-500">→</span></Link>
-                <Link href="/communities" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">👥</span>{t.communities}</span><span className="text-slate-500">→</span></Link>
-                <Link href="/messages" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">💬</span>{t.messages}</span><span className="text-slate-500">→</span></Link>
-                <Link href="/profile" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-white transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">👤</span>{t.profile}</span><span className="text-slate-500">→</span></Link>
+                <Link href="/feed" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-slate-700 transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">🏠</span>{t.homeFeed}</span><span className="text-slate-500">→</span></Link>
+                <Link href="/videos" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-slate-700 transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">🎬</span>{t.videos}</span><span className="text-slate-500">→</span></Link>
+                <Link href="/communities" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-slate-700 transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">👥</span>{t.communities}</span><span className="text-slate-500">→</span></Link>
+                <Link href="/messages" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-slate-700 transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">💬</span>{t.messages}</span><span className="text-slate-500">→</span></Link>
+                <Link href="/profile" className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm text-slate-700 transition hover:bg-white/[0.08]"><span className="flex items-center gap-3"><span className="text-base">👤</span>{t.profile}</span><span className="text-slate-500">→</span></Link>
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-white/[0.06] bg-white/[0.028] p-4 backdrop-blur-[28px] shadow-[0_18px_50px_rgba(2,8,23,0.18)]">
-              <p className="text-sm font-semibold text-cyan-200">{"About"}</p>
-              <div className="mt-4 rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
-                <p className="text-sm leading-7 text-slate-300">{profile.bio || "No bio yet."}</p>
+            <div className="rounded-[28px] border border-slate-200 bg-white p-4 backdrop-blur-[28px] shadow-sm">
+              <p className="text-sm font-semibold text-blue-600">{"About"}</p>
+              <div className="mt-4 rounded-2xl border border-white/[0.05] bg-white p-4">
+                <p className="text-sm leading-7 text-slate-600">{profile.bio || "No bio yet."}</p>
               </div>
             </div>
           </div>
         </aside>
 
         <section className="min-w-0 space-y-5 sm:space-y-6">
-          <div className="overflow-hidden rounded-[32px] border border-white/[0.06] bg-[linear-gradient(135deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015)_38%,rgba(255,255,255,0.025)_100%)] p-6 backdrop-blur-[28px] shadow-[0_24px_80px_rgba(2,8,23,0.14)]">
+          <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015)_38%,rgba(255,255,255,0.025)_100%)] p-6 backdrop-blur-[28px] shadow-[0_24px_80px_rgba(2,8,23,0.14)]">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex items-start gap-4">
                 <img src={currentAvatar} alt={profile.full_name || "FaceGrem User"} className="h-20 w-20 rounded-[28px] object-cover ring-2 ring-cyan-400/20 sm:h-24 sm:w-24" />
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-cyan-200">{isOwnProfile ? t.profile : t.profile}</p>
-                  <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">{profile.full_name || "FaceGrem User"}</h2>
-                  <p className="mt-2 text-sm text-slate-300">{profile.username ? `@${profile.username}` : "@yourusername"}</p>
-                  <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">{profile.bio || "No bio yet."}</p>
+                  <p className="text-sm font-semibold text-blue-600">{isOwnProfile ? t.profile : t.profile}</p>
+                  <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#050505] sm:text-4xl">{profile.full_name || "FaceGrem User"}</h2>
+                  <p className="mt-2 text-sm text-slate-600">{profile.username ? `@${profile.username}` : "@yourusername"}</p>
+                  <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600">{profile.bio || "No bio yet."}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4"><p className="text-xs text-slate-400">{"Followers"}</p><p className="mt-2 text-2xl font-bold text-white">{followersCount}</p></div>
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4"><p className="text-xs text-slate-400">{"Following"}</p><p className="mt-2 text-2xl font-bold text-white">{followingCount}</p></div>
-                <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4"><p className="text-xs text-slate-400">{t.posts}</p><p className="mt-2 text-2xl font-bold text-white">{posts.length}</p></div>
+                <div className="rounded-2xl border border-white/[0.05] bg-white p-4"><p className="text-xs text-slate-500">{"Followers"}</p><p className="mt-2 text-2xl font-bold text-[#050505]">{followersCount}</p></div>
+                <div className="rounded-2xl border border-white/[0.05] bg-white p-4"><p className="text-xs text-slate-500">{"Following"}</p><p className="mt-2 text-2xl font-bold text-[#050505]">{followingCount}</p></div>
+                <div className="rounded-2xl border border-white/[0.05] bg-white p-4"><p className="text-xs text-slate-500">{t.posts}</p><p className="mt-2 text-2xl font-bold text-[#050505]">{posts.length}</p></div>
               </div>
             </div>
           </div>
@@ -643,24 +637,24 @@ function ProfilePageContent() {
               <div className="border-b border-white/[0.05] px-4 py-4 sm:px-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold tracking-[0.01em] text-cyan-100/90">{t.profile}</p>
-                    <p className="mt-1 text-xs text-slate-400/90">{t.profileTagline}</p>
+                    <p className="text-sm font-semibold tracking-[0.01em] text-blue-700/90">{t.profile}</p>
+                    <p className="mt-1 text-xs text-slate-500/90">{t.profileTagline}</p>
                   </div>
 
-                  <span className="rounded-full border border-cyan-300/10 bg-cyan-400/[0.08] px-3 py-1.5 text-xs text-cyan-100">{t.settings}</span>
+                  <span className="rounded-full border border-cyan-300/10 bg-cyan-400/[0.08] px-3 py-1.5 text-xs text-blue-700">{t.settings}</span>
                 </div>
               </div>
 
               <div className="p-4 sm:p-6">
                 <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
                   <div className="space-y-4">
-                    <div className="overflow-hidden rounded-[28px] border border-white/[0.05] bg-white/[0.02] p-4">
+                    <div className="overflow-hidden rounded-[28px] border border-white/[0.05] bg-white p-4">
                       <img src={currentAvatar} alt={profile.full_name || "FaceGrem User"} className="h-44 w-full rounded-[24px] object-cover" />
                     </div>
 
-                    <div className="rounded-[24px] border border-white/[0.05] bg-white/[0.02] p-4">
-                      <label className="text-sm font-medium text-white">{t.photo}</label>
-                      <input type="file" accept="image/*" onChange={handleAvatarFileChange} className="mt-3 block w-full rounded-2xl text-sm text-white file:mr-4 file:rounded-xl file:border file:border-white/[0.06] file:bg-white/[0.04] file:px-4 file:py-2.5 file:text-slate-200" />
+                    <div className="rounded-[24px] border border-white/[0.05] bg-white p-4">
+                      <label className="text-sm font-medium text-slate-900">{t.photo}</label>
+                      <input type="file" accept="image/*" onChange={handleAvatarFileChange} className="mt-3 block w-full rounded-2xl text-sm text-[#050505] file:mr-4 file:rounded-xl file:border file:border-slate-200 file:bg-white/[0.04] file:px-4 file:py-2.5 file:text-slate-700" />
                       {selectedAvatarPreview && <p className="mt-3 text-xs text-cyan-300">"New avatar selected. Save profile to upload it."</p>}
                     </div>
                   </div>
@@ -668,22 +662,22 @@ function ProfilePageContent() {
                   <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="text-sm text-slate-300">{"Full name"}</label>
-                        <input type="text" value={profile.full_name} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} placeholder={"Enter your full name"} className="mt-2 w-full rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-white placeholder:text-slate-400/90 outline-none transition focus:border-cyan-300/20" />
+                        <label className="text-sm text-slate-600">{"Full name"}</label>
+                        <input type="text" value={profile.full_name} onChange={(e) => setProfile({ ...profile, full_name: e.target.value })} placeholder={"Enter your full name"} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-[#050505] placeholder:text-slate-500/90 outline-none transition focus:border-cyan-300/20" />
                       </div>
                       <div>
-                        <label className="text-sm text-slate-300">{"Username"}</label>
-                        <input type="text" value={profile.username} onChange={(e) => setProfile({ ...profile, username: e.target.value })} placeholder={"yourusername"} className="mt-2 w-full rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-white placeholder:text-slate-400/90 outline-none transition focus:border-cyan-300/20" />
+                        <label className="text-sm text-slate-600">{"Username"}</label>
+                        <input type="text" value={profile.username} onChange={(e) => setProfile({ ...profile, username: e.target.value })} placeholder={"yourusername"} className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-[#050505] placeholder:text-slate-500/90 outline-none transition focus:border-cyan-300/20" />
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-sm text-slate-300">{"Bio"}</label>
-                      <textarea value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} rows={6} placeholder="Tell FaceGrem who you are..." className="mt-2 w-full rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-white placeholder:text-slate-400/90 outline-none transition focus:border-cyan-300/20" />
+                      <label className="text-sm text-slate-600">{"Bio"}</label>
+                      <textarea value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} rows={6} placeholder="Tell FaceGrem who you are..." className="mt-2 w-full rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-[#050505] placeholder:text-slate-500/90 outline-none transition focus:border-cyan-300/20" />
                     </div>
 
                     <div className="flex justify-end">
-                      <button onClick={handleSave} disabled={saving || avatarUploading} className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-6 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/[0.14] disabled:opacity-70">
+                      <button onClick={handleSave} disabled={saving || avatarUploading} className="rounded-2xl border border-cyan-300/10 bg-blue-50 px-6 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:opacity-70">
                         {avatarUploading ? t.uploading : saving ? t.sending : "Save profile"}
                       </button>
                     </div>
@@ -692,19 +686,19 @@ function ProfilePageContent() {
               </div>
             </div>
           ) : (
-            <div className="rounded-[28px] border border-white/[0.06] bg-white/[0.028] p-6 backdrop-blur-[28px] shadow-[0_18px_50px_rgba(2,8,23,0.18)]">
+            <div className="rounded-[28px] border border-slate-200 bg-white p-6 backdrop-blur-[28px] shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-cyan-200">{"About"}</p>
-                  <p className="mt-2 text-sm leading-7 text-slate-300">{profile.bio || "No bio yet."}</p>
+                  <p className="text-sm font-semibold text-blue-600">{"About"}</p>
+                  <p className="mt-2 text-sm leading-7 text-slate-600">{profile.bio || "No bio yet."}</p>
                 </div>
 
                 <div className="flex gap-3">
-                  <button onClick={handleToggleFollow} disabled={followLoading} className="rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-5 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/[0.14] disabled:opacity-70">
+                  <button onClick={handleToggleFollow} disabled={followLoading} className="rounded-2xl border border-cyan-300/10 bg-blue-50 px-5 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:opacity-70">
                     {followLoading ? "Please wait..." : existingFollow ? "Unfollow" : "Follow"}
                   </button>
 
-                  <Link href={`/messages?user=${profile.id}`} className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-5 py-3 text-sm font-medium text-cyan-100 transition hover:bg-white/[0.045]">
+                  <Link href={`/messages?user=${profile.id}`} className="rounded-2xl border border-slate-200 bg-white/[0.025] px-5 py-3 text-sm font-medium text-blue-700 transition hover:bg-white/[0.045]">
                     {t.message}
                   </Link>
                 </div>
@@ -712,20 +706,20 @@ function ProfilePageContent() {
             </div>
           )}
 
-          <div className="rounded-[28px] border border-white/[0.06] bg-white/[0.028] p-5 backdrop-blur-[28px] shadow-[0_18px_50px_rgba(2,8,23,0.18)]">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 backdrop-blur-[28px] shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">{t.posts}</p>
-                <h3 className="mt-1 text-2xl font-bold tracking-tight text-white">{isOwnProfile ? t.posts : `${profile.full_name || "User"} ${t.posts}`}</h3>
+                <p className="text-sm font-semibold text-blue-600">{t.posts}</p>
+                <h3 className="mt-1 text-2xl font-bold tracking-tight text-[#050505]">{isOwnProfile ? t.posts : `${profile.full_name || "User"} ${t.posts}`}</h3>
               </div>
-              <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs text-slate-300">{filteredPosts.length} {"visible"}</span>
+              <span className="rounded-full border border-slate-200 bg-white/[0.025] px-3 py-1.5 text-xs text-slate-600">{filteredPosts.length} {"visible"}</span>
             </div>
           </div>
 
           {filteredPosts.length === 0 ? (
-            <div className="rounded-[30px] border border-white/[0.06] bg-white/[0.028] p-8 text-center backdrop-blur-[28px] shadow-[0_18px_50px_rgba(2,8,23,0.18)]">
-              <p className="text-lg font-medium text-white">{isOwnProfile ? "You have not posted anything yet." : "This user has not posted anything yet."}</p>
-              <p className="mt-2 text-sm text-slate-400">{"Posts from this profile will appear here."}</p>
+            <div className="rounded-[30px] border border-slate-200 bg-white p-8 text-center backdrop-blur-[28px] shadow-sm">
+              <p className="text-lg font-medium text-slate-900">{isOwnProfile ? "You have not posted anything yet." : "This user has not posted anything yet."}</p>
+              <p className="mt-2 text-sm text-slate-500">{"Posts from this profile will appear here."}</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -747,15 +741,15 @@ function ProfilePageContent() {
 
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="truncate font-semibold text-white">{profile.full_name || "FaceGrem User"}</p>
-                              {profile.username && <span className="truncate text-sm text-slate-400">@{profile.username}</span>}
+                              <p className="truncate font-semibold text-slate-900">{profile.full_name || "FaceGrem User"}</p>
+                              {profile.username && <span className="truncate text-sm text-slate-500">@{profile.username}</span>}
                               <span className="hidden h-1 w-1 rounded-full bg-slate-500 sm:block" />
-                              <span className="text-xs text-slate-400">{formatTime(post.created_at)}</span>
+                              <span className="text-xs text-slate-500">{formatTime(post.created_at)}</span>
                             </div>
 
                             <div className="mt-1 flex items-center gap-2">
-                              <span className="rounded-full border border-white/[0.06] bg-white/[0.025] px-2.5 py-1 text-[11px] text-slate-300">{t.public}</span>
-                              {post.video_url && <span className="rounded-full border border-cyan-300/10 bg-cyan-400/[0.08] px-2.5 py-1 text-[11px] text-cyan-100">{t.video}</span>}
+                              <span className="rounded-full border border-slate-200 bg-white/[0.025] px-2.5 py-1 text-[11px] text-slate-600">{t.public}</span>
+                              {post.video_url && <span className="rounded-full border border-cyan-300/10 bg-cyan-400/[0.08] px-2.5 py-1 text-[11px] text-blue-700">{t.video}</span>}
                               {post.image_url && !post.video_url && <span className="rounded-full border border-fuchsia-300/10 bg-fuchsia-400/[0.08] px-2.5 py-1 text-[11px] text-fuchsia-100">{t.photo}</span>}
                             </div>
                           </div>
@@ -764,14 +758,14 @@ function ProfilePageContent() {
 
                       {post.content && (
                         <div className="mt-5">
-                          <p className="text-[15px] leading-8 text-slate-200/95">{post.content}</p>
+                          <p className="text-[15px] leading-8 text-slate-700/95">{post.content}</p>
 
                           <div className="mt-3 flex flex-wrap items-center gap-3">
-                            <button type="button" onClick={() => handleTogglePostTranslation(post.id, post.content)} disabled={translatingPosts[post.id]} className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/[0.045] disabled:opacity-70">
+                            <button type="button" onClick={() => handleTogglePostTranslation(post.id, post.content)} disabled={translatingPosts[post.id]} className="rounded-full border border-slate-200 bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-white/[0.045] disabled:opacity-70">
                               {translatingPosts[post.id] ? t.translating : translatedPosts[post.id] ? t.translateShowOriginal : `${t.translate} ${languageLabels[selectedLanguage]}`}
                             </button>
 
-                            {translatedPosts[post.id] && <span className="text-xs text-cyan-200/90">{t.translatedTo} {languageLabels[selectedLanguage]}</span>}
+                            {translatedPosts[post.id] && <span className="text-xs text-blue-600/90">{t.translatedTo} {languageLabels[selectedLanguage]}</span>}
                           </div>
 
                           {translatedPosts[post.id] && (
@@ -808,45 +802,45 @@ function ProfilePageContent() {
                         <div className="flex items-center gap-3 text-sm">
                           <div className="flex items-center gap-2 rounded-full border border-white/[0.05] bg-white/[0.022] px-3 py-1.5">
                             <span className="text-base">❤️</span>
-                            <span className="text-slate-200">{likesCount} {likesCount === 1 ? t.like : "likes"}</span>
+                            <span className="text-slate-700">{likesCount} {likesCount === 1 ? t.like : "likes"}</span>
                           </div>
 
-                          <div className="rounded-full border border-white/[0.05] bg-white/[0.022] px-3 py-1.5 text-slate-300">
+                          <div className="rounded-full border border-white/[0.05] bg-white/[0.022] px-3 py-1.5 text-slate-600">
                             {commentsCount} {commentsCount === 1 ? "comment" : "comments"}
                           </div>
                         </div>
 
-                        <Link href={`/post/${post.id}`} className="text-sm font-medium text-cyan-300 transition hover:text-cyan-200">{t.viewDiscussion}</Link>
+                        <Link href={`/post/${post.id}`} className="text-sm font-medium text-cyan-300 transition hover:text-blue-600">{t.viewDiscussion}</Link>
                       </div>
 
                       <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-300">{likesCount} {"likes"}</div>
-                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-300">{commentsCount} {"comments"}</div>
-                        <Link href={`/post/${post.id}`} className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-cyan-100 transition hover:bg-white/[0.045]">{t.open}</Link>
-                        <Link href={`/messages?user=${post.user_id}`} className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-300 transition hover:bg-white/[0.045]">{t.message}</Link>
+                        <div className="rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-600">{likesCount} {"likes"}</div>
+                        <div className="rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-600">{commentsCount} {"comments"}</div>
+                        <Link href={`/post/${post.id}`} className="rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-blue-700 transition hover:bg-white/[0.045]">{t.open}</Link>
+                        <Link href={`/messages?user=${post.user_id}`} className="rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-slate-600 transition hover:bg-white/[0.045]">{t.message}</Link>
                       </div>
 
                       {latestComments.length > 0 && (
                         <div className="mt-5 space-y-3 border-t border-white/[0.05] pt-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{"Recent comments"}</p>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{"Recent comments"}</p>
                           {latestComments.map((comment) => {
                             const commentAuthorAvatar = getAvatarUrl(comment.full_name || "FaceGrem User");
 
                             return (
-                              <div key={comment.id} className="flex items-start gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.02] px-3 py-3 backdrop-blur-[20px]">
+                              <div key={comment.id} className="flex items-start gap-3 rounded-2xl border border-white/[0.05] bg-white px-3 py-3 backdrop-blur-[20px]">
                                 <img src={commentAuthorAvatar} alt={comment.full_name || "FaceGrem User"} className="h-9 w-9 rounded-xl object-cover ring-1 ring-white/[0.08]" />
                                 <div className="min-w-0 flex-1">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <p className="text-sm font-medium text-white">{comment.full_name || "FaceGrem User"}</p>
-                                    <span className="text-[11px] text-slate-400">{formatTime(comment.created_at)}</span>
+                                    <p className="text-sm font-medium text-slate-900">{comment.full_name || "FaceGrem User"}</p>
+                                    <span className="text-[11px] text-slate-500">{formatTime(comment.created_at)}</span>
                                   </div>
-                                  <p className="mt-1 text-sm leading-6 text-slate-300/95">{comment.content}</p>
+                                  <p className="mt-1 text-sm leading-6 text-slate-600/95">{comment.content}</p>
 
                                   <div className="mt-3 flex flex-wrap items-center gap-3">
-                                    <button type="button" onClick={() => handleToggleCommentTranslation(comment.id, comment.content)} disabled={translatingComments[comment.id]} className="rounded-full border border-white/[0.06] bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-white/[0.045] disabled:opacity-70">
+                                    <button type="button" onClick={() => handleToggleCommentTranslation(comment.id, comment.content)} disabled={translatingComments[comment.id]} className="rounded-full border border-slate-200 bg-white/[0.025] px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-white/[0.045] disabled:opacity-70">
                                       {translatingComments[comment.id] ? t.translating : translatedComments[comment.id] ? t.translateShowOriginal : `${t.translate} ${languageLabels[selectedLanguage]}`}
                                     </button>
-                                    {translatedComments[comment.id] && <span className="text-xs text-cyan-200/90">{t.translatedTo} {languageLabels[selectedLanguage]}</span>}
+                                    {translatedComments[comment.id] && <span className="text-xs text-blue-600/90">{t.translatedTo} {languageLabels[selectedLanguage]}</span>}
                                   </div>
 
                                   {translatedComments[comment.id] && (
@@ -869,65 +863,65 @@ function ProfilePageContent() {
         </section>
 
         <aside className="space-y-5 xl:space-y-5">
-          <div className="rounded-[28px] border border-white/[0.06] bg-white/[0.028] p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-[28px]">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-[28px]">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">{t.profile}</p>
-                <p className="mt-1 text-xs text-slate-400">{"Quick view of this account"}</p>
+                <p className="text-sm font-semibold text-blue-600">{t.profile}</p>
+                <p className="mt-1 text-xs text-slate-500">{"Quick view of this account"}</p>
               </div>
             </div>
 
             <div className="mt-4 space-y-4">
-              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
-                <p className="text-xs text-slate-400">{"Full name"}</p>
-                <p className="mt-2 font-medium text-white">{profile.full_name || "FaceGrem User"}</p>
+              <div className="rounded-2xl border border-white/[0.05] bg-white p-4">
+                <p className="text-xs text-slate-500">{"Full name"}</p>
+                <p className="mt-2 font-medium text-slate-900">{profile.full_name || "FaceGrem User"}</p>
               </div>
-              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
-                <p className="text-xs text-slate-400">{"Username"}</p>
-                <p className="mt-2 font-medium text-white">{profile.username ? `@${profile.username}` : "Not set"}</p>
+              <div className="rounded-2xl border border-white/[0.05] bg-white p-4">
+                <p className="text-xs text-slate-500">{"Username"}</p>
+                <p className="mt-2 font-medium text-slate-900">{profile.username ? `@${profile.username}` : "Not set"}</p>
               </div>
-              <div className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4">
-                <p className="text-xs text-slate-400">{"Bio"}</p>
-                <p className="mt-2 text-sm leading-7 text-slate-300">{profile.bio || "No bio yet."}</p>
+              <div className="rounded-2xl border border-white/[0.05] bg-white p-4">
+                <p className="text-xs text-slate-500">{"Bio"}</p>
+                <p className="mt-2 text-sm leading-7 text-slate-600">{profile.bio || "No bio yet."}</p>
               </div>
             </div>
           </div>
 
           {!isOwnProfile && (
-            <div className="rounded-[28px] border border-white/[0.06] bg-white/[0.028] p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-[28px]">
+            <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-[28px]">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-cyan-200">{"Actions"}</p>
-                  <p className="mt-1 text-xs text-slate-400">{"Connect with this person"}</p>
+                  <p className="text-sm font-semibold text-blue-600">{"Actions"}</p>
+                  <p className="mt-1 text-xs text-slate-500">{"Connect with this person"}</p>
                 </div>
               </div>
 
               <div className="mt-4 space-y-3">
-                <button onClick={handleToggleFollow} disabled={followLoading} className="w-full rounded-2xl border border-cyan-300/10 bg-cyan-400/[0.10] px-4 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/[0.14] disabled:opacity-70">
+                <button onClick={handleToggleFollow} disabled={followLoading} className="w-full rounded-2xl border border-cyan-300/10 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:opacity-70">
                   {followLoading ? "Please wait..." : existingFollow ? "Unfollow" : "Follow"}
                 </button>
-                <Link href={`/messages?user=${profile.id}`} className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-cyan-100 transition hover:bg-white/[0.045]">{t.send}</Link>
+                <Link href={`/messages?user=${profile.id}`} className="block rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-center text-sm font-medium text-blue-700 transition hover:bg-white/[0.045]">{t.send}</Link>
               </div>
             </div>
           )}
 
-          <div className="rounded-[28px] border border-white/[0.06] bg-white/[0.028] p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-[28px]">
+          <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-[28px]">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-cyan-200">{"Quick links"}</p>
-                <p className="mt-1 text-xs text-slate-400">{t.brandTagline}</p>
+                <p className="text-sm font-semibold text-blue-600">{"Quick links"}</p>
+                <p className="mt-1 text-xs text-slate-500">{t.brandTagline}</p>
               </div>
             </div>
 
             <div className="mt-4 space-y-3">
-              <Link href="/feed" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.homeFeed}</Link>
-              <Link href="/videos" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.videos}</Link>
-              <Link href="/communities" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.communities}</Link>
-              <Link href="/messages" className="block rounded-2xl border border-white/[0.06] bg-white/[0.025] px-4 py-3 text-sm text-white transition hover:bg-white/[0.045]">{t.messages}</Link>
+              <Link href="/feed" className="block rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-sm text-slate-700 transition hover:bg-white/[0.045]">{t.homeFeed}</Link>
+              <Link href="/videos" className="block rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-sm text-slate-700 transition hover:bg-white/[0.045]">{t.videos}</Link>
+              <Link href="/communities" className="block rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-sm text-slate-700 transition hover:bg-white/[0.045]">{t.communities}</Link>
+              <Link href="/messages" className="block rounded-2xl border border-slate-200 bg-white/[0.025] px-4 py-3 text-sm text-slate-700 transition hover:bg-white/[0.045]">{t.messages}</Link>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="block w-full rounded-2xl border border-red-300/10 bg-red-400/[0.07] px-4 py-3 text-left text-sm text-red-100 transition hover:bg-red-400/[0.11]"
+                className="block w-full rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left text-sm text-red-100 transition hover:bg-red-50"
               >
                 ↩️ {t.logout}
               </button>
@@ -941,7 +935,7 @@ function ProfilePageContent() {
 
 export default function ProfilePage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">Loading FaceGrem profile...</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] text-[#050505]">Loading FaceGrem profile...</div>}>
       <ProfilePageContent />
     </Suspense>
   );
