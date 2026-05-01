@@ -20,6 +20,10 @@ const securityHeaders = [
     value:
       "accelerometer=(), autoplay=(self), camera=(self), microphone=(self), geolocation=(), gyroscope=(), magnetometer=(), payment=(), usb=()",
   },
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=31536000; includeSubDomains",
+  },
 ];
 
 const nextConfig = {
