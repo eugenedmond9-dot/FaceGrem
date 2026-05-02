@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import MobileBottomNav from "../../components/MobileBottomNav";
 import FaceGremLogo from "../../components/FaceGremLogo";
 import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 type ProfileRecord = {
   id: string;
@@ -150,6 +151,7 @@ export default function FeedPage() {
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
 
   const [activeRightPanel, setActiveRightPanel] = useState<
@@ -323,6 +325,20 @@ export default function FeedPage() {
   const unreadNotificationsCount = notifications.filter(
     (notification) => !notification.is_read
   ).length;
+
+  const handleLogout = async () => {
+    setSigningOut(true);
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      setSigningOut(false);
+      return;
+    }
+
+    router.push("/");
+  };
 
   const suggestedPeople = useMemo(() => {
     return profiles
@@ -1092,102 +1108,20 @@ export default function FeedPage() {
         </div>
       </section>
 
-      {isMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm"
-            onClick={() => setIsMenuOpen(false)}
-          />
-          <aside className="fixed right-0 top-0 z-[70] flex h-full w-[310px] flex-col border-r border-slate-200 bg-white p-5 backdrop-blur-2xl shadow-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center font-bold text-white h-11 w-11 rounded-2xl bg-blue-600">
-                  F
-                </div>
-                <div>
-                  <h2 className="text-lg font-black text-slate-950">FaceGrem</h2>
-                  <p className="text-xs text-slate-500">Navigation</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
-                aria-label="Close menu"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-6 space-y-2">
-              <Link
-                href="/feed"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                🏠 Home Feed
-              </Link>
-              <Link
-                href="/videos"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                🎬 Videos
-              </Link>
-              <Link
-                href="/communities"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                👥 Communities
-              </Link>
-              <Link
-                href="/messages"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                💬 Messages
-              </Link>
-              <Link
-                href="/saved"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                🔖 Saved
-              </Link>
-              <Link
-                href="/profile"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                👤 Profile
-              </Link>
-            </div>
-
-            <div className="pt-5 mt-8 border-t border-slate-200">
-              <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                More
-              </p>
-
-              <div className="space-y-2">
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
-                  ⚙️ Settings
-                </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
-                  🌐 Language
-                </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
-                  🔒 Privacy
-                </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
-                  ❓ Help
-                </button>
-              </div>
-            </div>
-          </aside>
-        </>
+      {signingOut && (
+        <div className="fixed bottom-4 left-1/2 z-[120] -translate-x-1/2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-2xl">
+          Signing out...
+        </div>
       )}
+
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        userName={userName}
+        userAvatar={userAvatar}
+        onLogout={handleLogout}
+        notificationCount={unreadNotificationsCount}
+      />
 
       <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
         <aside className="hidden xl:block">
