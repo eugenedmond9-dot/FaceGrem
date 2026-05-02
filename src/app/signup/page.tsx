@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import AuthBackground from "../../components/AuthBackground";
 import LanguageMenu from "../../components/LanguageMenu";
 import { useLanguage } from "../../components/LanguageProvider";
 import { TranslationLanguage } from "../../lib/language";
@@ -358,256 +357,344 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#020817] text-white">
-      
-      
+    <div className="relative min-h-screen overflow-hidden bg-[#f0f2f5] text-[#050505]">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full bg-blue-200/45 blur-3xl" />
+        <div className="absolute -right-24 top-24 h-[30rem] w-[30rem] rounded-full bg-sky-200/45 blur-3xl" />
+        <div className="absolute bottom-[-10rem] left-1/3 h-[28rem] w-[28rem] rounded-full bg-indigo-100/55 blur-3xl" />
+      </div>
+
       <FaceGremHamburgerMenu
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onLogout={undefined}
       />
 
-<button
-        type="button"
-        onClick={() => setIsMenuOpen(true)}
-        className="fixed right-4 top-4 z-[75] flex h-11 w-11 items-center justify-center rounded-full bg-white text-2xl text-slate-800 shadow-lg ring-1 ring-black/10 transition hover:bg-slate-100"
-        aria-label="Open menu"
-      >
-        ≡
-      </button>
+      <header className="relative z-20 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen(true)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-700 shadow-sm transition hover:bg-slate-200"
+              aria-label="Open menu"
+            >
+              ≡
+            </button>
 
-<AuthBackground />
-
-      <header className="relative z-20 border-b border-white/[0.06] bg-[#020817]/55 backdrop-blur-3xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <Link href="/" className="flex items-center gap-3">
             <FaceGremLogo
-              href=""
+              href="/"
               showWordmark={false}
-              markClassName="h-10 w-10 rounded-2xl ring-0 shadow-sm"
+              markClassName="h-11 w-11 rounded-2xl ring-0 shadow-sm"
             />
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-white">{t.brandName}</h1>
-              <p className="text-xs text-slate-400">{t.pageTitle}</p>
-            </div>
-          </Link>
 
-          <LanguageMenu compact />
+            <div>
+              <h1 className="text-xl font-black tracking-tight text-slate-950">{t.brandName}</h1>
+              <p className="text-xs font-medium text-slate-500">{t.pageTitle}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <LanguageMenu compact />
+            <Link
+              href="/"
+              className="hidden rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 sm:inline-flex"
+            >
+              {t.alreadyHaveAccount}
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="relative z-10 flex-1 px-4 py-8 sm:px-6">
-        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[minmax(0,0.9fr)_minmax(420px,520px)] lg:items-start">
-          <section className="hidden pt-10 lg:block">
-            <Link
-              href="/"
-              className="mb-8 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-3xl text-slate-200 transition hover:bg-white/[0.06]"
-              aria-label="Back"
-            >
-              {t.back}
-            </Link>
+      <main className="relative z-10 mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:items-start lg:py-12">
+        <section className="space-y-6">
+          <Link
+            href="/"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-3xl text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:bg-slate-100"
+            aria-label="Back"
+          >
+            {t.back}
+          </Link>
 
-            <p className="text-sm font-semibold text-cyan-200">{t.brandName}</p>
-            <h2 className="mt-3 max-w-xl text-5xl font-bold tracking-tight text-white">
-              {t.pageTitle}
-            </h2>
-            <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
-              {t.pageSubtitle}
-            </p>
+          <div className="overflow-hidden rounded-[36px] bg-white shadow-sm ring-1 ring-slate-200">
+            <div className="bg-gradient-to-br from-blue-600 via-blue-500 to-sky-400 p-7 text-white sm:p-9">
+              <p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-50">
+                FaceGrem account
+              </p>
+              <h2 className="mt-4 max-w-3xl text-5xl font-black tracking-tight sm:text-6xl">
+                {t.pageTitle}
+              </h2>
+              <p className="mt-5 max-w-2xl text-base leading-8 text-blue-50">
+                {t.pageSubtitle}
+              </p>
 
-            <div className="mt-8 grid max-w-xl gap-3 sm:grid-cols-3">
+              <div className="mt-7 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-[24px] bg-white/15 p-4 ring-1 ring-white/15 backdrop-blur">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-100">
+                    Connect
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-white">
+                    Find friends and creators.
+                  </p>
+                </div>
+                <div className="rounded-[24px] bg-white/15 p-4 ring-1 ring-white/15 backdrop-blur">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-100">
+                    Share
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-white">
+                    Post stories, videos, and updates.
+                  </p>
+                </div>
+                <div className="rounded-[24px] bg-white/15 p-4 ring-1 ring-white/15 backdrop-blur">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-blue-100">
+                    Grow
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-white">
+                    Build your groups and community.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 p-5 sm:grid-cols-3 sm:p-6">
               <Link
                 href="/terms"
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-sm text-slate-200 transition hover:bg-white/[0.06]"
+                className="rounded-[24px] bg-slate-50 p-5 text-sm font-bold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
               >
+                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
+                  📄
+                </span>
                 {t.terms}
               </Link>
               <Link
                 href="/privacy-centre"
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-sm text-slate-200 transition hover:bg-white/[0.06]"
+                className="rounded-[24px] bg-slate-50 p-5 text-sm font-bold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
               >
+                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
+                  🔒
+                </span>
                 {t.privacy}
               </Link>
               <Link
                 href="/cookies"
-                className="rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 text-sm text-slate-200 transition hover:bg-white/[0.06]"
+                className="rounded-[24px] bg-slate-50 p-5 text-sm font-bold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
               >
+                <span className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
+                  🍪
+                </span>
                 {t.cookies}
               </Link>
             </div>
-          </section>
+          </div>
 
-          <section>
-            <div className="mb-5 lg:hidden">
-              <Link
+          <div className="grid gap-4 sm:grid-cols-2">
+            <article className="rounded-[30px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700">
+                ✓
+              </div>
+              <h3 className="mt-4 text-xl font-black text-slate-950">Security-first account</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                Your account is connected to Supabase Auth, profile records, RLS policies, and
+                protected storage rules.
+              </p>
+            </article>
+
+            <article className="rounded-[30px] bg-white p-6 shadow-sm ring-1 ring-slate-200">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-700">
+                ✦
+              </div>
+              <h3 className="mt-4 text-xl font-black text-slate-950">Ready for your world</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                Once you join, you can access the feed, messages, groups, communities, videos,
+                settings, privacy, and cookies controls.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section className="rounded-[36px] bg-white p-5 shadow-xl shadow-slate-200/70 ring-1 ring-slate-200 sm:p-6">
+          <div className="rounded-[28px] bg-slate-950 p-6 text-white">
+            <div className="flex items-center gap-3">
+              <FaceGremLogo
                 href="/"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.035] text-3xl text-slate-200 transition hover:bg-white/[0.06]"
-                aria-label="Back"
-              >
-                {t.back}
-              </Link>
+                showWordmark={false}
+                markClassName="h-12 w-12 rounded-2xl ring-0 shadow-sm"
+              />
+              <div>
+                <p className="text-sm font-semibold text-blue-200">Create your FaceGrem ID</p>
+                <h3 className="text-2xl font-black tracking-tight">{t.submit}</h3>
+              </div>
+            </div>
+            <p className="mt-4 text-sm leading-7 text-slate-300">
+              Fill in your details below. Use an email address you can access so your account can
+              stay secure.
+            </p>
+          </div>
+
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleSignup();
+            }}
+            className="mt-6 space-y-5"
+          >
+            <div>
+              <label className="mb-3 block text-sm font-black text-slate-950">
+                {t.name}
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(event) => setFirstName(event.target.value)}
+                  placeholder={t.firstName}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-300 focus:bg-white"
+                />
+                <input
+                  type="text"
+                  value={surname}
+                  onChange={(event) => setSurname(event.target.value)}
+                  placeholder={t.surname}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-300 focus:bg-white"
+                />
+              </div>
             </div>
 
-            <div className="mb-6 lg:hidden">
-              <h2 className="text-3xl font-bold tracking-tight text-white">
-                {t.pageTitle}
-              </h2>
-              <p className="mt-2 text-sm leading-7 text-slate-300">
-                {t.pageSubtitle}
+            <div>
+              <label className="mb-3 block text-sm font-black text-slate-950">
+                {t.dateOfBirth}
+              </label>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <select
+                  value={birthDay}
+                  onChange={(event) => setBirthDay(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:bg-white"
+                >
+                  <option value="">{t.day}</option>
+                  {days.map((day) => (
+                    <option key={day} value={day}>
+                      {day}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={birthMonth}
+                  onChange={(event) => setBirthMonth(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:bg-white"
+                >
+                  <option value="">{t.month}</option>
+                  {t.months.map((month) => (
+                    <option key={month} value={month}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={birthYear}
+                  onChange={(event) => setBirthYear(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:bg-white"
+                >
+                  <option value="">{t.year}</option>
+                  {years.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-3 block text-sm font-black text-slate-950">
+                {t.gender}
+              </label>
+              <select
+                value={gender}
+                onChange={(event) => setGender(event.target.value)}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:bg-white"
+              >
+                <option value="">{t.selectGender}</option>
+                <option value="Female">{t.female}</option>
+                <option value="Male">{t.male}</option>
+                <option value="Custom">{t.custom}</option>
+                <option value="Prefer not to say">{t.preferNotToSay}</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="mb-3 block text-sm font-black text-slate-950">
+                {t.emailOrPhone}
+              </label>
+              <input
+                type="email"
+                value={emailOrPhone}
+                onChange={(event) => setEmailOrPhone(event.target.value)}
+                placeholder={t.emailOrPhonePlaceholder}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-300 focus:bg-white"
+              />
+              <p className="mt-3 rounded-2xl bg-blue-50 px-4 py-3 text-xs leading-6 text-blue-700">
+                {t.contactInfoHelp}
               </p>
             </div>
 
-            <div className="rounded-[30px] border border-white/[0.07] bg-white/[0.045] p-5 shadow-[0_25px_90px_rgba(2,8,23,0.32)] backdrop-blur-2xl sm:p-6">
-              <div className="space-y-5">
-                <div>
-                  <label className="mb-3 block text-sm font-semibold text-cyan-100">
-                    {t.name}
-                  </label>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <input
-                      type="text"
-                      value={firstName}
-                      onChange={(event) => setFirstName(event.target.value)}
-                      placeholder={t.firstName}
-                      className="w-full rounded-2xl border border-white/[0.07] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-300/35"
-                    />
-                    <input
-                      type="text"
-                      value={surname}
-                      onChange={(event) => setSurname(event.target.value)}
-                      placeholder={t.surname}
-                      className="w-full rounded-2xl border border-white/[0.07] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-300/35"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-3 block text-sm font-semibold text-cyan-100">
-                    {t.dateOfBirth}
-                  </label>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <select
-                      value={birthDay}
-                      onChange={(event) => setBirthDay(event.target.value)}
-                      className="w-full rounded-2xl border border-white/[0.07] bg-[#07111f] px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/35"
-                    >
-                      <option value="">{t.day}</option>
-                      {days.map((day) => (
-                        <option key={day} value={day}>
-                          {day}
-                        </option>
-                      ))}
-                    </select>
-
-                    <select
-                      value={birthMonth}
-                      onChange={(event) => setBirthMonth(event.target.value)}
-                      className="w-full rounded-2xl border border-white/[0.07] bg-[#07111f] px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/35"
-                    >
-                      <option value="">{t.month}</option>
-                      {t.months.map((month) => (
-                        <option key={month} value={month}>
-                          {month}
-                        </option>
-                      ))}
-                    </select>
-
-                    <select
-                      value={birthYear}
-                      onChange={(event) => setBirthYear(event.target.value)}
-                      className="w-full rounded-2xl border border-white/[0.07] bg-[#07111f] px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/35"
-                    >
-                      <option value="">{t.year}</option>
-                      {years.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="mb-3 block text-sm font-semibold text-cyan-100">
-                    {t.gender}
-                  </label>
-                  <select
-                    value={gender}
-                    onChange={(event) => setGender(event.target.value)}
-                    className="w-full rounded-2xl border border-white/[0.07] bg-[#07111f] px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-300/35"
-                  >
-                    <option value="">{t.selectGender}</option>
-                    <option value="Female">{t.female}</option>
-                    <option value="Male">{t.male}</option>
-                    <option value="Custom">{t.custom}</option>
-                    <option value="Prefer not to say">{t.preferNotToSay}</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-3 block text-sm font-semibold text-cyan-100">
-                    {t.emailOrPhone}
-                  </label>
-                  <input
-                    type="email"
-                    value={emailOrPhone}
-                    onChange={(event) => setEmailOrPhone(event.target.value)}
-                    placeholder={t.emailOrPhonePlaceholder}
-                    className="w-full rounded-2xl border border-white/[0.07] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-300/35"
-                  />
-                  <p className="mt-3 text-xs leading-6 text-slate-400">
-                    {t.contactInfoHelp}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="mb-3 block text-sm font-semibold text-cyan-100">
-                    {t.password}
-                  </label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder={t.passwordPlaceholder}
-                    className="w-full rounded-2xl border border-white/[0.07] bg-white/[0.04] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-400 focus:border-cyan-300/35"
-                  />
-                </div>
-
-                <div className="space-y-2 rounded-2xl border border-white/[0.07] bg-white/[0.035] p-4 text-xs leading-6 text-slate-300">
-                  <p>{t.termsTextOne}</p>
-                  <p>{t.termsTextTwo}</p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleSignup}
-                  disabled={loadingSignup}
-                  className="w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-blue-600 py-3.5 text-base font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 disabled:opacity-70"
-                >
-                  {loadingSignup ? t.creatingAccount : t.submit}
-                </button>
-
-                <Link
-                  href="/"
-                  className="block w-full rounded-2xl border border-white/[0.07] bg-white/[0.035] py-3.5 text-center text-base font-semibold text-slate-200 transition hover:bg-white/[0.06]"
-                >
-                  {t.alreadyHaveAccount}
-                </Link>
+            <div>
+              <label className="mb-3 block text-sm font-black text-slate-950">
+                {t.password}
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder={t.passwordPlaceholder}
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-300 focus:bg-white"
+              />
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <span className="rounded-full bg-slate-100 px-3 py-2 text-center text-xs font-bold text-slate-600">
+                  6+ characters
+                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-2 text-center text-xs font-bold text-slate-600">
+                  Private to you
+                </span>
+                <span className="rounded-full bg-slate-100 px-3 py-2 text-center text-xs font-bold text-slate-600">
+                  Secure login
+                </span>
               </div>
             </div>
-          </section>
-        </div>
+
+            <div className="space-y-2 rounded-[24px] bg-slate-50 p-4 text-xs leading-6 text-slate-600 ring-1 ring-slate-200">
+              <p>{t.termsTextOne}</p>
+              <p>{t.termsTextTwo}</p>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loadingSignup}
+              className="w-full rounded-2xl bg-blue-600 py-3.5 text-base font-black text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {loadingSignup ? t.creatingAccount : t.submit}
+            </button>
+
+            <Link
+              href="/"
+              className="block w-full rounded-2xl border border-slate-200 bg-white py-3.5 text-center text-base font-bold text-slate-700 transition hover:bg-slate-100"
+            >
+              {t.alreadyHaveAccount}
+            </Link>
+          </form>
+        </section>
       </main>
 
-      <footer className="relative z-10 border-t border-white/[0.06] px-4 py-5 text-center text-xs text-slate-500">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-4">
-          <Link href="/terms" className="hover:text-slate-300">
+      <footer className="relative z-10 border-t border-slate-200 bg-white/90 px-4 py-5 text-center text-xs text-slate-500">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-4">
+          <Link href="/terms" className="font-semibold hover:text-blue-600">
             {t.terms}
           </Link>
-          <Link href="/privacy-centre" className="hover:text-slate-300">
+          <Link href="/privacy-centre" className="font-semibold hover:text-blue-600">
             {t.privacy}
           </Link>
-          <Link href="/cookies" className="hover:text-slate-300">
+          <Link href="/cookies" className="font-semibold hover:text-blue-600">
             {t.cookies}
           </Link>
         </div>

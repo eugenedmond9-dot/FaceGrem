@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-import { useLanguage } from "../../components/LanguageProvider";
-import LanguageMenu from "../../components/LanguageMenu";
-import NotificationDropdown from "../../components/NotificationDropdown";
+import MobileBottomNav from "../../components/MobileBottomNav";
 import FaceGremLogo from "../../components/FaceGremLogo";
 import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
 
@@ -51,27 +49,31 @@ type SavedPostRecord = {
   post_id: string;
 };
 
-type StoryRecord = {
-  id: string;
-  user_id: string;
-  image_url: string;
-  caption: string | null;
-  created_at: string;
-  expires_at: string;
-};
-
-type FollowRecord = {
-  id: string;
-  follower_id: string;
-  following_id: string;
-};
-
 type CommunityRecord = {
   id: string;
   creator_id: string;
   name: string;
   category: string | null;
   description: string | null;
+  created_at: string;
+};
+
+type CommunityMemberRecord = {
+  id: string;
+  community_id: string;
+  user_id: string;
+  created_at: string;
+};
+
+type VideoRecord = {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  video_url: string;
+  thumbnail_url: string | null;
+  views_count: number | null;
   created_at: string;
 };
 
@@ -87,435 +89,97 @@ type NotificationRecord = {
   created_at: string;
 };
 
-type VideoRecord = {
+type StoryRecord = {
   id: string;
   user_id: string;
+  image_url: string;
+  caption: string | null;
   created_at: string;
+  expires_at: string;
 };
 
-type IconProps = { className?: string };
+type FollowRecord = {
+  id: string;
+  follower_id: string;
+  following_id: string;
+};
 
-function HomeIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 10.75 12 4l9 6.75" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5.5 9.75V20h13V9.75" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 20v-5.5h5V20" />
-    </svg>
-  );
-}
+const quickActions = ["Photo", "Video", "Live", "Story"] as const;
+const feedTabs = ["For You", "Following", "Creators", "Videos", "Faith", "Business"] as const;
 
-function VideoIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <rect x="3" y="6" width="13" height="12" rx="3" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m16 10 5-3v10l-5-3" />
-    </svg>
-  );
-}
-
-function CommunitiesIcon({ className = "h-5 w-5" }: IconProps) {
-  return <CommunityCircleIcon className={className} />;
-}
-
-function GroupsIcon({ className = "h-5 w-5" }: IconProps) {
-  return <GroupPeopleIcon className={className} />;
-}
-
-function MessageIcon({ className = "h-5 w-5" }: IconProps) {
-  return <MessageBubblesIcon className={className} />;
-}
-
-function FriendsIcon({ className = "h-5 w-5" }: IconProps) {
-  return <FriendsFistIcon className={className} />;
-}
-
-function BookmarkIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 4.5h10a1.5 1.5 0 0 1 1.5 1.5V20l-6.5-4-6.5 4V6A1.5 1.5 0 0 1 7 4.5Z" />
-    </svg>
-  );
-}
-
-function SettingsIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19.4 15a1 1 0 0 0 .2 1.1l.05.06a1.25 1.25 0 0 1-1.77 1.77l-.06-.05a1 1 0 0 0-1.1-.2 1 1 0 0 0-.6.91V19a1.25 1.25 0 0 1-2.5 0v-.09a1 1 0 0 0-.67-.95 1 1 0 0 0-1.04.23l-.06.05a1.25 1.25 0 1 1-1.77-1.77l.05-.06a1 1 0 0 0 .2-1.1 1 1 0 0 0-.91-.6H5a1.25 1.25 0 0 1 0-2.5h.09a1 1 0 0 0 .95-.67 1 1 0 0 0-.23-1.04l-.05-.06a1.25 1.25 0 1 1 1.77-1.77l.06.05a1 1 0 0 0 1.1.2 1 1 0 0 0 .6-.91V5a1.25 1.25 0 0 1 2.5 0v.09a1 1 0 0 0 .67.95 1 1 0 0 0 1.04-.23l.06-.05a1.25 1.25 0 0 1 1.77 1.77l-.05.06a1 1 0 0 0-.2 1.1 1 1 0 0 0 .91.6H19a1.25 1.25 0 0 1 0 2.5h-.09a1 1 0 0 0-.95.67 1 1 0 0 0 .23 1.04l.05.06A1 1 0 0 0 19.4 15Z" />
-    </svg>
-  );
-}
-
-function LogoutIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M14 7V5.75A1.75 1.75 0 0 0 12.25 4H6.75A1.75 1.75 0 0 0 5 5.75v12.5C5 19.22 5.78 20 6.75 20h5.5A1.75 1.75 0 0 0 14 18.25V17" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10 12h10" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m17 8 4 4-4 4" />
-    </svg>
-  );
-}
-
-function SearchIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-      <circle cx="11" cy="11" r="6" />
-      <path strokeLinecap="round" d="m20 20-4.35-4.35" />
-    </svg>
-  );
-}
-
-function MenuIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-      <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
-    </svg>
-  );
-}
-
-function CloseIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
-      <path strokeLinecap="round" d="m6 6 12 12M18 6 6 18" />
-    </svg>
-  );
-}
-
-function PhotoIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <rect x="3" y="5" width="18" height="14" rx="3" />
-      <circle cx="9" cy="10" r="1.5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m21 15-4.2-4.2a1 1 0 0 0-1.4 0L9 17" />
-    </svg>
-  );
-}
-
-function VideoPlusIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <rect x="3" y="6" width="12" height="12" rx="3" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m15 10 5-3v10l-5-3" />
-      <path strokeLinecap="round" d="M9 9v6M6 12h6" />
-    </svg>
-  );
-}
-
-function SmileIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <circle cx="12" cy="12" r="8" />
-      <path strokeLinecap="round" d="M9 10h.01M15 10h.01" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8.5 14.5a4.5 4.5 0 0 0 7 0" />
-    </svg>
-  );
-}
-
-function HeartFilledIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <path d="M12 21s-7.2-4.74-9.5-8.38C.77 9.95 2.13 6 5.92 6c2.02 0 3.16 1.08 4.04 2.28C10.84 7.08 11.98 6 14 6c3.79 0 5.15 3.95 3.42 6.62C19.2 16.26 12 21 12 21Z" />
-    </svg>
-  );
-}
-
-function LikeIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M8 10v10H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h3Zm0 10h8.2a2 2 0 0 0 1.96-1.6l1.2-6A2 2 0 0 0 17.4 10H13l.6-3.1A2.5 2.5 0 0 0 11.14 4L8 10Z" />
-    </svg>
-  );
-}
-
-function CommentIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 18.5 3.5 20V6.75A2.75 2.75 0 0 1 6.25 4h11.5A2.75 2.75 0 0 1 20.5 6.75v7.5A2.75 2.75 0 0 1 17.75 17H9.5L7 18.5Z" />
-    </svg>
-  );
-}
-
-function SendIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 3 10 14" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 3 14 21l-4-7-7-4L21 3Z" />
-    </svg>
-  );
-}
-
-function BellIcon({ className = "h-5 w-5" }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.5h-7.5A2.25 2.25 0 0 1 6 15.25v-3.4a6 6 0 0 1 12 0v3.4a2.25 2.25 0 0 1-2.25 2.25Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M10 20a2.25 2.25 0 0 0 4 0" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M18.75 9.7V8.9A6.75 6.75 0 0 0 12 2.15" />
-    </svg>
-  );
-}
-
-function NavBadge({ count, max = 15 }: { count: number; max?: number }) {
-  if (!count || count < 1) return null;
-
-  return (
-    <span className="absolute -right-1 -top-1 flex min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white ring-2 ring-white">
-      {count > max ? `${max}+` : count}
-    </span>
-  );
-}
-
-const feedPageText = {
-  en: {
-    search: "Search FaceGrem",
-    menu: "Menu",
-    viewProfile: "View your profile",
-    homeFeed: "Home Feed",
-    videos: "Videos",
-    communities: "Communities",
-    groups: "Groups",
-    messages: "Messages",
-    saved: "Saved",
-    settings: "Settings",
-    logout: "Log out",
-    friends: "Friends",
-    yourCommunities: "Your communities",
-    whatsMind: "What's on your mind",
-    friend: "Friend",
-    sharePlaceholder: "Share something with FaceGrem...",
-    videoPlaceholder: "Paste video link...",
-    posting: "Posting...",
-    post: "Post",
-    photo: "Photo",
-    video: "Video",
-    feeling: "Feeling",
-    stories: "Stories",
-    storySub: "Quick moments from your people",
-    createStory: "Create story",
-    storyCaption: "Story caption...",
-    creatingStory: "Creating story...",
-    shareStory: "Share story",
-    noPosts: "No posts found.",
-    noPostsSub: "Try a different search or create the first post.",
-    like: "like",
-    likes: "likes",
-    comment: "comment",
-    comments: "comments",
-    save: "Save",
-    send: "Send",
-    writeComment: "Write a comment...",
-    friendRequests: "Friend requests",
-    seeAll: "See all",
-    noSuggestions: "No new suggestions right now.",
-    confirm: "Confirm",
-    delete: "Delete",
-    contacts: "Contacts",
-    online: "Online",
-    suggestedCommunities: "Suggested communities",
-    communityFallback: "Community on FaceGrem",
-  },
-  sw: {
-    search: "Tafuta FaceGrem",
-    menu: "Menyu",
-    viewProfile: "Tazama wasifu wako",
-    homeFeed: "Feed ya nyumbani",
-    videos: "Video",
-    communities: "Jumuiya",
-    groups: "Makundi",
-    messages: "Ujumbe",
-    saved: "Zilizohifadhiwa",
-    settings: "Mipangilio",
-    logout: "Toka",
-    friends: "Marafiki",
-    yourCommunities: "Jumuiya zako",
-    whatsMind: "Unafikiria nini",
-    friend: "Rafiki",
-    sharePlaceholder: "Shiriki kitu kwenye FaceGrem...",
-    videoPlaceholder: "Bandika kiungo cha video...",
-    posting: "Inachapisha...",
-    post: "Chapisha",
-    photo: "Picha",
-    video: "Video",
-    feeling: "Hisia",
-    stories: "Hadithi",
-    storySub: "Matukio ya haraka kutoka kwa watu wako",
-    createStory: "Tengeneza hadithi",
-    storyCaption: "Maelezo ya hadithi...",
-    creatingStory: "Inatengeneza hadithi...",
-    shareStory: "Shiriki hadithi",
-    noPosts: "Hakuna machapisho yaliyopatikana.",
-    noPostsSub: "Jaribu utafutaji mwingine au tengeneza chapisho la kwanza.",
-    like: "like",
-    likes: "likes",
-    comment: "comment",
-    comments: "comments",
-    save: "Hifadhi",
-    send: "Tuma",
-    writeComment: "Andika comment...",
-    friendRequests: "Maombi ya urafiki",
-    seeAll: "Ona yote",
-    noSuggestions: "Hakuna mapendekezo mapya kwa sasa.",
-    confirm: "Thibitisha",
-    delete: "Futa",
-    contacts: "Wasiliani",
-    online: "Mtandaoni",
-    suggestedCommunities: "Jumuiya zinazopendekezwa",
-    communityFallback: "Jumuiya kwenye FaceGrem",
-  },
-  fr: {
-    search: "Rechercher sur FaceGrem",
-    menu: "Menu",
-    viewProfile: "Voir votre profil",
-    homeFeed: "Fil d’accueil",
-    videos: "Vidéos",
-    communities: "Communautés",
-    groups: "Groupes",
-    messages: "Messages",
-    saved: "Enregistrés",
-    settings: "Paramètres",
-    logout: "Se déconnecter",
-    friends: "Amis",
-    yourCommunities: "Vos communautés",
-    whatsMind: "Quoi de neuf",
-    friend: "Ami",
-    sharePlaceholder: "Partagez quelque chose sur FaceGrem...",
-    videoPlaceholder: "Collez un lien vidéo...",
-    posting: "Publication...",
-    post: "Publier",
-    photo: "Photo",
-    video: "Vidéo",
-    feeling: "Humeur",
-    stories: "Stories",
-    storySub: "Moments rapides de vos proches",
-    createStory: "Créer une story",
-    storyCaption: "Légende de la story...",
-    creatingStory: "Création de la story...",
-    shareStory: "Partager la story",
-    noPosts: "Aucune publication trouvée.",
-    noPostsSub: "Essayez une autre recherche ou créez la première publication.",
-    like: "j’aime",
-    likes: "j’aime",
-    comment: "commentaire",
-    comments: "commentaires",
-    save: "Enregistrer",
-    send: "Envoyer",
-    writeComment: "Écrire un commentaire...",
-    friendRequests: "Demandes d’amis",
-    seeAll: "Voir tout",
-    noSuggestions: "Aucune nouvelle suggestion pour le moment.",
-    confirm: "Confirmer",
-    delete: "Supprimer",
-    contacts: "Contacts",
-    online: "En ligne",
-    suggestedCommunities: "Communautés suggérées",
-    communityFallback: "Communauté sur FaceGrem",
-  },
-  rw: {
-    search: "Shaka kuri FaceGrem",
-    menu: "Menyu",
-    viewProfile: "Reba umwirondoro wawe",
-    homeFeed: "Feed y’ahabanza",
-    videos: "Video",
-    communities: "Imiryango",
-    groups: "Amatsinda",
-    messages: "Ubutumwa",
-    saved: "Ibyabitswe",
-    settings: "Igenamiterere",
-    logout: "Sohoka",
-    friends: "Inshuti",
-    yourCommunities: "Imiryango yawe",
-    whatsMind: "Urimo gutekereza iki",
-    friend: "Nshuti",
-    sharePlaceholder: "Sangiza ikintu kuri FaceGrem...",
-    videoPlaceholder: "Shyiramo link ya video...",
-    posting: "Birimo gutangazwa...",
-    post: "Tangaza",
-    photo: "Ifoto",
-    video: "Video",
-    feeling: "Uko wiyumva",
-    stories: "Inkuru",
-    storySub: "Ibihe byihuse by’abantu bawe",
-    createStory: "Kora inkuru",
-    storyCaption: "Amagambo y’inkuru...",
-    creatingStory: "Birimo gukora inkuru...",
-    shareStory: "Sangiza inkuru",
-    noPosts: "Nta nyandiko zabonetse.",
-    noPostsSub: "Gerageza gushaka ukundi cyangwa ukore inyandiko ya mbere.",
-    like: "like",
-    likes: "likes",
-    comment: "comment",
-    comments: "comments",
-    save: "Bika",
-    send: "Ohereza",
-    writeComment: "Andika comment...",
-    friendRequests: "Ubusabe bw’ubucuti",
-    seeAll: "Reba byose",
-    noSuggestions: "Nta byifuzo bishya bihari ubu.",
-    confirm: "Emeza",
-    delete: "Siba",
-    contacts: "Abantu",
-    online: "Ari online",
-    suggestedCommunities: "Imiryango usabwa",
-    communityFallback: "Umuryango kuri FaceGrem",
-  },
-} as const;
+const glassCard =
+  "border border-slate-200 bg-white shadow-sm";
+const softCard =
+  "border border-slate-200 bg-white shadow-sm";
 
 export default function FeedPage() {
   const router = useRouter();
-  const { language, t } = useLanguage();
-  const ft = feedPageText[language] || feedPageText.en;
+  const storyInputRef = useRef<HTMLInputElement | null>(null);
 
   const [userId, setUserId] = useState("");
   const [userName, setUserName] = useState("FaceGrem User");
   const [userAvatar, setUserAvatar] = useState("");
-
   const [profiles, setProfiles] = useState<ProfileRecord[]>([]);
   const [posts, setPosts] = useState<PostRecord[]>([]);
   const [likes, setLikes] = useState<LikeRecord[]>([]);
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [savedPosts, setSavedPosts] = useState<SavedPostRecord[]>([]);
+  const [communities, setCommunities] = useState<CommunityRecord[]>([]);
+  const [communityMembers, setCommunityMembers] = useState<CommunityMemberRecord[]>([]);
+  const [videos, setVideos] = useState<VideoRecord[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [stories, setStories] = useState<StoryRecord[]>([]);
   const [follows, setFollows] = useState<FollowRecord[]>([]);
-  const [communities, setCommunities] = useState<CommunityRecord[]>([]);
-  const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
-  const [videos, setVideos] = useState<VideoRecord[]>([]);
-
   const [loading, setLoading] = useState(true);
-  const [posting, setPosting] = useState(false);
-  const [commentingPostId, setCommentingPostId] = useState("");
-  const [savingStory, setSavingStory] = useState(false);
-  const [followingUserId, setFollowingUserId] = useState("");
 
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeComposerAction, setActiveComposerAction] =
+    useState<(typeof quickActions)[number]>("Photo");
+  const [activeFeedTab, setActiveFeedTab] =
+    useState<(typeof feedTabs)[number]>("For You");
+
   const [postText, setPostText] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [storyFile, setStoryFile] = useState<File | null>(null);
-  const [storyPreview, setStoryPreview] = useState("");
-  const [storyCaption, setStoryCaption] = useState("");
-  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [posting, setPosting] = useState(false);
   const [searchText, setSearchText] = useState("");
+
+  const [storyUploading, setStoryUploading] = useState(false);
+  const [storyViewerOpen, setStoryViewerOpen] = useState(false);
+  const [activeStoryUserId, setActiveStoryUserId] = useState("");
+  const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
+
+  const [activeRightPanel, setActiveRightPanel] = useState<
+    "friends" | "communities" | "messages" | "videos"
+  >("friends");
+  const [activeFriendsTab, setActiveFriendsTab] = useState<
+    "online" | "suggestions" | "your_friends"
+  >("online");
 
   const getAvatarUrl = (name: string) =>
     `https://ui-avatars.com/api/?name=${encodeURIComponent(
-      name || "FaceGrem User"
+      name
     )}&background=0f172a&color=ffffff&bold=true`;
 
-  const getProfileById = (profileId?: string) =>
-    profiles.find((profile) => profile.id === profileId);
+  const getProfileById = (profileId?: string) => {
+    if (!profileId) return undefined;
+    return profiles.find((profile) => profile.id === profileId);
+  };
 
-  const getBestNameForUser = (profileId?: string, fallbackName?: string | null) => {
-    const profile = getProfileById(profileId);
+  const getBestNameForUser = (uid?: string, fallbackName?: string | null) => {
+    const profile = getProfileById(uid);
     return profile?.full_name || fallbackName || "FaceGrem User";
   };
 
   const getBestAvatarForUser = (
-    profileId?: string,
+    uid?: string,
     fallbackName?: string | null,
     fallbackAvatarUrl?: string | null
   ) => {
-    const profile = getProfileById(profileId);
+    const profile = getProfileById(uid);
     return (
       profile?.avatar_url ||
       fallbackAvatarUrl ||
@@ -561,10 +225,11 @@ export default function FeedPage() {
       const currentUserId = session.user.id;
       const currentUserName =
         session.user.user_metadata?.full_name || "FaceGrem User";
-      const nowIso = new Date().toISOString();
 
       setUserId(currentUserId);
       setUserName(currentUserName);
+
+      const nowIso = new Date().toISOString();
 
       const [
         { data: profilesData },
@@ -572,11 +237,12 @@ export default function FeedPage() {
         { data: likesData },
         { data: commentsData },
         { data: savedPostsData },
+        { data: communitiesData },
+        { data: communityMembersData },
+        { data: videosData },
+        { data: notificationsData },
         { data: storiesData },
         { data: followsData },
-        { data: communitiesData },
-        { data: notificationsData },
-        { data: videosData },
       ] = await Promise.all([
         supabase.from("profiles").select("id, full_name, username, bio, avatar_url"),
         supabase
@@ -584,54 +250,57 @@ export default function FeedPage() {
           .select(
             "id, user_id, content, created_at, full_name, avatar_url, image_url, video_url, community_id"
           )
-          .order("created_at", { ascending: false })
-          .limit(80),
+          .is("community_id", null)
+          .order("created_at", { ascending: false }),
         supabase.from("likes").select("id, post_id, user_id"),
         supabase
           .from("comments")
-          .select("id, post_id, user_id, full_name, content, created_at")
-          .order("created_at", { ascending: true }),
+          .select("id, post_id, user_id, full_name, content, created_at"),
         supabase.from("saved_posts").select("id, user_id, post_id"),
+        supabase
+          .from("communities")
+          .select("id, creator_id, name, category, description, created_at")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("community_members")
+          .select("id, community_id, user_id, created_at"),
+        supabase
+          .from("videos")
+          .select(
+            "id, user_id, title, description, category, video_url, thumbnail_url, views_count, created_at"
+          )
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("notifications")
+          .select(
+            "id, user_id, actor_id, type, post_id, actor_name, content, is_read, created_at"
+          )
+          .eq("user_id", currentUserId)
+          .order("created_at", { ascending: false }),
         supabase
           .from("stories")
           .select("id, user_id, image_url, caption, created_at, expires_at")
           .gt("expires_at", nowIso)
-          .order("created_at", { ascending: false })
-          .limit(24),
+          .order("created_at", { ascending: false }),
         supabase.from("follows").select("id, follower_id, following_id"),
-        supabase
-          .from("communities")
-          .select("id, creator_id, name, category, description, created_at")
-          .order("created_at", { ascending: false })
-          .limit(6),
-        supabase
-          .from("notifications")
-          .select("id, user_id, actor_id, type, post_id, actor_name, content, is_read, created_at")
-          .eq("user_id", currentUserId)
-          .order("created_at", { ascending: false })
-          .limit(80),
-        supabase
-          .from("videos")
-          .select("id, user_id, created_at")
-          .order("created_at", { ascending: false })
-          .limit(80),
       ]);
 
       const allProfiles = profilesData || [];
-      const currentProfile = allProfiles.find((profile) => profile.id === currentUserId);
+      const myProfile = allProfiles.find((profile) => profile.id === currentUserId);
 
       setProfiles(allProfiles);
       setPosts(postsData || []);
       setLikes(likesData || []);
       setComments(commentsData || []);
       setSavedPosts(savedPostsData || []);
+      setCommunities(communitiesData || []);
+      setCommunityMembers(communityMembersData || []);
+      setVideos(videosData || []);
+      setNotifications(notificationsData || []);
       setStories(storiesData || []);
       setFollows(followsData || []);
-      setCommunities(communitiesData || []);
-      setNotifications(notificationsData || []);
-      setVideos(videosData || []);
       setUserAvatar(
-        currentProfile?.avatar_url || getAvatarUrl(currentProfile?.full_name || currentUserName)
+        myProfile?.avatar_url || getAvatarUrl(myProfile?.full_name || currentUserName)
       );
       setLoading(false);
     };
@@ -639,248 +308,166 @@ export default function FeedPage() {
     void loadFeed();
   }, [router]);
 
-  useEffect(() => {
-    if (!userId) return;
+  const isFollowingUser = (targetUserId: string) =>
+    follows.some(
+      (follow) =>
+        follow.follower_id === userId && follow.following_id === targetUserId
+    );
 
-    const sortNewest = (items: PostRecord[]) =>
-      [...items].sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+  const myCommunityIds = useMemo(() => {
+    return communityMembers
+      .filter((member) => member.user_id === userId)
+      .map((member) => member.community_id);
+  }, [communityMembers, userId]);
 
-    const postsChannel = supabase
-      .channel("facegrem-feed-posts-live")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "posts" },
-        (payload) => {
-          const newPost = payload.new as PostRecord;
-          setPosts((prev) => {
-            if (prev.some((post) => post.id === newPost.id)) return prev;
-            return sortNewest([newPost, ...prev]);
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "posts" },
-        (payload) => {
-          const updatedPost = payload.new as PostRecord;
-          setPosts((prev) =>
-            sortNewest(
-              prev.map((post) => (post.id === updatedPost.id ? updatedPost : post))
-            )
-          );
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "posts" },
-        (payload) => {
-          const deletedPost = payload.old as Partial<PostRecord>;
-          setPosts((prev) => prev.filter((post) => post.id !== deletedPost.id));
-        }
-      )
-      .subscribe();
+  const unreadNotificationsCount = notifications.filter(
+    (notification) => !notification.is_read
+  ).length;
 
-    const likesChannel = supabase
-      .channel("facegrem-feed-likes-live")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "likes" },
-        (payload) => {
-          const newLike = payload.new as LikeRecord;
-          setLikes((prev) => {
-            if (prev.some((like) => like.id === newLike.id)) return prev;
-            return [...prev, newLike];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "likes" },
-        (payload) => {
-          const deletedLike = payload.old as Partial<LikeRecord>;
-          setLikes((prev) => prev.filter((like) => like.id !== deletedLike.id));
-        }
-      )
-      .subscribe();
+  const suggestedPeople = useMemo(() => {
+    return profiles
+      .filter((profile) => profile.id !== userId && !isFollowingUser(profile.id))
+      .slice(0, 6);
+  }, [profiles, userId, follows]);
 
-    const commentsChannel = supabase
-      .channel("facegrem-feed-comments-live")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "comments" },
-        (payload) => {
-          const newComment = payload.new as CommentRecord;
-          setComments((prev) => {
-            if (prev.some((comment) => comment.id === newComment.id)) return prev;
-            return [...prev, newComment].sort(
-              (a, b) =>
-                new Date(a.created_at).getTime() -
-                new Date(b.created_at).getTime()
-            );
-          });
-        }
-      )
-      .subscribe();
+  const onlinePeople = useMemo(() => {
+    const followedIds = follows
+      .filter((follow) => follow.follower_id === userId)
+      .map((follow) => follow.following_id);
 
-    const savedChannel = supabase
-      .channel("facegrem-feed-saved-live")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "saved_posts" },
-        (payload) => {
-          const newSaved = payload.new as SavedPostRecord;
-          setSavedPosts((prev) => {
-            if (prev.some((saved) => saved.id === newSaved.id)) return prev;
-            return [...prev, newSaved];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "DELETE", schema: "public", table: "saved_posts" },
-        (payload) => {
-          const deletedSaved = payload.old as Partial<SavedPostRecord>;
-          setSavedPosts((prev) => prev.filter((saved) => saved.id !== deletedSaved.id));
-        }
-      )
-      .subscribe();
+    return profiles
+      .filter((profile) => followedIds.includes(profile.id))
+      .slice(0, 6);
+  }, [profiles, follows, userId]);
 
-    const notificationsChannel = supabase
-      .channel(`facegrem-feed-notifications-live-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const newNotification = payload.new as NotificationRecord;
-          setNotifications((prev) => {
-            if (prev.some((notification) => notification.id === newNotification.id)) {
-              return prev;
-            }
+  const yourFriends = useMemo(() => {
+    const relatedIds = new Set<string>();
 
-            return [newNotification, ...prev];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const updatedNotification = payload.new as NotificationRecord;
-          setNotifications((prev) =>
-            prev.map((notification) =>
-              notification.id === updatedNotification.id
-                ? updatedNotification
-                : notification
-            )
-          );
-        }
-      )
-      .subscribe();
+    follows.forEach((follow) => {
+      if (follow.follower_id === userId) relatedIds.add(follow.following_id);
+      if (follow.following_id === userId) relatedIds.add(follow.follower_id);
+    });
 
-    const videosChannel = supabase
-      .channel("facegrem-feed-videos-live")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "videos" },
-        (payload) => {
-          const newVideo = payload.new as VideoRecord;
-          setVideos((prev) => {
-            if (prev.some((video) => video.id === newVideo.id)) return prev;
-            return [newVideo, ...prev];
-          });
-        }
-      )
-      .subscribe();
+    return profiles.filter((profile) => relatedIds.has(profile.id)).slice(0, 8);
+  }, [profiles, follows, userId]);
 
-    return () => {
-      void supabase.removeChannel(postsChannel);
-      void supabase.removeChannel(likesChannel);
-      void supabase.removeChannel(commentsChannel);
-      void supabase.removeChannel(savedChannel);
-      void supabase.removeChannel(notificationsChannel);
-      void supabase.removeChannel(videosChannel);
-    };
-  }, [userId]);
+  const suggestedCommunities = useMemo(() => {
+    return communities
+      .filter((community) => !myCommunityIds.includes(community.id))
+      .slice(0, 5);
+  }, [communities, myCommunityIds]);
+
+  const latestVideoCards = useMemo(() => videos.slice(0, 4), [videos]);
+  const latestActivity = useMemo(() => notifications.slice(0, 5), [notifications]);
 
   const filteredPosts = useMemo(() => {
-    const term = searchText.trim().toLowerCase();
-    if (!term) return posts;
+    let result = [...posts];
 
-    return posts.filter((post) => {
-      const author = getBestNameForUser(post.user_id, post.full_name);
+    switch (activeFeedTab) {
+      case "Following":
+        result = result.filter((post) => isFollowingUser(post.user_id));
+        break;
+      case "Creators":
+        result = result.filter((post) => {
+          const profile = getProfileById(post.user_id);
+          return !!profile?.username;
+        });
+        break;
+      case "Faith":
+        result = result.filter((post) => {
+          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
+          return (
+            text.includes("faith") ||
+            text.includes("jesus") ||
+            text.includes("church") ||
+            text.includes("gospel")
+          );
+        });
+        break;
+      case "Business":
+        result = result.filter((post) => {
+          const text = `${post.content} ${post.full_name || ""}`.toLowerCase();
+          return (
+            text.includes("business") ||
+            text.includes("money") ||
+            text.includes("brand") ||
+            text.includes("market")
+          );
+        });
+        break;
+      case "Videos":
+        result = result.filter((post) => !!post.video_url);
+        break;
+      case "For You":
+      default:
+        break;
+    }
+
+    const term = searchText.trim().toLowerCase();
+    if (!term) return result;
+
+    return result.filter((post) => {
+      const author = getBestNameForUser(post.user_id, post.full_name).toLowerCase();
       const text = `${post.content} ${author}`.toLowerCase();
       return text.includes(term);
     });
-  }, [posts, searchText, profiles]);
+  }, [activeFeedTab, posts, searchText, profiles, follows, userId]);
 
-  const suggestedProfiles = useMemo(() => {
-    const followedIds = new Set(
-      follows
-        .filter((follow) => follow.follower_id === userId)
-        .map((follow) => follow.following_id)
-    );
+  const storyGroups = useMemo(() => {
+    const grouped = new Map<string, StoryRecord[]>();
 
-    return profiles
-      .filter((profile) => profile.id !== userId && !followedIds.has(profile.id))
-      .slice(0, 4);
-  }, [profiles, follows, userId]);
-
-  const onlineProfiles = useMemo(() => {
-    return profiles.filter((profile) => profile.id !== userId).slice(0, 8);
-  }, [profiles, userId]);
-
-  const myStories = useMemo(() => {
-    return stories.filter((story) => story.user_id === userId);
-  }, [stories, userId]);
-
-  const getPostLikesCount = (postId: string) =>
-    likes.filter((like) => like.post_id === postId).length;
-
-  const getPostComments = (postId: string) =>
-    comments.filter((comment) => comment.post_id === postId);
-
-  const getPostCommentsCount = (postId: string) => getPostComments(postId).length;
-
-  const getSavedRecord = (postId: string) =>
-    savedPosts.find((saved) => saved.post_id === postId && saved.user_id === userId);
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const diffMs = Date.now() - date.getTime();
-    const diffMinutes = Math.floor(diffMs / 60000);
-
-    if (diffMinutes < 1) return "now";
-    if (diffMinutes < 60) return `${diffMinutes}m`;
-    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h`;
-    return date.toLocaleDateString();
-  };
-
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      alert(error.message);
-      return;
+    for (const story of stories) {
+      if (!grouped.has(story.user_id)) grouped.set(story.user_id, []);
+      grouped.get(story.user_id)?.push(story);
     }
 
-    router.push("/");
-  };
+    const items = Array.from(grouped.entries()).map(([storyUserId, userStories]) => ({
+      userId: storyUserId,
+      stories: userStories
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        ),
+      latestCreatedAt: userStories
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )[0]?.created_at,
+    }));
 
-  const handlePostImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
+    items.sort((a, b) => {
+      if (a.userId === userId) return -1;
+      if (b.userId === userId) return 1;
+      return (
+        new Date(b.latestCreatedAt || 0).getTime() -
+        new Date(a.latestCreatedAt || 0).getTime()
+      );
+    });
+
+    return items;
+  }, [stories, userId]);
+
+  const highlightedProfiles = useMemo(() => {
+    const storyUserIds = new Set(storyGroups.map((group) => group.userId));
+    return profiles
+      .filter((profile) => profile.id !== userId && !storyUserIds.has(profile.id))
+      .slice(0, 6);
+  }, [profiles, userId, storyGroups]);
+
+  const activeStoryGroup = useMemo(() => {
+    if (!activeStoryUserId) return null;
+    return storyGroups.find((group) => group.userId === activeStoryUserId) || null;
+  }, [activeStoryUserId, storyGroups]);
+
+  const activeStory = useMemo(() => {
+    if (!activeStoryGroup) return null;
+    return activeStoryGroup.stories[activeStoryIndex] || null;
+  }, [activeStoryGroup, activeStoryIndex]);
+
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
     setImageFile(file);
 
     if (!file) {
@@ -888,19 +475,8 @@ export default function FeedPage() {
       return;
     }
 
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const handleStoryImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setStoryFile(file);
-
-    if (!file) {
-      setStoryPreview("");
-      return;
-    }
-
-    setStoryPreview(URL.createObjectURL(file));
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
   };
 
   const uploadPostImage = async () => {
@@ -924,17 +500,17 @@ export default function FeedPage() {
     return data.publicUrl;
   };
 
-  const uploadStoryImage = async () => {
-    if (!storyFile || !userId) return null;
+  const uploadStoryImage = async (file: File) => {
+    if (!userId) return null;
 
-    const fileExt = storyFile.name.split(".").pop() || "jpg";
+    const fileExt = file.name.split(".").pop() || "jpg";
     const filePath = `${userId}/${Date.now()}-${Math.random()
       .toString(36)
       .slice(2)}.${fileExt.toLowerCase()}`;
 
     const { error: uploadError } = await supabase.storage
       .from("stories")
-      .upload(filePath, storyFile, {
+      .upload(filePath, file, {
         cacheControl: "3600",
         upsert: false,
       });
@@ -959,10 +535,10 @@ export default function FeedPage() {
     setPosting(true);
 
     try {
-      let uploadedImageUrl: string | null = null;
+      let imageUrl: string | null = null;
 
       if (imageFile) {
-        uploadedImageUrl = await uploadPostImage();
+        imageUrl = await uploadPostImage();
       }
 
       const { data, error } = await supabase
@@ -973,7 +549,7 @@ export default function FeedPage() {
             content: trimmedContent,
             full_name: userName,
             avatar_url: userAvatar,
-            image_url: uploadedImageUrl,
+            image_url: imageUrl,
             video_url: trimmedVideoUrl || null,
           },
         ])
@@ -995,6 +571,7 @@ export default function FeedPage() {
       setVideoUrl("");
       setImageFile(null);
       setImagePreview("");
+      setActiveComposerAction("Photo");
     } catch (error) {
       alert(error instanceof Error ? error.message : "Could not create post.");
     }
@@ -1002,16 +579,18 @@ export default function FeedPage() {
     setPosting(false);
   };
 
-  const handleCreateStory = async () => {
-    if (!userId || !storyFile) {
-      alert("Choose a story image first.");
-      return;
-    }
+  const handleCreateStory = async (file: File) => {
+    if (!userId) return;
 
-    setSavingStory(true);
+    setStoryUploading(true);
 
     try {
-      const uploadedStoryUrl = await uploadStoryImage();
+      const imageUrl = await uploadStoryImage(file);
+
+      if (!imageUrl) {
+        throw new Error("Could not upload story image.");
+      }
+
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
       const { data, error } = await supabase
@@ -1019,8 +598,8 @@ export default function FeedPage() {
         .insert([
           {
             user_id: userId,
-            image_url: uploadedStoryUrl,
-            caption: storyCaption.trim() || null,
+            image_url: imageUrl,
+            caption: "",
             expires_at: expiresAt,
           },
         ])
@@ -1028,40 +607,43 @@ export default function FeedPage() {
 
       if (error) {
         alert(error.message);
-        setSavingStory(false);
+        setStoryUploading(false);
         return;
       }
 
       if (data && data.length > 0) {
         setStories((prev) => [data[0], ...prev]);
       }
-
-      setStoryFile(null);
-      setStoryPreview("");
-      setStoryCaption("");
     } catch (error) {
       alert(error instanceof Error ? error.message : "Could not create story.");
     }
 
-    setSavingStory(false);
+    setStoryUploading(false);
   };
 
-  const handleToggleLike = async (postId: string) => {
-    if (!userId) return;
+  const handleStoryInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
+    await handleCreateStory(file);
+    e.target.value = "";
+  };
+
+  const handleOpenStoryCreator = () => {
+    if (storyUploading) return;
+    storyInputRef.current?.click();
+  };
+
+  const handleToggleLike = async (postId: string, ownerId: string) => {
     const existingLike = likes.find(
       (like) => like.post_id === postId && like.user_id === userId
     );
 
     if (existingLike) {
       const { error } = await supabase.from("likes").delete().eq("id", existingLike.id);
-
-      if (error) {
-        alert(error.message);
-        return;
+      if (!error) {
+        setLikes((prev) => prev.filter((like) => like.id !== existingLike.id));
       }
-
-      setLikes((prev) => prev.filter((like) => like.id !== existingLike.id));
       return;
     }
 
@@ -1078,12 +660,24 @@ export default function FeedPage() {
     if (data && data.length > 0) {
       setLikes((prev) => [...prev, data[0]]);
     }
+
+    if (ownerId !== userId) {
+      await supabase.from("notifications").insert([
+        {
+          user_id: ownerId,
+          actor_id: userId,
+          type: "like",
+          post_id: postId,
+          actor_name: userName,
+        },
+      ]);
+    }
   };
 
   const handleToggleSave = async (postId: string) => {
-    if (!userId) return;
-
-    const existingSaved = getSavedRecord(postId);
+    const existingSaved = savedPosts.find(
+      (saved) => saved.post_id === postId && saved.user_id === userId
+    );
 
     if (existingSaved) {
       const { error } = await supabase
@@ -1091,12 +685,9 @@ export default function FeedPage() {
         .delete()
         .eq("id", existingSaved.id);
 
-      if (error) {
-        alert(error.message);
-        return;
+      if (!error) {
+        setSavedPosts((prev) => prev.filter((saved) => saved.id !== existingSaved.id));
       }
-
-      setSavedPosts((prev) => prev.filter((saved) => saved.id !== existingSaved.id));
       return;
     }
 
@@ -1115,28 +706,53 @@ export default function FeedPage() {
     }
   };
 
-  const handleAddComment = async (event: FormEvent, postId: string) => {
-    event.preventDefault();
+  const handleDeletePost = async (postId: string) => {
+    const confirmed = window.confirm("Are you sure you want to delete this post?");
+    if (!confirmed) return;
 
-    const content = (commentDrafts[postId] || "").trim();
+    const { error } = await supabase.from("posts").delete().eq("id", postId);
 
-    if (!content) return;
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-    setCommentingPostId(postId);
+    setPosts((prev) => prev.filter((post) => post.id !== postId));
+    setLikes((prev) => prev.filter((like) => like.post_id !== postId));
+    setComments((prev) => prev.filter((comment) => comment.post_id !== postId));
+    setSavedPosts((prev) => prev.filter((saved) => saved.post_id !== postId));
+  };
+
+  const handleToggleFollow = async (targetUserId: string) => {
+    const existingFollow = follows.find(
+      (follow) =>
+        follow.follower_id === userId && follow.following_id === targetUserId
+    );
+
+    if (existingFollow) {
+      const { error } = await supabase
+        .from("follows")
+        .delete()
+        .eq("id", existingFollow.id);
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      setFollows((prev) => prev.filter((follow) => follow.id !== existingFollow.id));
+      return;
+    }
 
     const { data, error } = await supabase
-      .from("comments")
+      .from("follows")
       .insert([
         {
-          post_id: postId,
-          user_id: userId,
-          full_name: userName,
-          content,
+          follower_id: userId,
+          following_id: targetUserId,
         },
       ])
-      .select("id, post_id, user_id, full_name, content, created_at");
-
-    setCommentingPostId("");
+      .select("id, follower_id, following_id");
 
     if (error) {
       alert(error.message);
@@ -1144,765 +760,1530 @@ export default function FeedPage() {
     }
 
     if (data && data.length > 0) {
-      setComments((prev) => [...prev, data[0]]);
+      setFollows((prev) => [...prev, data[0]]);
     }
-
-    setCommentDrafts((prev) => ({ ...prev, [postId]: "" }));
   };
 
-  const handleToggleFollow = async (profileId: string) => {
-    if (!userId || userId === profileId) return;
+  const getPostLikesCount = (postId: string) =>
+    likes.filter((like) => like.post_id === postId).length;
 
-    setFollowingUserId(profileId);
+  const getPostCommentsCount = (postId: string) =>
+    comments.filter((comment) => comment.post_id === postId).length;
 
-    const existingFollow = follows.find(
-      (follow) => follow.follower_id === userId && follow.following_id === profileId
-    );
+  const isSaved = (postId: string) =>
+    savedPosts.some((saved) => saved.user_id === userId && saved.post_id === postId);
 
-    if (existingFollow) {
-      const { error } = await supabase.from("follows").delete().eq("id", existingFollow.id);
+  const isLiked = (postId: string) =>
+    likes.some((like) => like.user_id === userId && like.post_id === postId);
 
-      if (!error) {
-        setFollows((prev) => prev.filter((follow) => follow.id !== existingFollow.id));
-      }
+  const openStoryViewer = (storyUserId: string) => {
+    setActiveStoryUserId(storyUserId);
+    setActiveStoryIndex(0);
+    setStoryViewerOpen(true);
+  };
 
-      setFollowingUserId("");
+  const closeStoryViewer = () => {
+    setStoryViewerOpen(false);
+    setActiveStoryUserId("");
+    setActiveStoryIndex(0);
+  };
+
+  const goToNextStory = () => {
+    if (!activeStoryGroup) return;
+
+    if (activeStoryIndex < activeStoryGroup.stories.length - 1) {
+      setActiveStoryIndex((prev) => prev + 1);
       return;
     }
 
-    const { data, error } = await supabase
-      .from("follows")
-      .insert([{ follower_id: userId, following_id: profileId }])
-      .select("id, follower_id, following_id");
+    const currentGroupIndex = storyGroups.findIndex(
+      (group) => group.userId === activeStoryGroup.userId
+    );
 
-    if (!error && data && data.length > 0) {
-      setFollows((prev) => [...prev, data[0]]);
+    if (currentGroupIndex >= 0 && currentGroupIndex < storyGroups.length - 1) {
+      setActiveStoryUserId(storyGroups[currentGroupIndex + 1].userId);
+      setActiveStoryIndex(0);
+      return;
     }
 
-    setFollowingUserId("");
+    closeStoryViewer();
   };
 
-  const recentActivityCutoff = useMemo(() => Date.now() - 24 * 60 * 60 * 1000, []);
+  const goToPreviousStory = () => {
+    if (!activeStoryGroup) return;
 
-  const homeBadgeCount = useMemo(() => {
-    return posts.filter(
-      (post) =>
-        post.user_id !== userId &&
-        new Date(post.created_at).getTime() >= recentActivityCutoff
-    ).length;
-  }, [posts, userId, recentActivityCutoff]);
+    if (activeStoryIndex > 0) {
+      setActiveStoryIndex((prev) => prev - 1);
+      return;
+    }
 
-  const videoBadgeCount = useMemo(() => {
-    return videos.filter(
-      (video) =>
-        video.user_id !== userId &&
-        new Date(video.created_at).getTime() >= recentActivityCutoff
-    ).length;
-  }, [videos, userId, recentActivityCutoff]);
+    const currentGroupIndex = storyGroups.findIndex(
+      (group) => group.userId === activeStoryGroup.userId
+    );
 
-  const messageBadgeCount = useMemo(() => {
-    return notifications.filter(
-      (notification) => !notification.is_read && notification.type === "message"
-    ).length;
-  }, [notifications]);
-
-  const notificationBadgeCount = useMemo(() => {
-    return notifications.filter((notification) => !notification.is_read).length;
-  }, [notifications]);
-
-  const friendBadgeCount = suggestedProfiles.length;
-  const communityBadgeCount = suggestedProfiles.length > 0 ? Math.min(communities.length, 15) : 0;
+    if (currentGroupIndex > 0) {
+      const prevGroup = storyGroups[currentGroupIndex - 1];
+      setActiveStoryUserId(prevGroup.userId);
+      setActiveStoryIndex(prevGroup.stories.length - 1);
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#020817] text-white">
-        {t.loadingFeed}
+      <div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] text-[#050505]">
+        Loading FaceGrem feed...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f2f5] text-[#050505]">
+    <div className="relative min-h-screen overflow-hidden bg-[#f0f2f5] pb-24 text-[#050505] xl:pb-0">
+      <style jsx>{`
+        @keyframes blobFloatA {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          50% {
+            transform: translate3d(40px, -30px, 0) scale(1.15);
+          }
+        }
+
+        @keyframes blobFloatB {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          50% {
+            transform: translate3d(-35px, 35px, 0) scale(1.1);
+          }
+        }
+
+        @keyframes blobFloatC {
+          0%,
+          100% {
+            transform: translate3d(0, 0, 0) scale(1);
+          }
+          50% {
+            transform: translate3d(20px, 25px, 0) scale(1.08);
+          }
+        }
+
+        .blob-a {
+          animation: blobFloatA 14s ease-in-out infinite;
+        }
+
+        .blob-b {
+          animation: blobFloatB 18s ease-in-out infinite;
+        }
+
+        .blob-c {
+          animation: blobFloatC 16s ease-in-out infinite;
+        }
+      `}</style>
+
+      <input
+        ref={storyInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleStoryInputChange}
+        className="hidden"
+      />
+
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 bg-[#f0f2f5]" />
+        <div className="absolute left-[-8rem] top-[-5rem] h-96 w-96 rounded-full bg-blue-200/40 blur-3xl" />
+        <div className="absolute right-[-8rem] top-10 h-[28rem] w-[28rem] rounded-full bg-sky-200/40 blur-3xl" />
+        <div className="absolute bottom-[-8rem] left-1/3 h-[24rem] w-[24rem] rounded-full bg-indigo-100/40 blur-3xl" />
+      </div>
+
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
-        <div className="flex h-14 items-center gap-3 px-3 sm:px-4">
-          <div className="flex items-center gap-2">
-            <FaceGremLogo
-              href="/feed"
-              showWordmark={false}
-              markClassName="h-10 w-10 rounded-full ring-0 shadow-none"
-            />
-            <Link href="/feed" className="hidden text-2xl font-extrabold tracking-tight text-blue-600 sm:block md:hidden">
-              FaceGrem
-            </Link>
-          </div>
-
-          <div className="hidden w-[280px] items-center gap-2 rounded-full bg-slate-100 px-4 py-2 md:flex">
-            <SearchIcon className="h-4 w-4 text-slate-500" />
-            <input
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              placeholder={ft.search}
-              className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
-            />
-          </div>
-
-          <nav className="mx-auto hidden h-full items-center gap-2 lg:flex">
-            <Link href="/feed" className="relative flex h-12 w-24 items-center justify-center border-b-4 border-blue-600 text-blue-600">
-              <HomeIcon className="h-6 w-6" />
-              <NavBadge count={homeBadgeCount} />
-            </Link>
-            <Link href="/friends" className="relative flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
-              <FriendsIcon className="h-6 w-6" />
-              <NavBadge count={friendBadgeCount} />
-            </Link>
-            <Link href="/messages" className="relative flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
-              <MessageIcon className="h-6 w-6" />
-              <NavBadge count={messageBadgeCount} />
-            </Link>
-            <Link href="/videos" className="relative flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
-              <VideoIcon className="h-6 w-6" />
-              <NavBadge count={videoBadgeCount} />
-            </Link>
-            <Link href="/communities" className="relative flex h-12 w-24 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900">
-              <CommunitiesIcon className="h-6 w-6" />
-              <NavBadge count={communityBadgeCount} />
-            </Link>
-          </nav>
-
-          <div className="ml-auto flex items-center gap-2">
+        <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setIsMenuOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-sm transition hover:bg-slate-200 hover:text-slate-900"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-lg text-slate-700 shadow-sm transition hover:bg-slate-200"
               aria-label="Open menu"
             >
-              <MenuIcon className="h-5 w-5" />
+              ☰
             </button>
 
-            <LanguageMenu compact />
-
-            <NotificationDropdown
-              iconClassName="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-base transition hover:bg-slate-200"
-            />
-
-            <Link href="/profile" className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-slate-100">
-              <img
-                src={userAvatar || getAvatarUrl(userName)}
-                alt={userName}
-                className="h-full w-full object-cover"
+            <div className="flex items-center gap-3">
+              <FaceGremLogo
+                href="/feed"
+                showWordmark={false}
+                markClassName="h-11 w-11 rounded-2xl ring-0 shadow-sm sm:h-12 sm:w-12"
               />
+              <div className="hidden sm:block">
+                <h1 className="text-xl font-black tracking-tight text-slate-950">FaceGrem</h1>
+                <p className="text-xs font-medium text-slate-500">Your social world, live now</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 hidden lg:block">
+            <div className="max-w-xl mx-auto">
+              <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
+                <span className="text-sm text-slate-500">⌕</span>
+                <input
+                  type="text"
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  placeholder="Search posts, creators, communities, topics..."
+                  className="w-full text-sm text-slate-900 bg-transparent outline-none placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("friends")}
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-lg transition ${
+                activeRightPanel === "friends"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200"
+              }`}
+              aria-label="Friends"
+              title="Friends"
+            >
+              <FriendsFistIcon className="h-5 w-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("communities")}
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-lg transition ${
+                activeRightPanel === "communities"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200"
+              }`}
+              aria-label="Communities"
+              title="Communities"
+            >
+              <CommunityCircleIcon className="h-5 w-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("messages")}
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-lg transition ${
+                activeRightPanel === "messages"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200"
+              }`}
+              aria-label="Messages"
+              title="Messages"
+            >
+              <MessageBubblesIcon className="h-5 w-5" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveRightPanel("videos")}
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-lg transition ${
+                activeRightPanel === "videos"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200"
+              }`}
+              aria-label="Videos"
+              title="Videos"
+            >
+              <span className="text-sm font-black">▶</span>
+            </button>
+
+            <div className="relative">
+              <Link
+                href="/notifications"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-700 transition hover:bg-slate-100"
+              >
+                <span className="text-sm">🔔</span>
+              </Link>
+
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex min-h-[22px] min-w-[22px] items-center justify-center rounded-full bg-blue-600 px-1 text-[11px] font-bold text-white shadow-sm">
+                  {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
+                </span>
+              )}
+            </div>
+
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 rounded-full bg-slate-100 px-2 py-2 transition hover:bg-slate-200 sm:px-2 sm:pr-3"
+            >
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="object-cover h-9 w-9 rounded-full"
+              />
+              <span className="hidden max-w-[120px] truncate text-sm font-medium text-slate-950 lg:inline-block">
+                {userName}
+              </span>
             </Link>
           </div>
         </div>
 
-        <div className="grid grid-cols-6 border-t border-slate-100 bg-white px-2 py-1 md:hidden">
-          <Link href="/feed" className="relative flex h-11 items-center justify-center text-blue-600">
-            <HomeIcon className="h-6 w-6" />
-            <NavBadge count={homeBadgeCount} />
-          </Link>
-          <Link href="/friends" className="relative flex h-11 items-center justify-center text-slate-600">
-            <FriendsIcon className="h-6 w-6" />
-            <NavBadge count={friendBadgeCount} />
-          </Link>
-          <Link href="/messages" className="relative flex h-11 items-center justify-center text-slate-600">
-            <MessageIcon className="h-6 w-6" />
-            <NavBadge count={messageBadgeCount} />
-          </Link>
-          <Link href="/videos" className="relative flex h-11 items-center justify-center text-slate-600">
-            <VideoIcon className="h-6 w-6" />
-            <NavBadge count={videoBadgeCount} />
-          </Link>
-          <Link href="/notifications" className="relative flex h-11 items-center justify-center text-slate-600">
-            <BellIcon className="h-6 w-6" />
-            <NavBadge count={notificationBadgeCount} max={20} />
-          </Link>
-          <Link href="/communities" className="relative flex h-11 items-center justify-center text-slate-600">
-            <CommunitiesIcon className="h-6 w-6" />
-            <NavBadge count={communityBadgeCount} />
-          </Link>
-        </div>
+        <div className="px-4 pb-4 sm:px-6 lg:hidden">
+          <div className="mx-auto space-y-3 max-w-7xl">
+            <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
+              <span className="text-sm text-slate-500">⌕</span>
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                placeholder="Search FaceGrem..."
+                className="w-full text-sm text-slate-900 bg-transparent outline-none placeholder:text-slate-500"
+              />
+            </div>
 
-        <div className="border-t border-slate-100 px-3 py-2 md:hidden">
-          <div className="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2">
-            <SearchIcon className="h-4 w-4 text-slate-500" />
-            <input
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              placeholder={ft.search}
-              className="w-full bg-transparent text-sm outline-none placeholder:text-slate-500"
-            />
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("friends")}
+                className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-950 transition hover:bg-slate-100"
+              >
+                Friends
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("communities")}
+                className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-950 transition hover:bg-slate-100"
+              >
+                Groups
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("messages")}
+                className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-950 transition hover:bg-slate-100"
+              >
+                Chat
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveRightPanel("videos")}
+                className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-950 transition hover:bg-slate-100"
+              >
+                Videos
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
+      <section className="relative mx-auto mt-4 max-w-7xl px-4 sm:px-6">
+        <div className="grid gap-3 rounded-[28px] bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:grid-cols-3">
+          <div className="rounded-2xl bg-blue-50 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Live feed</p>
+            <p className="mt-1 text-2xl font-black text-slate-950">{filteredPosts.length}</p>
+            <p className="text-xs text-slate-500">Posts visible now</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Creators</p>
+            <p className="mt-1 text-2xl font-black text-slate-950">{profiles.length}</p>
+            <p className="text-xs text-slate-500">People in your world</p>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Notifications</p>
+            <p className="mt-1 text-2xl font-black text-slate-950">{unreadNotificationsCount}</p>
+            <p className="text-xs text-slate-500">Unread updates</p>
+          </div>
+        </div>
+      </section>
+
       {isMenuOpen && (
         <>
           <div
-            className="fixed inset-0 z-[80] bg-black/35"
+            className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm"
             onClick={() => setIsMenuOpen(false)}
           />
-          <aside className="fixed right-0 top-0 z-[90] flex h-full w-[320px] max-w-[88vw] flex-col overflow-y-auto bg-white p-4 shadow-2xl">
+          <aside className="fixed right-0 top-0 z-[70] flex h-full w-[310px] flex-col border-r border-slate-200 bg-white p-5 backdrop-blur-2xl shadow-2xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">{ft.menu}</h2>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center font-bold text-white h-11 w-11 rounded-2xl bg-blue-600">
+                  F
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-slate-950">FaceGrem</h2>
+                  <p className="text-xs text-slate-500">Navigation</p>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-sm transition hover:bg-slate-200 hover:text-slate-900"
+                className="rounded-xl bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                aria-label="Close menu"
               >
-                <CloseIcon className="h-5 w-5" />
+                ✕
               </button>
             </div>
 
-            <div className="mt-4 rounded-2xl bg-slate-50 p-3">
+            <div className="mt-6 space-y-2">
+              <Link
+                href="/feed"
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                🏠 Home Feed
+              </Link>
+              <Link
+                href="/videos"
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                🎬 Videos
+              </Link>
+              <Link
+                href="/communities"
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                👥 Communities
+              </Link>
+              <Link
+                href="/messages"
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                💬 Messages
+              </Link>
+              <Link
+                href="/saved"
+                onClick={() => setIsMenuOpen(false)}
+                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                🔖 Saved
+              </Link>
               <Link
                 href="/profile"
                 onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-3 rounded-xl p-2 hover:bg-white"
+                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
               >
-                <img
-                  src={userAvatar || getAvatarUrl(userName)}
-                  alt={userName}
-                  className="h-11 w-11 rounded-full object-cover"
-                />
-                <div>
-                  <p className="font-semibold">{userName}</p>
-                  <p className="text-xs text-slate-500">{ft.viewProfile}</p>
-                </div>
+                👤 Profile
               </Link>
             </div>
 
-            <div className="mt-4 space-y-5">
-              <section>
-                <p className="px-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-                  Main
-                </p>
-                <div className="mt-2 grid gap-1">
-                  <Link href="/feed" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <HomeIcon className="h-5 w-5 text-slate-500" /> {ft.homeFeed}
-                  </Link>
-                  <Link href="/friends" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <FriendsIcon className="h-5 w-5 text-slate-500" /> {ft.friends}
-                  </Link>
-                  <Link href="/messages" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <MessageIcon className="h-5 w-5 text-slate-500" /> {ft.messages}
-                  </Link>
-                  <Link href="/videos" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <VideoIcon className="h-5 w-5 text-slate-500" /> {ft.videos}
-                  </Link>
-                  <Link href="/notifications" onClick={() => setIsMenuOpen(false)} className="flex items-center justify-between rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="inline-flex items-center gap-3">
-                      <BellIcon className="h-5 w-5 text-slate-500" /> Notifications
-                    </span>
-                    <NavBadge count={notificationBadgeCount} max={20} />
-                  </Link>
-                  <Link href="/communities" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <CommunitiesIcon className="h-5 w-5 text-slate-500" /> {ft.communities}
-                  </Link>
-                  <Link href="/groups" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <GroupsIcon className="h-5 w-5 text-slate-500" /> {ft.groups}
-                  </Link>
-                  <Link href="/saved" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <BookmarkIcon className="h-5 w-5 text-slate-500" /> {ft.saved}
-                  </Link>
-                  <Link href="/settings" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <SettingsIcon className="h-5 w-5 text-slate-500" /> {ft.settings}
-                  </Link>
-                </div>
-              </section>
+            <div className="pt-5 mt-8 border-t border-slate-200">
+              <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                More
+              </p>
 
-              <section>
-                <p className="px-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-                  Privacy & legal
-                </p>
-                <div className="mt-2 grid gap-1">
-                  <Link href="/privacy" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">🔒</span> Privacy
-                  </Link>
-                  <Link href="/privacy-centre" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">🛡️</span> Privacy Centre
-                  </Link>
-                  <Link href="/terms" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">📄</span> Terms
-                  </Link>
-                  <Link href="/cookies" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">🍪</span> Cookies
-                  </Link>
-                  <Link href="/ad-choices" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">🎯</span> AdChoices
-                  </Link>
-                </div>
-              </section>
-
-              <section>
-                <p className="px-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-                  Create & explore
-                </p>
-                <div className="mt-2 grid gap-1">
-                  <Link href="/create-page" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">➕</span> Create Page
-                  </Link>
-                  <Link href="/create-ad" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">📣</span> Create Ad
-                  </Link>
-                  <Link href="/threads" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <MessageIcon className="h-5 w-5 text-slate-500" /> Threads
-                  </Link>
-                </div>
-              </section>
-
-              <section>
-                <p className="px-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
-                  Support & company
-                </p>
-                <div className="mt-2 grid gap-1">
-                  <Link href="/help" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">❓</span> Help
-                  </Link>
-                  <Link href="/about" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">ℹ️</span> About FaceGrem
-                  </Link>
-                  <Link href="/careers" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">💼</span> Careers
-                  </Link>
-                  <Link href="/developers" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 rounded-xl p-3 font-medium text-slate-700 hover:bg-slate-100">
-                    <span className="flex h-5 w-5 items-center justify-center text-slate-500">⌘</span> Developers
-                  </Link>
-                </div>
-              </section>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full rounded-xl p-3 text-left font-medium text-red-600 hover:bg-red-50"
-              >
-                <span className="inline-flex items-center gap-3"><LogoutIcon className="h-5 w-5" /> {ft.logout}</span>
-              </button>
+              <div className="space-y-2">
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
+                  ⚙️ Settings
+                </button>
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
+                  🌐 Language
+                </button>
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
+                  🔒 Privacy
+                </button>
+                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
+                  ❓ Help
+                </button>
+              </div>
             </div>
           </aside>
         </>
       )}
 
-      <main className="mx-auto grid max-w-[1460px] gap-5 px-3 py-4 lg:grid-cols-[280px_minmax(0,680px)_320px]">
-        <aside className="hidden lg:block">
-          <div className="sticky top-[72px] space-y-2">
-            <Link href="/profile" className="flex items-center gap-3 rounded-xl p-3 hover:bg-white">
-              <img
-                src={userAvatar || getAvatarUrl(userName)}
-                alt={userName}
-                className="h-9 w-9 rounded-full object-cover"
-              />
-              <span className="font-medium">{userName}</span>
-            </Link>
-            <Link href="/friends" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><FriendsIcon className="h-5 w-5 text-slate-500" /> {ft.friends}</Link>
-            <Link href="/saved" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><BookmarkIcon className="h-5 w-5 text-slate-500" /> {ft.saved}</Link>
-            <Link href="/groups" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><GroupsIcon className="h-5 w-5 text-slate-500" /> {ft.groups}</Link>
-            <Link href="/communities" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><CommunitiesIcon className="h-5 w-5 text-slate-500" /> {ft.communities}</Link>
-            <Link href="/videos" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><VideoIcon className="h-5 w-5 text-slate-500" /> {ft.videos}</Link>
-            <Link href="/settings" className="flex items-center gap-3 rounded-xl p-3 text-slate-700 transition hover:bg-white hover:text-slate-900"><SettingsIcon className="h-5 w-5 text-slate-500" /> {ft.settings}</Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-xl p-3 text-left text-red-600 hover:bg-red-50"
-            >
-              <LogoutIcon className="h-5 w-5" /> {ft.logout}
-            </button>
+      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+        <aside className="hidden xl:block">
+          <div className="sticky top-[104px] space-y-4">
+            <div className={`overflow-hidden rounded-[30px] p-4 ${glassCard}`}>
+              <button
+                type="button"
+                onClick={() => setIsProfileCardOpen(!isProfileCardOpen)}
+                className="flex items-center w-full gap-3 text-left"
+              >
+                <img
+                  src={userAvatar}
+                  alt={userName}
+                  className="object-cover h-14 w-14 rounded-2xl ring-2 ring-cyan-400/20"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-950 truncate">{userName}</p>
+                  <p className="text-sm truncate text-slate-500">Tap to view quick details</p>
+                </div>
+                <div className="text-xl text-slate-950">{isProfileCardOpen ? "−" : "+"}</div>
+              </button>
 
-            <div className="mt-4 border-t border-slate-300 pt-4">
-              <p className="px-3 text-sm font-semibold text-slate-600">{ft.yourCommunities}</p>
-              <div className="mt-2 space-y-1">
-                {communities.slice(0, 4).map((community) => (
-                  <Link
-                    key={community.id}
-                    href={`/communities/${community.id}`}
-                    className="block truncate rounded-xl px-3 py-2 text-sm hover:bg-white"
-                  >
-                    # {community.name}
-                  </Link>
-                ))}
+              {isProfileCardOpen && (
+                <div className="pt-4 mt-4 space-y-3 border-t border-slate-200">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
+                      <p className="text-[11px] text-slate-500">Saved</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-950">{savedPosts.length}</p>
+                    </div>
+                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
+                      <p className="text-[11px] text-slate-500">Alerts</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-950">
+                        {unreadNotificationsCount}
+                      </p>
+                    </div>
+                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
+                      <p className="text-[11px] text-slate-500">Groups</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-950">
+                        {myCommunityIds.length}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link
+                      href="/profile"
+                      className={`rounded-2xl px-4 py-3 text-center text-sm text-slate-950 transition hover:bg-slate-100 ${softCard}`}
+                    >
+                      Open Profile
+                    </Link>
+                    <Link
+                      href="/saved"
+                      className={`rounded-2xl px-4 py-3 text-center text-sm text-slate-950 transition hover:bg-slate-100 ${softCard}`}
+                    >
+                      Saved Posts
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className={`rounded-[28px] p-4 ${glassCard}`}>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-blue-600">Your communities</p>
+                <Link
+                  href="/communities"
+                  className="text-xs transition text-blue-600 hover:text-blue-600"
+                >
+                  View all
+                </Link>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                {communities.filter((community) => myCommunityIds.includes(community.id))
+                  .length === 0 ? (
+                  <p className="text-sm leading-7 text-slate-500">
+                    Join communities to keep your favorite spaces close.
+                  </p>
+                ) : (
+                  communities
+                    .filter((community) => myCommunityIds.includes(community.id))
+                    .slice(0, 4)
+                    .map((community) => (
+                      <Link
+                        key={community.id}
+                        href={`/communities/${community.id}`}
+                        className={`block rounded-2xl px-4 py-3 transition hover:bg-slate-100 ${softCard}`}
+                      >
+                        <p className="font-medium text-slate-950">{community.name}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {community.category || "Community"}
+                        </p>
+                      </Link>
+                    ))
+                )}
               </div>
             </div>
           </div>
         </aside>
 
-        <section className="min-w-0 space-y-4">
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <div className="flex gap-3">
-              <Link href="/profile" className="shrink-0">
-                <img
-                  src={userAvatar || getAvatarUrl(userName)}
-                  alt={userName}
-                  className="h-11 w-11 rounded-full object-cover"
-                />
-              </Link>
-              <button
-                type="button"
-                onClick={() => document.getElementById("feed-composer-textarea")?.focus()}
-                className="flex-1 rounded-full bg-slate-100 px-4 text-left text-slate-500 hover:bg-slate-200"
-              >
-                {ft.whatsMind}, {userName.split(" ")[0] || ft.friend}?
-              </button>
-            </div>
-
-            <div className="mt-4 border-t border-slate-100 pt-4">
-              <textarea
-                id="feed-composer-textarea"
-                value={postText}
-                onChange={(event) => setPostText(event.target.value)}
-                placeholder={ft.sharePlaceholder}
-                rows={3}
-                className="w-full resize-none rounded-2xl bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-200"
-              />
-
-              {imagePreview && (
-                <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200">
-                  <img src={imagePreview} alt="Preview" className="max-h-[420px] w-full object-cover" />
-                </div>
-              )}
-
-              <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-                <input
-                  value={videoUrl}
-                  onChange={(event) => setVideoUrl(event.target.value)}
-                  placeholder={ft.videoPlaceholder}
-                  className="rounded-xl bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-200"
-                />
-
-                <button
-                  type="button"
-                  onClick={handleCreatePost}
-                  disabled={posting}
-                  className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
-                >
-                  {posting ? ft.posting : ft.post}
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3">
-              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">
-                <PhotoIcon className="h-5 w-5 text-emerald-500" /> {ft.photo}
-                <input type="file" accept="image/*" onChange={handlePostImageChange} className="hidden" />
-              </label>
-              <button
-                type="button"
-                onClick={() => setVideoUrl((prev) => prev || "https://")}
-                className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-              >
-                <span className="inline-flex items-center gap-2"><VideoPlusIcon className="h-5 w-5 text-rose-500" /> {ft.video}</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleCreatePost}
-                disabled={posting}
-                className="rounded-xl px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-60"
-              >
-                <span className="inline-flex items-center gap-2"><SmileIcon className="h-5 w-5 text-amber-500" /> {ft.feeling}</span>
-              </button>
+        <section className="min-w-0 space-y-5 sm:space-y-6">
+          <div className="overflow-hidden rounded-[32px] border border-cyan-400/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.35),rgba(2,8,23,0.18)_55%,rgba(15,23,42,0.32))] p-6 backdrop-blur-2xl shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold text-blue-600">Welcome back</p>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">
+                Good to see you, {userName.split(" ")[0]}.
+              </h2>
+              <p className="max-w-xl mt-4 text-sm leading-8 text-slate-600 sm:text-base">
+                Discover what people are sharing right now across FaceGrem —
+                moments, ideas, videos, conversations, and communities.
+              </p>
             </div>
           </div>
 
-          <div className="rounded-xl bg-white p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
+          <div className={`overflow-x-auto rounded-[28px] p-3 sm:rounded-[30px] sm:p-4 ${glassCard}`}>
+            <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <p className="font-semibold">{ft.stories}</p>
-                <p className="text-sm text-slate-500">{ft.storySub}</p>
+                <p className="text-sm font-semibold text-blue-600">Stories</p>
+                <p className="text-xs text-slate-500">Quick moments from people around you</p>
               </div>
-              <label className="cursor-pointer rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold hover:bg-slate-200">
-                {ft.createStory}
-                <input type="file" accept="image/*" onChange={handleStoryImageChange} className="hidden" />
-              </label>
+
+              <button
+                type="button"
+                onClick={handleOpenStoryCreator}
+                disabled={storyUploading}
+                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-70"
+              >
+                {storyUploading ? "Uploading..." : "Create story"}
+              </button>
             </div>
 
-            {storyPreview && (
-              <div className="mb-3 rounded-2xl border border-blue-100 bg-blue-50 p-3">
-                <img src={storyPreview} alt="Story preview" className="h-40 w-full rounded-xl object-cover" />
-                <input
-                  value={storyCaption}
-                  onChange={(event) => setStoryCaption(event.target.value)}
-                  placeholder={ft.storyCaption}
-                  className="mt-3 w-full rounded-xl bg-white px-3 py-2 text-sm outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={handleCreateStory}
-                  disabled={savingStory}
-                  className="mt-3 w-full rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                >
-                  {savingStory ? ft.creatingStory : ft.shareStory}
-                </button>
-              </div>
-            )}
-
-            <div className="flex gap-3 overflow-x-auto pb-1">
-              <div className="relative h-48 w-28 shrink-0 overflow-hidden rounded-2xl bg-slate-900 text-white">
-                <img src={userAvatar || getAvatarUrl(userName)} alt={userName} className="h-32 w-full object-cover opacity-80" />
-                <div className="absolute left-1/2 top-[112px] flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-full border-4 border-white bg-blue-600 text-xl">+</div>
-                <p className="absolute bottom-3 left-2 right-2 text-center text-sm font-semibold">{ft.createStory}</p>
-              </div>
-
-              {stories.map((story) => (
-                <Link
-                  key={story.id}
-                  href={`/profile?id=${story.user_id}`}
-                  className="relative h-48 w-28 shrink-0 overflow-hidden rounded-2xl bg-slate-900 text-white"
-                >
-                  <img src={story.image_url} alt={story.caption || "Story"} className="h-full w-full object-cover opacity-90" />
+            <div className="flex gap-3 min-w-max sm:gap-4">
+              <button
+                type="button"
+                onClick={handleOpenStoryCreator}
+                disabled={storyUploading}
+                className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-cyan-400/15 bg-white/[0.04] p-1 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-1 disabled:opacity-70 sm:h-52 sm:w-36"
+              >
+                <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/60">
                   <img
-                    src={getBestAvatarForUser(story.user_id)}
-                    alt={getBestNameForUser(story.user_id)}
-                    className="absolute left-2 top-2 h-9 w-9 rounded-full border-4 border-blue-600 object-cover"
+                    src={userAvatar}
+                    alt={userName}
+                    className="absolute inset-0 object-cover w-full h-full opacity-35"
                   />
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 pt-10">
-                    <p className="line-clamp-2 text-xs font-semibold">
-                      {story.caption || getBestNameForUser(story.user_id)}
-                    </p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-[#020817]/20 to-transparent" />
+
+                  <div className="relative flex flex-col justify-between h-full p-4">
+                    <div className="flex items-center justify-center w-12 h-12 text-2xl font-semibold text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-cyan-500/30">
+                      +
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-semibold text-slate-950">
+                        {storyUploading ? "Uploading..." : "Create story"}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-950/75">Share a quick moment</p>
+                    </div>
+                  </div>
+                </div>
+              </button>
+
+              {storyGroups.map((group, index) => {
+                const storyProfile = getProfileById(group.userId);
+                const storyUserName = storyProfile?.full_name || "FaceGrem User";
+                const storyUserAvatar =
+                  storyProfile?.avatar_url || getAvatarUrl(storyUserName);
+                const previewStory =
+                  group.stories[group.stories.length - 1] || group.stories[0];
+
+                return (
+                  <button
+                    key={group.userId}
+                    type="button"
+                    onClick={() => openStoryViewer(group.userId)}
+                    className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br ${
+                      index % 2 === 0
+                        ? "from-cyan-400/35 via-blue-500/25 to-fuchsia-500/25"
+                        : "from-fuchsia-500/35 via-orange-400/20 to-cyan-500/25"
+                    } p-1 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36`}
+                  >
+                    <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/55">
+                      <img
+                        src={previewStory.image_url}
+                        alt={storyUserName}
+                        className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-80 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-black/10" />
+
+                      <div className="relative flex flex-col justify-between h-full p-4">
+                        <img
+                          src={storyUserAvatar}
+                          alt={storyUserName}
+                          className="object-cover w-12 h-12 border-2 shadow-lg rounded-2xl border-cyan-300/90"
+                        />
+
+                        <div>
+                          <p className="text-sm font-semibold text-slate-950 line-clamp-2">
+                            {storyUserName}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-950/75">
+                            {group.userId === userId
+                              ? "Your story"
+                              : `@${storyProfile?.username || "member"}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+
+              {highlightedProfiles.map((profile, index) => (
+                <Link
+                  key={profile.id}
+                  href={`/profile?id=${profile.id}`}
+                  className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br ${
+                    index % 2 === 0
+                      ? "from-violet-500/30 via-blue-500/20 to-cyan-500/20"
+                      : "from-amber-400/25 via-rose-500/20 to-fuchsia-500/20"
+                  } p-1 backdrop-blur-xl transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36`}
+                >
+                  <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/55">
+                    <img
+                      src={
+                        profile.avatar_url ||
+                        getAvatarUrl(profile.full_name || "FaceGrem User")
+                      }
+                      alt={profile.full_name}
+                      className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-80 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-black/10" />
+
+                    <div className="relative flex flex-col justify-between h-full p-4">
+                      <img
+                        src={
+                          profile.avatar_url ||
+                          getAvatarUrl(profile.full_name || "FaceGrem User")
+                        }
+                        alt={profile.full_name}
+                        className="object-cover w-12 h-12 border-2 shadow-lg rounded-2xl border-cyan-300/90"
+                      />
+
+                      <div>
+                        <p className="text-sm font-semibold text-slate-950 line-clamp-2">
+                          {profile.full_name}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-950/75">
+                          @{profile.username || "member"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
+          <div className={`overflow-hidden rounded-[30px] ${glassCard}`}>
+            <div className="px-4 py-4 border-b border-slate-200 sm:px-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-blue-600">Create post</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Share a thought, photo, story, or video with FaceGrem
+                  </p>
+                </div>
+
+                <div className="items-center hidden gap-2 sm:flex">
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600">
+                    Public post
+                  </span>
+                  <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-blue-600">
+                    Live composer
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-6">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <img
+                  src={userAvatar}
+                  alt={userName}
+                  className="object-cover w-12 h-12 rounded-2xl ring-2 ring-cyan-400/15 sm:h-14 sm:w-14"
+                />
+
+                <div className="flex-1 min-w-0">
+                  <div className={`rounded-[24px] p-4 ${softCard}`}>
+                    <div className="flex flex-wrap items-center gap-2 mb-3 sm:gap-3">
+                      <p className="font-medium text-slate-950">{userName}</p>
+                      <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600">
+                        Posting to everyone
+                      </span>
+                    </div>
+
+                    <textarea
+                      value={postText}
+                      onChange={(e) => setPostText(e.target.value)}
+                      rows={4}
+                      placeholder="What’s on your mind today?"
+                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-slate-950 placeholder:text-slate-500 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-5 sm:gap-3">
+                {quickActions.map((action) => (
+                  <button
+                    key={action}
+                    type="button"
+                    onClick={() => {
+                      setActiveComposerAction(action);
+                      if (action === "Story") handleOpenStoryCreator();
+                    }}
+                    className={`rounded-full px-4 py-2.5 text-sm font-medium transition sm:px-5 sm:py-3 ${
+                      activeComposerAction === action
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {action}
+                  </button>
+                ))}
+              </div>
+
+              {(activeComposerAction === "Photo" || activeComposerAction === "Story") && (
+                <div className={`mt-5 rounded-[24px] p-4 ${softCard}`}>
+                  <div>
+                    <p className="text-sm font-medium text-slate-950">
+                      {activeComposerAction === "Story" ? "Story image" : "Photo upload"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {activeComposerAction === "Story"
+                        ? "Use the Create story button above to publish a real story"
+                        : "Add a strong visual to make your post stand out"}
+                    </p>
+                  </div>
+
+                  {activeComposerAction === "Photo" && (
+                    <>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="mt-4 block w-full rounded-2xl text-sm text-slate-950 file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-4 file:py-2.5 file:text-blue-600"
+                      />
+
+                      {imagePreview && (
+                        <div className="mt-4 overflow-hidden rounded-[20px] border border-slate-200">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="object-cover w-full max-h-96"
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {activeComposerAction === "Story" && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={handleOpenStoryCreator}
+                        disabled={storyUploading}
+                        className="px-4 py-3 text-sm font-medium transition border rounded-2xl border-cyan-400/20 bg-cyan-500/10 text-blue-600 hover:bg-cyan-500/20 disabled:opacity-70"
+                      >
+                        {storyUploading ? "Uploading story..." : "Choose story image"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {(activeComposerAction === "Video" || activeComposerAction === "Live") && (
+                <div className={`mt-5 rounded-[24px] p-4 ${softCard}`}>
+                  <div>
+                    <p className="text-sm font-medium text-slate-950">
+                      {activeComposerAction === "Live" ? "Live stream link" : "Video link"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Paste a YouTube link or direct video URL
+                    </p>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={videoUrl}
+                    onChange={(e) => setVideoUrl(e.target.value)}
+                    placeholder={
+                      activeComposerAction === "Live"
+                        ? "Paste a live stream or video URL"
+                        : "Paste a YouTube or video URL"
+                    }
+                    className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 placeholder:text-slate-500 outline-none transition focus:border-cyan-400/40"
+                  />
+                </div>
+              )}
+
+              <div className="flex flex-col gap-4 pt-4 mt-5 border-t border-slate-200 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap gap-2">
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600">
+                    Text
+                  </span>
+                  {imagePreview && (
+                    <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-3 py-1.5 text-xs text-fuchsia-200">
+                      Image attached
+                    </span>
+                  )}
+                  {videoUrl.trim() && (
+                    <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-blue-600">
+                      Video linked
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 sm:flex sm:items-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPostText("");
+                      setVideoUrl("");
+                      setImageFile(null);
+                      setImagePreview("");
+                      setActiveComposerAction("Photo");
+                    }}
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
+                  >
+                    Clear
+                  </button>
+
+                  <button
+                    onClick={handleCreatePost}
+                    disabled={posting}
+                    className="px-6 py-3 text-sm font-semibold text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-200 disabled:opacity-70"
+                  >
+                    {posting ? "Posting..." : "Post"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            {feedTabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => {
+                  setActiveFeedTab(tab);
+                  if (tab === "Videos") router.push("/videos");
+                }}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  activeFeedTab === tab
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
           {filteredPosts.length === 0 ? (
-            <div className="rounded-xl bg-white p-8 text-center shadow-sm">
-              <p className="text-lg font-semibold">{ft.noPosts}</p>
-              <p className="mt-2 text-sm text-slate-500">{ft.noPostsSub}</p>
+            <div className={`rounded-[30px] p-8 text-center ${glassCard}`}>
+              <p className="text-lg font-medium text-slate-950">No posts found here yet.</p>
+              <p className="mt-2 text-sm text-slate-500">
+                Try another feed tab or create the first post.
+              </p>
             </div>
           ) : (
-            filteredPosts.map((post) => {
-              const authorName = getBestNameForUser(post.user_id, post.full_name);
-              const authorAvatar = getBestAvatarForUser(
-                post.user_id,
-                post.full_name,
-                post.avatar_url
-              );
-              const postLikesCount = getPostLikesCount(post.id);
-              const postComments = getPostComments(post.id);
-              const isLiked = likes.some(
-                (like) => like.post_id === post.id && like.user_id === userId
-              );
-              const isSaved = !!getSavedRecord(post.id);
+            <div className="space-y-6">
+              {filteredPosts.map((post) => {
+                const authorProfile = getProfileById(post.user_id);
+                const authorName = getBestNameForUser(post.user_id, post.full_name);
+                const authorAvatar = getBestAvatarForUser(
+                  post.user_id,
+                  post.full_name,
+                  post.avatar_url
+                );
+                const likesCount = getPostLikesCount(post.id);
+                const commentsCount = getPostCommentsCount(post.id);
 
-              return (
-                <article key={post.id} className="overflow-hidden rounded-xl bg-white shadow-sm">
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <Link href={`/profile?id=${post.user_id}`} className="flex min-w-0 items-center gap-3">
-                        <img src={authorAvatar} alt={authorName} className="h-11 w-11 rounded-full object-cover" />
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold">{authorName}</p>
-                          <p className="text-xs text-slate-500">{formatTime(post.created_at)} · 🌍</p>
-                        </div>
-                      </Link>
+                const latestComments = comments
+                  .filter((comment) => comment.post_id === post.id)
+                  .sort(
+                    (a, b) =>
+                      new Date(b.created_at).getTime() -
+                      new Date(a.created_at).getTime()
+                  )
+                  .slice(0, 2);
 
-                      <Link href={`/post/${post.id}`} className="rounded-full px-3 py-1 text-xl text-slate-500 hover:bg-slate-100">…</Link>
-                    </div>
+                return (
+                  <article key={post.id} className={`overflow-hidden rounded-[32px] ${glassCard}`}>
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <Link
+                          href={`/profile?id=${post.user_id}`}
+                          className="flex items-center min-w-0 gap-3 hover:opacity-90"
+                        >
+                          <img
+                            src={authorAvatar}
+                            alt={authorName}
+                            className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
+                          />
 
-                    {post.content && (
-                      <p className="mt-4 whitespace-pre-wrap text-[15px] leading-7 text-slate-800">{post.content}</p>
-                    )}
-                  </div>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-slate-950 truncate">{authorName}</p>
 
-                  {post.image_url && (
-                    <img src={post.image_url} alt="Post" className="max-h-[720px] w-full object-cover" />
-                  )}
+                              {authorProfile?.username && (
+                                <span className="text-sm truncate text-slate-500">
+                                  @{authorProfile.username}
+                                </span>
+                              )}
 
-                  {post.video_url && (
-                    <div className="bg-black">
-                      {isYouTubeUrl(post.video_url) ? (
-                        <iframe
-                          src={getYouTubeEmbedUrl(post.video_url)}
-                          title={`post-video-${post.id}`}
-                          className="h-80 w-full md:h-[460px]"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <video controls src={post.video_url} className="h-80 w-full bg-black md:h-[460px]" />
-                      )}
-                    </div>
-                  )}
+                              <span className="hidden w-1 h-1 rounded-full bg-slate-500 sm:block" />
 
-                  <div className="px-4 py-3">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3 text-sm text-slate-500">
-                      <span className="inline-flex items-center gap-2"><span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white"><HeartFilledIcon className="h-3.5 w-3.5" /></span>{postLikesCount} {postLikesCount === 1 ? ft.like : ft.likes}</span>
-                      <Link href={`/post/${post.id}`} className="hover:underline">
-                        {postComments.length} {postComments.length === 1 ? ft.comment : ft.comments}
-                      </Link>
-                    </div>
+                              <span className="text-xs text-slate-500">
+                                {new Date(post.created_at).toLocaleString()}
+                              </span>
+                            </div>
 
-                    <div className="grid grid-cols-4 gap-1 border-b border-slate-100 py-1">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleLike(post.id)}
-                        className={`rounded-lg px-2 py-2 text-sm font-semibold hover:bg-slate-50 ${
-                          isLiked ? "text-blue-600" : "text-slate-600"
-                        }`}
-                      >
-                        <span className="inline-flex items-center gap-2"><LikeIcon className="h-4.5 w-4.5" /> {ft.like}</span>
-                      </button>
-                      <Link href={`/post/${post.id}`} className="rounded-lg px-2 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                        <span className="inline-flex items-center justify-center gap-2"><CommentIcon className="h-4.5 w-4.5" /> {ft.comment}</span>
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleSave(post.id)}
-                        className={`rounded-lg px-2 py-2 text-sm font-semibold hover:bg-slate-50 ${
-                          isSaved ? "text-blue-600" : "text-slate-600"
-                        }`}
-                      >
-                        <span className="inline-flex items-center gap-2"><BookmarkIcon className="h-4.5 w-4.5" /> {ft.save}</span>
-                      </button>
-                      <Link href={`/messages?user=${post.user_id}`} className="rounded-lg px-2 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                        <span className="inline-flex items-center justify-center gap-2"><SendIcon className="h-4.5 w-4.5" /> {ft.send}</span>
-                      </Link>
-                    </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600">
+                                Public
+                              </span>
 
-                    <div className="mt-3 space-y-3">
-                      {postComments.slice(-2).map((comment) => {
-                        const commentAuthorName = getBestNameForUser(
-                          comment.user_id,
-                          comment.full_name
-                        );
+                              {post.video_url && (
+                                <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-blue-600">
+                                  Video post
+                                </span>
+                              )}
 
-                        return (
-                          <div key={comment.id} className="flex gap-2">
-                            <img
-                              src={getBestAvatarForUser(comment.user_id, comment.full_name)}
-                              alt={commentAuthorName}
-                              className="h-8 w-8 rounded-full object-cover"
-                            />
-                            <div className="rounded-2xl bg-slate-100 px-3 py-2">
-                              <p className="text-xs font-semibold">{commentAuthorName}</p>
-                              <p className="text-sm text-slate-700">{comment.content}</p>
+                              {post.image_url && !post.video_url && (
+                                <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-2.5 py-1 text-[11px] text-fuchsia-200">
+                                  Photo post
+                                </span>
+                              )}
                             </div>
                           </div>
-                        );
-                      })}
+                        </Link>
 
-                      <form onSubmit={(event) => handleAddComment(event, post.id)} className="flex gap-2">
-                        <img
-                          src={userAvatar || getAvatarUrl(userName)}
-                          alt={userName}
-                          className="h-8 w-8 rounded-full object-cover"
-                        />
-                        <input
-                          value={commentDrafts[post.id] || ""}
-                          onChange={(event) =>
-                            setCommentDrafts((prev) => ({
-                              ...prev,
-                              [post.id]: event.target.value,
-                            }))
-                          }
-                          placeholder={ft.writeComment}
-                          className="flex-1 rounded-full bg-slate-100 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-200"
-                        />
-                        <button
-                          type="submit"
-                          disabled={commentingPostId === post.id}
-                          className="rounded-full bg-blue-600 px-4 text-sm font-semibold text-white disabled:opacity-60"
-                        >
-                          {commentingPostId === post.id ? "..." : ft.post}
-                        </button>
-                      </form>
+                        {post.user_id === userId && (
+                          <button
+                            onClick={() => handleDeletePost(post.id)}
+                            className="px-4 py-2 text-xs text-red-200 transition border rounded-2xl border-red-400/20 bg-red-500/10 hover:bg-red-500/20"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+
+                      {post.content && (
+                        <div className="mt-5">
+                          <p className="text-[15px] leading-8 text-slate-700">{post.content}</p>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </article>
-              );
-            })
+
+                    {post.image_url && (
+                      <div className="px-3 pb-3 border-y border-slate-200 bg-black/20 sm:px-4 sm:pb-4">
+                        <div className="overflow-hidden rounded-[28px]">
+                          <img
+                            src={post.image_url}
+                            alt="Post"
+                            className="max-h-[720px] w-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {post.video_url && (
+                      <div className="px-3 pb-3 border-y border-slate-200 bg-slate-950 sm:px-4 sm:pb-4">
+                        <div className="overflow-hidden rounded-[28px]">
+                          {isYouTubeUrl(post.video_url) ? (
+                            <iframe
+                              src={getYouTubeEmbedUrl(post.video_url)}
+                              title={`feed-video-${post.id}`}
+                              className="h-80 w-full md:h-[480px]"
+                              allowFullScreen
+                            />
+                          ) : (
+                            <video
+                              controls
+                              className="h-80 w-full bg-black md:h-[480px]"
+                              src={post.video_url}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="p-5 sm:p-6">
+                      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
+                        <div className="flex items-center gap-3 text-sm">
+                          <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5">
+                            <span className="text-base">❤️</span>
+                            <span className="text-slate-700">
+                              {likesCount} {likesCount === 1 ? "like" : "likes"}
+                            </span>
+                          </div>
+
+                          <div className="rounded-full bg-white px-3 py-1.5 text-slate-600">
+                            {commentsCount} {commentsCount === 1 ? "comment" : "comments"}
+                          </div>
+                        </div>
+
+                        <Link
+                          href={`/post/${post.id}`}
+                          className="text-sm font-medium transition text-blue-600 hover:text-blue-600"
+                        >
+                          View discussion
+                        </Link>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+                        <button
+                          onClick={() => handleToggleLike(post.id, post.user_id)}
+                          className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                            isLiked(post.id)
+                              ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
+                              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          {isLiked(post.id) ? "Liked" : "Like"}
+                        </button>
+
+                        <Link
+                          href={`/post/${post.id}`}
+                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-medium text-slate-600 transition hover:bg-slate-100"
+                        >
+                          Comment
+                        </Link>
+
+                        <button
+                          onClick={() => handleToggleSave(post.id)}
+                          className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                            isSaved(post.id)
+                              ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
+                              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          {isSaved(post.id) ? "Saved" : "Save"}
+                        </button>
+
+                        <Link
+                          href={`/post/${post.id}`}
+                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-medium text-blue-600 transition hover:bg-slate-100"
+                        >
+                          Open
+                        </Link>
+                      </div>
+
+                      {latestComments.length > 0 && (
+                        <div className="pt-4 mt-5 space-y-3 border-t border-slate-200">
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            Recent comments
+                          </p>
+
+                          {latestComments.map((comment) => {
+                            const commentAuthorName = getBestNameForUser(
+                              comment.user_id,
+                              comment.full_name
+                            );
+                            const commentAuthorAvatar = getBestAvatarForUser(
+                              comment.user_id,
+                              comment.full_name,
+                              null
+                            );
+
+                            return (
+                              <div
+                                key={comment.id}
+                                className={`flex items-start gap-3 rounded-2xl px-3 py-3 ${softCard}`}
+                              >
+                                <img
+                                  src={commentAuthorAvatar}
+                                  alt={commentAuthorName}
+                                  className="object-cover h-9 w-9 rounded-xl"
+                                />
+
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <p className="text-sm font-medium text-slate-950">
+                                      {commentAuthorName}
+                                    </p>
+                                    <span className="text-[11px] text-slate-500">
+                                      {new Date(comment.created_at).toLocaleString()}
+                                    </span>
+                                  </div>
+
+                                  <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-600">
+                                    {comment.content}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           )}
         </section>
 
-        <aside className="hidden xl:block">
-          <div className="sticky top-[72px] space-y-4">
-            <section className="rounded-xl bg-white p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="font-semibold text-slate-600">{ft.friendRequests}</p>
-                <Link href="/friends" className="text-sm text-blue-600">{ft.seeAll}</Link>
-              </div>
-
-              {suggestedProfiles.length === 0 ? (
-                <p className="text-sm text-slate-500">{ft.noSuggestions}</p>
-              ) : (
-                <div className="space-y-3">
-                  {suggestedProfiles.slice(0, 2).map((profile) => (
-                    <div key={profile.id} className="flex gap-3">
-                      <img
-                        src={profile.avatar_url || getAvatarUrl(profile.full_name)}
-                        alt={profile.full_name}
-                        className="h-12 w-12 rounded-full object-cover"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold">{profile.full_name}</p>
-                        <p className="text-xs text-slate-500">@{profile.username || "facegrem"}</p>
-                        <div className="mt-2 grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleFollow(profile.id)}
-                            disabled={followingUserId === profile.id}
-                            className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                          >
-                            {ft.confirm}
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700"
-                          >
-                            {ft.delete}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+        <aside className="space-y-5">
+          <div className={`rounded-[28px] p-5 ${glassCard}`}>
+            {activeRightPanel === "friends" && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-blue-600">Friends</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Online, suggestions, and your friends
+                  </p>
                 </div>
-              )}
-            </section>
 
-            <section className="rounded-xl bg-white p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="font-semibold text-slate-600">{ft.contacts}</p>
-                <span className="text-sm text-slate-400">{ft.online}</span>
-              </div>
-
-              <div className="space-y-1">
-                {onlineProfiles.map((profile) => (
-                  <Link
-                    key={profile.id}
-                    href={`/messages?user=${profile.id}`}
-                    className="flex items-center gap-3 rounded-xl p-2 hover:bg-slate-50"
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveFriendsTab("online")}
+                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
+                      activeFriendsTab === "online"
+                        ? "bg-cyan-500/20 text-blue-600"
+                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                    }`}
                   >
-                    <div className="relative">
-                      <img
-                        src={profile.avatar_url || getAvatarUrl(profile.full_name)}
-                        alt={profile.full_name}
-                        className="h-9 w-9 rounded-full object-cover"
-                      />
-                      <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
+                    Online
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveFriendsTab("suggestions")}
+                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
+                      activeFriendsTab === "suggestions"
+                        ? "bg-cyan-500/20 text-blue-600"
+                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    Suggestions
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveFriendsTab("your_friends")}
+                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
+                      activeFriendsTab === "your_friends"
+                        ? "bg-cyan-500/20 text-blue-600"
+                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    Your Friends
+                  </button>
+                </div>
+
+                {activeFriendsTab === "online" && (
+                  <div className="space-y-4">
+                    {onlinePeople.length === 0 ? (
+                      <p className="text-sm text-slate-500">No online friends to show yet.</p>
+                    ) : (
+                      onlinePeople.map((person) => (
+                        <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
+                          <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
+                            <div className="relative">
+                              <img
+                                src={
+                                  person.avatar_url ||
+                                  getAvatarUrl(person.full_name || "FaceGrem User")
+                                }
+                                alt={person.full_name}
+                                className="object-cover w-12 h-12 rounded-2xl"
+                              />
+                              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#07111f] bg-emerald-400" />
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-slate-950 truncate">{person.full_name}</p>
+                              <p className="text-xs truncate text-slate-500">
+                                @{person.username || "member"} • online
+                              </p>
+                            </div>
+                          </Link>
+
+                          <div className="grid grid-cols-2 gap-2 mt-3">
+                            <Link
+                              href={`/messages?user=${person.id}`}
+                              className="rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-sm shadow-blue-200"
+                            >
+                              Message
+                            </Link>
+
+                            <Link
+                              href={`/profile?id=${person.id}`}
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm text-slate-600 transition hover:bg-slate-100"
+                            >
+                              View
+                            </Link>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {activeFriendsTab === "suggestions" && (
+                  <div className="space-y-4">
+                    {suggestedPeople.length === 0 ? (
+                      <p className="text-sm text-slate-500">No suggestions yet.</p>
+                    ) : (
+                      suggestedPeople.map((person) => {
+                        const following = isFollowingUser(person.id);
+
+                        return (
+                          <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
+                            <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
+                              <img
+                                src={
+                                  person.avatar_url ||
+                                  getAvatarUrl(person.full_name || "FaceGrem User")
+                                }
+                                alt={person.full_name}
+                                className="object-cover w-12 h-12 rounded-2xl"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-slate-950 truncate">{person.full_name}</p>
+                                <p className="text-xs truncate text-slate-500">
+                                  @{person.username || "member"}
+                                </p>
+                              </div>
+                            </Link>
+
+                            <div className="flex gap-2 mt-3">
+                              <button
+                                onClick={() => handleToggleFollow(person.id)}
+                                className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
+                                  following
+                                    ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
+                                    : "bg-blue-600 text-white shadow-sm"
+                                }`}
+                              >
+                                {following ? "Following" : "Follow"}
+                              </button>
+
+                              <Link
+                                href={`/profile?id=${person.id}`}
+                                className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 transition hover:bg-slate-100"
+                              >
+                                View
+                              </Link>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+
+                {activeFriendsTab === "your_friends" && (
+                  <div className="space-y-4">
+                    {yourFriends.length === 0 ? (
+                      <p className="text-sm text-slate-500">You have no friends to show yet.</p>
+                    ) : (
+                      yourFriends.map((person) => (
+                        <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
+                          <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
+                            <img
+                              src={
+                                person.avatar_url ||
+                                getAvatarUrl(person.full_name || "FaceGrem User")
+                              }
+                              alt={person.full_name}
+                              className="object-cover w-12 h-12 rounded-2xl"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-slate-950 truncate">{person.full_name}</p>
+                              <p className="text-xs truncate text-slate-500">
+                                @{person.username || "member"}
+                              </p>
+                            </div>
+                          </Link>
+
+                          <div className="grid grid-cols-2 gap-2 mt-3">
+                            <Link
+                              href={`/messages?user=${person.id}`}
+                              className="rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-sm shadow-blue-200"
+                            >
+                              Message
+                            </Link>
+
+                            <Link
+                              href={`/profile?id=${person.id}`}
+                              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm text-slate-600 transition hover:bg-slate-100"
+                            >
+                              View
+                            </Link>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeRightPanel === "communities" && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-blue-600">Communities</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Discover and open communities
+                  </p>
+                </div>
+
+                {suggestedCommunities.length === 0 ? (
+                  <p className="text-sm text-slate-500">No communities to show yet.</p>
+                ) : (
+                  suggestedCommunities.map((community) => {
+                    const memberCount = communityMembers.filter(
+                      (member) => member.community_id === community.id
+                    ).length;
+
+                    return (
+                      <Link
+                        key={community.id}
+                        href={`/communities/${community.id}`}
+                        className={`block rounded-2xl p-4 transition hover:bg-slate-100 ${softCard}`}
+                      >
+                        <p className="font-medium text-slate-950">{community.name}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {community.category || "Community"} • {memberCount} members
+                        </p>
+                      </Link>
+                    );
+                  })
+                )}
+
+                <Link
+                  href="/communities"
+                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-200"
+                >
+                  Open communities page
+                </Link>
+              </div>
+            )}
+
+            {activeRightPanel === "messages" && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-blue-600">Messages</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Recent activity and quick access
+                  </p>
+                </div>
+
+                {latestActivity.length === 0 ? (
+                  <p className="text-sm text-slate-500">No activity yet.</p>
+                ) : (
+                  latestActivity.map((notification) => (
+                    <div key={notification.id} className={`rounded-2xl px-4 py-3 ${softCard}`}>
+                      <p className="text-sm leading-6 text-slate-950">
+                        <span className="font-medium">
+                          {notification.actor_name || "Someone"}
+                        </span>{" "}
+                        {notification.type}
+                        {notification.content ? `: ${notification.content}` : ""}
+                      </p>
+                      <p className="mt-2 text-xs text-slate-500">
+                        {new Date(notification.created_at).toLocaleString()}
+                      </p>
                     </div>
-                    <span className="truncate text-sm font-medium">{profile.full_name}</span>
-                  </Link>
-                ))}
-              </div>
-            </section>
+                  ))
+                )}
 
-            <section className="rounded-xl bg-white p-4 shadow-sm">
-              <p className="mb-3 font-semibold text-slate-600">{ft.suggestedCommunities}</p>
-              <div className="space-y-2">
-                {communities.slice(0, 4).map((community) => (
-                  <Link
-                    key={community.id}
-                    href={`/communities/${community.id}`}
-                    className="block rounded-xl bg-slate-50 p-3 hover:bg-slate-100"
-                  >
-                    <p className="truncate text-sm font-semibold">{community.name}</p>
-                    <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-                      {community.description || community.category || ft.communityFallback}
-                    </p>
-                  </Link>
-                ))}
+                <Link
+                  href="/messages"
+                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-200"
+                >
+                  Open messages
+                </Link>
               </div>
-            </section>
+            )}
+
+            {activeRightPanel === "videos" && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-semibold text-blue-600">Videos</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Trending and recent videos
+                  </p>
+                </div>
+
+                {latestVideoCards.length === 0 ? (
+                  <p className="text-sm text-slate-500">No videos published yet.</p>
+                ) : (
+                  latestVideoCards.map((video) => (
+                    <Link
+                      key={video.id}
+                      href="/videos"
+                      className={`block rounded-2xl p-4 transition hover:bg-slate-100 ${softCard}`}
+                    >
+                      <p className="font-medium text-slate-950">{video.title}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {(video.views_count || 0).toLocaleString()} views
+                      </p>
+                    </Link>
+                  ))
+                )}
+
+                <Link
+                  href="/videos"
+                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-200"
+                >
+                  Open videos page
+                </Link>
+              </div>
+            )}
           </div>
         </aside>
       </main>
+
+      {storyViewerOpen && activeStory && activeStoryGroup && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 px-4 backdrop-blur-md">
+          <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-slate-200 bg-[#07111f] shadow-2xl">
+            <div className="absolute inset-x-0 top-0 z-10 flex gap-1 px-4 pt-4">
+              {activeStoryGroup.stories.map((story, index) => (
+                <div key={story.id} className="flex-1 h-1 rounded-full bg-white/20">
+                  <div
+                    className={`h-1 rounded-full ${
+                      index <= activeStoryIndex ? "bg-white" : "bg-transparent"
+                    }`}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={closeStoryViewer}
+              className="absolute z-20 px-3 py-1 text-sm text-slate-950 border rounded-full right-4 top-6 border-slate-200 bg-slate-950"
+            >
+              ✕
+            </button>
+
+            <div className="relative">
+              <img
+                src={activeStory.image_url}
+                alt={getBestNameForUser(activeStory.user_id)}
+                className="h-[72vh] w-full object-cover"
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
+
+              <button
+                type="button"
+                onClick={goToPreviousStory}
+                className="absolute top-0 left-0 w-1/3 h-full"
+                aria-label="Previous story"
+              />
+              <button
+                type="button"
+                onClick={goToNextStory}
+                className="absolute top-0 right-0 w-1/3 h-full"
+                aria-label="Next story"
+              />
+
+              <div className="absolute z-10 flex items-center gap-3 pt-4 left-4 top-6">
+                <img
+                  src={getBestAvatarForUser(activeStory.user_id)}
+                  alt={getBestNameForUser(activeStory.user_id)}
+                  className="object-cover border h-11 w-11 rounded-2xl border-white/20"
+                />
+                <div>
+                  <p className="font-medium text-slate-950">
+                    {getBestNameForUser(activeStory.user_id)}
+                  </p>
+                  <p className="text-xs text-slate-950/75">
+                    {new Date(activeStory.created_at).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {activeStory.caption && (
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <p className="text-sm leading-7 text-slate-950">{activeStory.caption}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <MobileBottomNav unreadNotificationsCount={unreadNotificationsCount} />
     </div>
   );
 }

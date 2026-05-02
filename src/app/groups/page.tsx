@@ -88,6 +88,7 @@ export default function GroupsPage() {
   const [groupName, setGroupName] = useState("");
   const [groupCategory, setGroupCategory] = useState("");
   const [groupDescription, setGroupDescription] = useState("");
+  const [groupVisibility, setGroupVisibility] = useState<"public" | "private">("public");
   const [searchTerm, setSearchTerm] = useState("");
 
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
@@ -311,6 +312,7 @@ export default function GroupsPage() {
       setGroupName("");
       setGroupCategory("");
       setGroupDescription("");
+      setGroupVisibility("public");
       setShowCreateForm(false);
     }
 
@@ -377,35 +379,34 @@ export default function GroupsPage() {
             <button
               type="button"
               onClick={() => setIsMenuOpen(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-base text-slate-700 shadow-sm transition hover:bg-slate-200"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-700 shadow-sm transition hover:bg-slate-200"
               aria-label="Open menu"
             >
-              ☰
+              ≡
             </button>
 
-            <div className="flex items-center gap-3">
-              <FaceGremLogo
-                href="/feed"
-                showWordmark={false}
-                markClassName="h-10 w-10 rounded-2xl ring-0 shadow-sm sm:h-11 sm:w-11"
-              />
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold tracking-tight text-[#050505]">FaceGrem</h1>
-                <p className="text-xs text-slate-500">{t.brandTagline}</p>
-              </div>
+            <FaceGremLogo
+              href="/feed"
+              showWordmark={false}
+              markClassName="h-10 w-10 rounded-2xl ring-0 shadow-sm sm:h-11 sm:w-11"
+            />
+
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-bold tracking-tight text-slate-950">FaceGrem</h1>
+              <p className="text-xs text-slate-500">{t.groups}</p>
             </div>
           </div>
 
           <div className="min-w-0 flex-1">
             <div className="mx-auto max-w-xl">
-              <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 shadow-sm transition focus-within:border-cyan-400/40 sm:px-4 lg:py-3">
-                <span className="text-sm text-slate-500">⌕</span>
+              <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 shadow-sm transition focus-within:border-blue-300 focus-within:bg-white">
+                <span className="text-sm text-slate-500">🔎</span>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={t.searchGroups}
-                  className="w-full bg-transparent text-xs text-slate-900 outline-none placeholder:text-slate-500 sm:text-sm"
+                  className="w-full bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -414,7 +415,7 @@ export default function GroupsPage() {
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => setShowCreateForm((prev) => !prev)}
-              className="hidden rounded-2xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-slate-900 shadow-lg shadow-blue-200 sm:inline-flex"
+              className="hidden rounded-full bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 sm:inline-flex"
             >
               {showCreateForm ? t.close : t.create}
             </button>
@@ -423,7 +424,7 @@ export default function GroupsPage() {
               <button
                 type="button"
                 onClick={() => setIsLanguageMenuOpen((prev) => !prev)}
-                className="inline-flex h-9 items-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
+                className="inline-flex h-10 items-center rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200"
                 aria-label="Language"
                 title="Language"
               >
@@ -431,7 +432,7 @@ export default function GroupsPage() {
               </button>
 
               {isLanguageMenuOpen && (
-                <div className="absolute right-0 top-11 z-[90] w-44 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl backdrop-blur-xl">
+                <div className="absolute right-0 top-12 z-[90] w-44 rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl">
                   {(["en", "sw", "fr", "rw"] as TranslationLanguage[]).map((language) => (
                     <button
                       key={language}
@@ -440,7 +441,7 @@ export default function GroupsPage() {
                       className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition ${
                         selectedLanguage === language
                           ? "bg-blue-50 text-blue-700"
-                          : "text-[#050505] hover:bg-slate-100"
+                          : "text-slate-700 hover:bg-slate-100"
                       }`}
                     >
                       <span>{languageLabels[language]}</span>
@@ -452,31 +453,22 @@ export default function GroupsPage() {
             </div>
 
             <NotificationDropdown
-              iconClassName="relative inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-[13px] text-slate-700 transition hover:bg-slate-100"
+              iconClassName="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-[13px] text-slate-700 shadow-sm transition hover:bg-slate-200"
             />
 
             <Link
               href="/profile"
-              className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-white px-2 py-1.5 transition hover:bg-slate-100 md:flex md:px-2 md:pr-3"
+              className="hidden items-center gap-2 rounded-full bg-slate-100 px-2 py-1.5 transition hover:bg-slate-200 md:flex md:px-2 md:pr-3"
             >
               <img
                 src={userAvatar}
                 alt={userName}
-                className="h-8 w-8 rounded-xl object-cover ring-1 ring-cyan-400/15"
+                className="h-8 w-8 rounded-full object-cover"
               />
-              <span className="hidden max-w-[120px] truncate text-sm font-medium text-slate-900 lg:inline-block">
+              <span className="hidden max-w-[120px] truncate text-sm font-semibold text-slate-700 lg:inline-block">
                 {userName}
               </span>
             </Link>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={signingOut}
-              className="hidden rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-70 lg:inline-flex"
-            >
-              {signingOut ? t.signingOut : t.logout}
-            </button>
           </div>
         </div>
       </header>
@@ -490,52 +482,49 @@ export default function GroupsPage() {
         notificationCount={unreadNotificationsCount}
       />
 
-      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_320px]">
+      <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:py-8 xl:grid-cols-[280px_minmax(0,1fr)_340px]">
         <aside className="hidden xl:block">
-          <div className="sticky top-[104px] space-y-4">
-            <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-[linear-gradient(135deg,rgba(34,211,238,0.12),rgba(15,23,42,0.94)_45%,rgba(30,41,59,0.94))] p-4 shadow-[0_20px_60px_rgba(6,182,212,0.10)] backdrop-blur-xl">
+          <div className="sticky top-[96px] space-y-4">
+            <section className="rounded-[30px] bg-white p-5 shadow-sm ring-1 ring-slate-200">
               <div className="flex items-center gap-3">
                 <img
                   src={userAvatar}
                   alt={userName}
-                  className="object-cover h-14 w-14 rounded-2xl ring-2 ring-cyan-400/20"
+                  className="h-14 w-14 rounded-2xl object-cover"
                 />
                 <div className="min-w-0">
-                  <p className="font-semibold text-slate-900 truncate">{userName}</p>
-                  <p className="text-sm truncate text-slate-500">{t.yourGroupSpace}</p>
+                  <p className="truncate font-bold text-slate-950">{userName}</p>
+                  <p className="truncate text-sm text-slate-500">{t.yourGroupSpace}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="px-3 py-3 text-center border rounded-2xl border-slate-200 bg-white/5">
-                  <p className="text-[11px] text-slate-500">{t.joined}</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">{myGroupIds.length}</p>
+              <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="rounded-2xl bg-blue-50 px-3 py-3 text-center">
+                  <p className="text-[11px] font-semibold text-blue-600">{t.joined}</p>
+                  <p className="mt-1 text-lg font-black text-slate-950">{myGroupIds.length}</p>
                 </div>
-                <div className="px-3 py-3 text-center border rounded-2xl border-slate-200 bg-white/5">
-                  <p className="text-[11px] text-slate-500">{t.all}</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">{groups.length}</p>
+                <div className="rounded-2xl bg-slate-50 px-3 py-3 text-center">
+                  <p className="text-[11px] font-semibold text-slate-500">{t.all}</p>
+                  <p className="mt-1 text-lg font-black text-slate-950">{groups.length}</p>
                 </div>
-                <div className="px-3 py-3 text-center border rounded-2xl border-slate-200 bg-white/5">
-                  <p className="text-[11px] text-slate-500">{t.posts}</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-900">{groupPosts.length}</p>
+                <div className="rounded-2xl bg-slate-50 px-3 py-3 text-center">
+                  <p className="text-[11px] font-semibold text-slate-500">{t.posts}</p>
+                  <p className="mt-1 text-lg font-black text-slate-950">{groupPosts.length}</p>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div className="rounded-[28px] border border-slate-200 bg-white/5 p-4 backdrop-blur-xl">
+            <section className="rounded-[30px] bg-white p-5 shadow-sm ring-1 ring-slate-200">
               <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-blue-600">{t.yourGroups}</p>
-                <Link
-                  href="/groups"
-                  className="text-xs transition text-cyan-300 hover:text-blue-600"
-                >
+                <p className="text-sm font-bold text-slate-950">{t.yourGroups}</p>
+                <Link href="/groups" className="text-xs font-semibold text-blue-600 hover:text-blue-700">
                   {t.viewAll}
                 </Link>
               </div>
 
               <div className="mt-4 space-y-3">
                 {joinedGroups.length === 0 ? (
-                  <p className="text-sm leading-6 text-slate-500">
+                  <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-500">
                     {t.noJoinedGroups}
                   </p>
                 ) : (
@@ -543,9 +532,9 @@ export default function GroupsPage() {
                     <Link
                       key={group.id}
                       href={`/communities/${group.id}`}
-                      className="block px-4 py-3 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
+                      className="block rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:bg-slate-50"
                     >
-                      <p className="font-medium text-slate-900">{group.name}</p>
+                      <p className="truncate font-semibold text-slate-950">{group.name}</p>
                       <p className="mt-1 text-xs text-slate-500">
                         {group.category || t.groupFallback}
                       </p>
@@ -553,92 +542,161 @@ export default function GroupsPage() {
                   ))
                 )}
               </div>
-            </div>
+            </section>
           </div>
         </aside>
 
-        <section className="min-w-0 space-y-5 sm:space-y-6">
-          <div className="overflow-hidden rounded-[32px] border border-slate-200 bg-[linear-gradient(135deg,rgba(8,47,73,0.95),rgba(15,23,42,0.95)_55%,rgba(30,41,59,0.95))] p-6 shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-2xl">
-                <p className="text-sm font-semibold text-blue-600">{t.discoverBelong}</p>
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-[#050505] sm:text-4xl">
+        <section className="min-w-0 space-y-5">
+          <section className="overflow-hidden rounded-[34px] bg-white shadow-sm ring-1 ring-slate-200">
+            <div className="grid gap-6 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-[0.18em] text-blue-600">
+                  {t.discoverBelong}
+                </p>
+                <h2 className="mt-3 max-w-3xl text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
                   {t.heroTitle}
                 </h2>
-                <p className="max-w-xl mt-3 text-sm leading-7 text-slate-600">
+                <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600">
                   {t.heroText}
                 </p>
+
+                <div className="mt-6 flex flex-wrap gap-2">
+                  <span className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white">
+                    Public groups visible to members
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
+                    Clean cards
+                  </span>
+                  <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600">
+                    Better discovery
+                  </span>
+                </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 sm:min-w-[320px]">
-                <div className="p-4 border rounded-2xl border-slate-200 bg-white/5">
-                  <p className="text-xs text-slate-500">{t.joined}</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">{myGroupIds.length}</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-[24px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+                  <p className="text-xs font-semibold text-slate-500">{t.joined}</p>
+                  <p className="mt-2 text-3xl font-black text-blue-600">{myGroupIds.length}</p>
                 </div>
-                <div className="p-4 border rounded-2xl border-slate-200 bg-white/5">
-                  <p className="text-xs text-slate-500">{t.groups}</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">{groups.length}</p>
+                <div className="rounded-[24px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+                  <p className="text-xs font-semibold text-slate-500">{t.groups}</p>
+                  <p className="mt-2 text-3xl font-black text-slate-950">{groups.length}</p>
                 </div>
-                <div className="p-4 border rounded-2xl border-slate-200 bg-white/5">
-                  <p className="text-xs text-slate-500">{t.posts}</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">{groupPosts.length}</p>
+                <div className="rounded-[24px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+                  <p className="text-xs font-semibold text-slate-500">{t.posts}</p>
+                  <p className="mt-2 text-3xl font-black text-slate-950">{groupPosts.length}</p>
                 </div>
               </div>
             </div>
+          </section>
+
+          <div className="flex flex-col gap-3 rounded-[26px] bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-bold text-slate-950">Group visibility</p>
+              <p className="mt-1 text-sm text-slate-500">
+                Groups are shown with clear public visibility labels so people know what they can open and join.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowCreateForm((prev) => !prev)}
+              className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
+            >
+              {showCreateForm ? t.close : t.createGroup}
+            </button>
           </div>
 
           {showCreateForm && (
             <form
               onSubmit={handleCreateGroup}
-              className="overflow-hidden rounded-[28px] border border-slate-200 bg-[linear-gradient(135deg,rgba(15,23,42,0.92),rgba(30,41,59,0.92)_45%,rgba(15,23,42,0.96))] shadow-[0_25px_80px_rgba(15,23,42,0.45)] backdrop-blur-xl sm:rounded-[34px]"
+              className="overflow-hidden rounded-[30px] bg-white shadow-sm ring-1 ring-slate-200"
             >
-              <div className="px-4 py-4 border-b border-slate-200 sm:px-6">
-                <div className="flex items-center justify-between gap-4">
+              <div className="border-b border-slate-200 bg-slate-50 px-5 py-5 sm:px-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-blue-600">{t.createGroup}</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {t.createGroupSubtitle}
-                    </p>
+                    <p className="text-sm font-bold text-blue-600">{t.createGroup}</p>
+                    <p className="mt-1 text-sm text-slate-500">{t.createGroupSubtitle}</p>
                   </div>
 
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-blue-600">
+                  <span className="w-fit rounded-full bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">
                     {t.groupBuilder}
                   </span>
                 </div>
               </div>
 
-              <div className="p-4 sm:p-6">
+              <div className="space-y-4 p-5 sm:p-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                  <input
-                    type="text"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    placeholder={t.groupName}
-                    className="w-full px-4 py-3 text-sm text-slate-700 transition border outline-none rounded-2xl border-slate-200 bg-white/5 placeholder:text-slate-500 focus:border-cyan-400/40"
-                  />
+                  <label className="block">
+                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+                      Group name
+                    </span>
+                    <input
+                      type="text"
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      placeholder={t.groupName}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-300 focus:bg-white"
+                    />
+                  </label>
 
-                  <input
-                    type="text"
-                    value={groupCategory}
-                    onChange={(e) => setGroupCategory(e.target.value)}
-                    placeholder={t.categoryOptional}
-                    className="w-full px-4 py-3 text-sm text-slate-700 transition border outline-none rounded-2xl border-slate-200 bg-white/5 placeholder:text-slate-500 focus:border-cyan-400/40"
-                  />
+                  <label className="block">
+                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+                      Category
+                    </span>
+                    <input
+                      type="text"
+                      value={groupCategory}
+                      onChange={(e) => setGroupCategory(e.target.value)}
+                      placeholder={t.categoryOptional}
+                      className="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-300 focus:bg-white"
+                    />
+                  </label>
                 </div>
 
-                <textarea
-                  value={groupDescription}
-                  onChange={(e) => setGroupDescription(e.target.value)}
-                  rows={4}
-                  placeholder={t.groupDescription}
-                  className="w-full px-4 py-3 mt-4 text-sm text-slate-700 transition border outline-none resize-none rounded-2xl border-slate-200 bg-white/5 placeholder:text-slate-500 focus:border-cyan-400/40"
-                />
+                <label className="block">
+                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+                    Visibility
+                  </span>
+                  <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                    {(["public", "private"] as const).map((visibility) => (
+                      <button
+                        key={visibility}
+                        type="button"
+                        onClick={() => setGroupVisibility(visibility)}
+                        className={`rounded-2xl border px-4 py-4 text-left transition ${
+                          groupVisibility === visibility
+                            ? "border-blue-300 bg-blue-50 text-blue-700"
+                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <p className="font-bold capitalize">{visibility}</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
+                          {visibility === "public"
+                            ? "Anyone can discover and request to join this group."
+                            : "Private visibility UI is ready; database privacy can be added later."}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </label>
 
-                <div className="flex justify-end mt-5">
+                <label className="block">
+                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+                    Description
+                  </span>
+                  <textarea
+                    value={groupDescription}
+                    onChange={(e) => setGroupDescription(e.target.value)}
+                    rows={4}
+                    placeholder={t.groupDescription}
+                    className="mt-2 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-500 focus:border-blue-300 focus:bg-white"
+                  />
+                </label>
+
+                <div className="flex justify-end">
                   <button
                     type="submit"
                     disabled={creatingGroup}
-                    className="px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg rounded-2xl bg-blue-600 shadow-blue-200 disabled:opacity-70"
+                    className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-70"
                   >
                     {creatingGroup ? t.creating : t.createGroupButton}
                   </button>
@@ -648,14 +706,12 @@ export default function GroupsPage() {
           )}
 
           {filteredGroups.length === 0 ? (
-            <div className="rounded-[30px] border border-slate-200 bg-white/5 p-8 text-center backdrop-blur-xl">
-              <p className="text-lg font-medium text-slate-900">{t.noGroups}</p>
-              <p className="mt-2 text-sm text-slate-500">
-                {t.noGroupsSub}
-              </p>
+            <div className="rounded-[30px] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+              <p className="text-lg font-bold text-slate-950">{t.noGroups}</p>
+              <p className="mt-2 text-sm text-slate-500">{t.noGroupsSub}</p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-5 md:grid-cols-2">
               {filteredGroups.map((group) => {
                 const memberCount = getGroupMembersCount(group.id);
                 const postCount = getGroupPostsCount(group.id);
@@ -666,58 +722,74 @@ export default function GroupsPage() {
                 return (
                   <article
                     key={group.id}
-                    className="overflow-hidden rounded-[32px] border border-slate-200 bg-white/5 shadow-[0_20px_60px_rgba(15,23,42,0.45)] backdrop-blur-xl"
+                    className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md"
                   >
+                    <div className="h-24 bg-gradient-to-br from-blue-600 via-blue-500 to-sky-400" />
+
                     <div className="p-5 sm:p-6">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-blue-600">
-                            {group.category || t.groupFallback}
-                          </span>
-                          <span className="rounded-full border border-slate-200 bg-white/5 px-2.5 py-1 text-[11px] text-slate-600">
-                            {joined ? t.joined : t.open}
-                          </span>
+                      <div className="-mt-14 mb-4 flex items-end justify-between gap-3">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-white text-2xl shadow-sm ring-4 ring-white">
+                          <GroupPeopleIcon className="h-8 w-8 text-blue-600" />
                         </div>
 
-                        <h3 className="mt-4 text-2xl font-bold tracking-tight text-[#050505]">
-                          {group.name}
-                        </h3>
-
-                        <p className="mt-3 text-sm leading-7 text-slate-600">
-                          {group.description || "No description yet."}
-                        </p>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-blue-700 shadow-sm ring-1 ring-blue-100">
+                          Public
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-3 mt-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700">
+                          {group.category || t.groupFallback}
+                        </span>
+                        <span
+                          className={`rounded-full px-3 py-1 text-[11px] font-bold ${
+                            joined
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {joined ? t.joined : t.open}
+                        </span>
+                      </div>
+
+                      <h3 className="mt-4 text-2xl font-black tracking-tight text-slate-950">
+                        {group.name}
+                      </h3>
+
+                      <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-600">
+                        {group.description || "No description yet."}
+                      </p>
+
+                      <div className="mt-5 flex items-center gap-3 rounded-2xl bg-slate-50 p-3">
                         <img
                           src={creatorAvatar}
                           alt={creatorName}
-                          className="object-cover h-11 w-11 rounded-2xl ring-1 ring-white/10"
+                          className="h-10 w-10 rounded-2xl object-cover"
                         />
                         <div className="min-w-0">
-                          <p className="font-medium text-slate-900 truncate">{creatorName}</p>
+                          <p className="truncate font-semibold text-slate-950">{creatorName}</p>
                           <p className="text-xs text-slate-500">{t.creator}</p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3 mt-5">
-                        <div className="p-4 border rounded-2xl border-slate-200 bg-white/5">
-                          <p className="text-xs text-slate-500">{t.members}</p>
-                          <p className="mt-2 text-xl font-bold text-slate-900">{memberCount}</p>
+                      <div className="mt-5 grid grid-cols-2 gap-3">
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                          <p className="text-xs font-semibold text-slate-500">{t.members}</p>
+                          <p className="mt-2 text-2xl font-black text-slate-950">{memberCount}</p>
                         </div>
-                        <div className="p-4 border rounded-2xl border-slate-200 bg-white/5">
-                          <p className="text-xs text-slate-500">{t.posts}</p>
-                          <p className="mt-2 text-xl font-bold text-slate-900">{postCount}</p>
+                        <div className="rounded-2xl bg-slate-50 p-4">
+                          <p className="text-xs font-semibold text-slate-500">{t.posts}</p>
+                          <p className="mt-2 text-2xl font-black text-slate-950">{postCount}</p>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3 mt-5">
+                      <div className="mt-5 grid grid-cols-2 gap-3">
                         <button
                           onClick={() => handleJoinGroup(group.id)}
-                          className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                          className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
                             joined
-                              ? "border border-red-400/20 bg-red-500/10 text-red-200 hover:bg-red-500/20"
-                              : "bg-blue-600 text-[#050505] shadow-lg shadow-blue-200"
+                              ? "border border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                              : "bg-blue-600 text-white shadow-sm hover:bg-blue-700"
                           }`}
                         >
                           {joined ? t.leave : t.join}
@@ -725,7 +797,7 @@ export default function GroupsPage() {
 
                         <Link
                           href={`/communities/${group.id}`}
-                          className="px-4 py-3 text-sm font-medium text-center transition border rounded-2xl border-slate-200 bg-white/5 text-cyan-300 hover:bg-white/10"
+                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-100"
                         >
                           {t.open}
                         </Link>
@@ -738,66 +810,77 @@ export default function GroupsPage() {
           )}
         </section>
 
-        <aside className="space-y-5 xl:space-y-5">
-          <div className="rounded-[28px] border border-slate-200 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+        <aside className="space-y-5">
+          <section className="rounded-[30px] bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div>
-              <p className="text-sm font-semibold text-blue-600">{t.suggestedGroups}</p>
+              <p className="text-sm font-bold text-slate-950">{t.suggestedGroups}</p>
               <p className="mt-1 text-xs text-slate-500">{t.suggestedGroupsSub}</p>
             </div>
 
-            <div className="mt-4 space-y-4">
+            <div className="mt-4 space-y-3">
               {suggestedGroups.length === 0 ? (
-                <p className="text-sm text-slate-500">{t.noGroups}</p>
+                <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">{t.noGroups}</p>
               ) : (
                 suggestedGroups.map((group) => (
                   <Link
                     key={group.id}
                     href={`/communities/${group.id}`}
-                    className="block p-4 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
+                    className="block rounded-2xl border border-slate-200 bg-white p-4 transition hover:bg-slate-50"
                   >
-                    <p className="font-medium text-slate-900 truncate">{group.name}</p>
-                    <p className="mt-1 text-xs truncate text-slate-500">
-                      {group.category || t.groupFallback}
-                    </p>
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50">
+                        <GroupPeopleIcon className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate font-bold text-slate-950">{group.name}</p>
+                        <p className="mt-1 truncate text-xs text-slate-500">
+                          {group.category || t.groupFallback}
+                        </p>
+                      </div>
+                    </div>
                   </Link>
                 ))
               )}
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-[28px] border border-slate-200 bg-white/5 p-5 shadow-[0_20px_50px_rgba(15,23,42,0.35)] backdrop-blur-xl">
+          <section className="rounded-[30px] bg-white p-5 shadow-sm ring-1 ring-slate-200">
             <div>
-              <p className="text-sm font-semibold text-blue-600">{t.quickLinks}</p>
+              <p className="text-sm font-bold text-slate-950">{t.quickLinks}</p>
               <p className="mt-1 text-xs text-slate-500">{t.moveFast}</p>
             </div>
 
             <div className="mt-4 space-y-3">
               <Link
                 href="/feed"
-                className="block px-4 py-3 text-sm text-slate-700 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
+                className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
               >
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white shadow-sm">⌂</span>
                 {t.backToFeed}
               </Link>
               <Link
                 href="/communities"
-                className="block px-4 py-3 text-sm text-slate-700 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
+                className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
               >
+                <CommunityCircleIcon className="h-5 w-5 text-blue-600" />
                 {t.openCommunities}
               </Link>
               <Link
                 href="/messages"
-                className="block px-4 py-3 text-sm text-slate-700 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
+                className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
               >
+                <MessageBubblesIcon className="h-5 w-5 text-blue-600" />
                 {t.openMessages}
               </Link>
               <Link
                 href="/profile"
-                className="block px-4 py-3 text-sm text-slate-700 transition border rounded-2xl border-slate-200 bg-white/5 hover:bg-white/10"
+                className="flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
               >
+                <FriendsFistIcon className="h-5 w-5 text-blue-600" />
                 {t.visitProfile}
               </Link>
             </div>
-          </div>
+          </section>
         </aside>
       </main>
     </div>
