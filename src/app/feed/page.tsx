@@ -7,6 +7,7 @@ import { supabase } from "../../lib/supabase";
 import MobileBottomNav from "../../components/MobileBottomNav";
 import FaceGremLogo from "../../components/FaceGremLogo";
 import { CommunityCircleIcon, FriendsFistIcon, GroupPeopleIcon, MessageBubblesIcon, TranslateLanguageIcon } from "../../components/FaceGremCustomIcons";
+import FaceGremHamburgerMenu from "../../components/FaceGremHamburgerMenu";
 
 type ProfileRecord = {
   id: string;
@@ -150,6 +151,7 @@ export default function FeedPage() {
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [isProfileCardOpen, setIsProfileCardOpen] = useState(false);
 
   const [activeRightPanel, setActiveRightPanel] = useState<
@@ -323,6 +325,20 @@ export default function FeedPage() {
   const unreadNotificationsCount = notifications.filter(
     (notification) => !notification.is_read
   ).length;
+
+  const handleLogout = async () => {
+    setSigningOut(true);
+
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      setSigningOut(false);
+      return;
+    }
+
+    router.push("/");
+  };
 
   const suggestedPeople = useMemo(() => {
     return profiles
@@ -831,57 +847,20 @@ export default function FeedPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f0f2f5] text-[#050505]">
-        Loading FaceGrem feed...
+        <div className="rounded-[32px] bg-white px-7 py-6 text-center shadow-sm ring-1 ring-slate-200">
+          <FaceGremLogo
+            href="/feed"
+            showWordmark={false}
+            markClassName="mx-auto h-14 w-14 rounded-2xl ring-0 shadow-sm"
+          />
+          <p className="mt-4 text-sm font-bold text-slate-700">Loading FaceGrem feed...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#f0f2f5] pb-24 text-[#050505] xl:pb-0">
-      <style jsx>{`
-        @keyframes blobFloatA {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-          }
-          50% {
-            transform: translate3d(40px, -30px, 0) scale(1.15);
-          }
-        }
-
-        @keyframes blobFloatB {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-          }
-          50% {
-            transform: translate3d(-35px, 35px, 0) scale(1.1);
-          }
-        }
-
-        @keyframes blobFloatC {
-          0%,
-          100% {
-            transform: translate3d(0, 0, 0) scale(1);
-          }
-          50% {
-            transform: translate3d(20px, 25px, 0) scale(1.08);
-          }
-        }
-
-        .blob-a {
-          animation: blobFloatA 14s ease-in-out infinite;
-        }
-
-        .blob-b {
-          animation: blobFloatB 18s ease-in-out infinite;
-        }
-
-        .blob-c {
-          animation: blobFloatC 16s ease-in-out infinite;
-        }
-      `}</style>
-
+    <div className="relative min-h-screen bg-[#f0f2f5] pb-24 text-[#050505] xl:pb-0">
       <input
         ref={storyInputRef}
         type="file"
@@ -890,58 +869,56 @@ export default function FeedPage() {
         className="hidden"
       />
 
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[#f0f2f5]" />
-        <div className="absolute left-[-8rem] top-[-5rem] h-96 w-96 rounded-full bg-blue-200/40 blur-3xl" />
-        <div className="absolute right-[-8rem] top-10 h-[28rem] w-[28rem] rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="absolute bottom-[-8rem] left-1/3 h-[24rem] w-[24rem] rounded-full bg-indigo-100/40 blur-3xl" />
+        <div className="absolute -left-32 -top-28 h-96 w-96 rounded-full bg-blue-200/45 blur-3xl" />
+        <div className="absolute -right-32 top-20 h-[30rem] w-[30rem] rounded-full bg-sky-200/45 blur-3xl" />
+        <div className="absolute bottom-[-10rem] left-1/3 h-[28rem] w-[28rem] rounded-full bg-indigo-100/45 blur-3xl" />
       </div>
 
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
-        <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsMenuOpen(true)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-lg text-slate-700 shadow-sm transition hover:bg-slate-200"
-              aria-label="Open menu"
-            >
-              ☰
-            </button>
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen(true)}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-xl font-black text-slate-700 shadow-sm transition hover:bg-slate-200"
+            aria-label="Open menu"
+          >
+            ≡
+          </button>
 
-            <div className="flex items-center gap-3">
-              <FaceGremLogo
-                href="/feed"
-                showWordmark={false}
-                markClassName="h-11 w-11 rounded-2xl ring-0 shadow-sm sm:h-12 sm:w-12"
-              />
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-black tracking-tight text-slate-950">FaceGrem</h1>
-                <p className="text-xs font-medium text-slate-500">Your social world, live now</p>
-              </div>
+          <div className="flex items-center gap-3">
+            <FaceGremLogo
+              href="/feed"
+              showWordmark={false}
+              markClassName="h-11 w-11 rounded-2xl ring-0 shadow-sm"
+            />
+            <div className="hidden sm:block">
+              <h1 className="text-xl font-black tracking-tight text-slate-950">FaceGrem</h1>
+              <p className="text-xs font-semibold text-slate-500">Professional social feed</p>
             </div>
           </div>
 
-          <div className="flex-1 hidden lg:block">
-            <div className="max-w-xl mx-auto">
-              <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
+          <div className="hidden flex-1 lg:block">
+            <div className="mx-auto max-w-xl">
+              <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 shadow-inner transition focus-within:border-blue-300 focus-within:bg-white">
                 <span className="text-sm text-slate-500">⌕</span>
                 <input
                   type="text"
                   value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  placeholder="Search posts, creators, communities, topics..."
-                  className="w-full text-sm text-slate-900 bg-transparent outline-none placeholder:text-slate-500"
+                  onChange={(event) => setSearchText(event.target.value)}
+                  placeholder="Search posts, creators, communities..."
+                  className="w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-500"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={() => setActiveRightPanel("friends")}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-lg transition ${
+              className={`relative inline-flex h-11 w-11 items-center justify-center rounded-full transition ${
                 activeRightPanel === "friends"
                   ? "bg-blue-600 text-white shadow-sm"
                   : "bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200"
@@ -950,12 +927,17 @@ export default function FeedPage() {
               title="Friends"
             >
               <FriendsFistIcon className="h-5 w-5" />
+              {suggestedPeople.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+                  {suggestedPeople.length > 9 ? "9+" : suggestedPeople.length}
+                </span>
+              )}
             </button>
 
             <button
               type="button"
               onClick={() => setActiveRightPanel("communities")}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-lg transition ${
+              className={`hidden h-11 w-11 items-center justify-center rounded-full transition sm:inline-flex ${
                 activeRightPanel === "communities"
                   ? "bg-blue-600 text-white shadow-sm"
                   : "bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200"
@@ -969,7 +951,7 @@ export default function FeedPage() {
             <button
               type="button"
               onClick={() => setActiveRightPanel("messages")}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-lg transition ${
+              className={`relative inline-flex h-11 w-11 items-center justify-center rounded-full transition ${
                 activeRightPanel === "messages"
                   ? "bg-blue-600 text-white shadow-sm"
                   : "bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200"
@@ -978,292 +960,163 @@ export default function FeedPage() {
               title="Messages"
             >
               <MessageBubblesIcon className="h-5 w-5" />
+              {latestActivity.length > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
+                  {latestActivity.length > 9 ? "9+" : latestActivity.length}
+                </span>
+              )}
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveRightPanel("videos")}
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-full text-lg transition ${
-                activeRightPanel === "videos"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-slate-100 text-slate-700 shadow-sm hover:bg-slate-200"
-              }`}
+              onClick={() => router.push("/videos")}
+              className="hidden h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-sm font-black text-slate-700 shadow-sm transition hover:bg-slate-200 sm:inline-flex"
               aria-label="Videos"
               title="Videos"
             >
-              <span className="text-sm font-black">▶</span>
+              ▶
             </button>
 
-            <div className="relative">
-              <Link
-                href="/notifications"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-700 transition hover:bg-slate-100"
-              >
-                <span className="text-sm">🔔</span>
-              </Link>
+            <Link
+              href="/settings"
+              className="hidden h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-sm transition hover:bg-slate-200 lg:inline-flex"
+              aria-label="Language and settings"
+              title="Language and settings"
+            >
+              <TranslateLanguageIcon className="h-5 w-5" />
+            </Link>
 
+            <Link
+              href="/notifications"
+              className="relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-700 shadow-sm transition hover:bg-slate-200"
+              aria-label="Notifications"
+              title="Notifications"
+            >
+              🔔
               {unreadNotificationsCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex min-h-[22px] min-w-[22px] items-center justify-center rounded-full bg-blue-600 px-1 text-[11px] font-bold text-white shadow-sm">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">
                   {unreadNotificationsCount > 9 ? "9+" : unreadNotificationsCount}
                 </span>
               )}
-            </div>
+            </Link>
 
             <Link
               href="/profile"
-              className="flex items-center gap-2 rounded-full bg-slate-100 px-2 py-2 transition hover:bg-slate-200 sm:px-2 sm:pr-3"
+              className="hidden items-center gap-2 rounded-full bg-slate-100 py-1.5 pl-1.5 pr-3 transition hover:bg-slate-200 md:flex"
             >
-              <img
-                src={userAvatar}
-                alt={userName}
-                className="object-cover h-9 w-9 rounded-full"
-              />
-              <span className="hidden max-w-[120px] truncate text-sm font-medium text-slate-950 lg:inline-block">
+              <img src={userAvatar} alt={userName} className="h-9 w-9 rounded-full object-cover" />
+              <span className="hidden max-w-[120px] truncate text-sm font-bold text-slate-700 lg:inline-block">
                 {userName}
               </span>
             </Link>
           </div>
         </div>
 
-        <div className="px-4 pb-4 sm:px-6 lg:hidden">
-          <div className="mx-auto space-y-3 max-w-7xl">
-            <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
+        <div className="px-4 pb-3 sm:px-6 lg:hidden">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 shadow-inner transition focus-within:border-blue-300 focus-within:bg-white">
               <span className="text-sm text-slate-500">⌕</span>
               <input
                 type="text"
                 value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
+                onChange={(event) => setSearchText(event.target.value)}
                 placeholder="Search FaceGrem..."
-                className="w-full text-sm text-slate-900 bg-transparent outline-none placeholder:text-slate-500"
+                className="w-full bg-transparent text-sm font-medium text-slate-900 outline-none placeholder:text-slate-500"
               />
-            </div>
-
-            <div className="grid grid-cols-4 gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("friends")}
-                className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-950 transition hover:bg-slate-100"
-              >
-                Friends
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("communities")}
-                className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-950 transition hover:bg-slate-100"
-              >
-                Groups
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("messages")}
-                className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-950 transition hover:bg-slate-100"
-              >
-                Chat
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveRightPanel("videos")}
-                className="rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-medium text-slate-950 transition hover:bg-slate-100"
-              >
-                Videos
-              </button>
             </div>
           </div>
         </div>
       </header>
 
-      <section className="relative mx-auto mt-4 max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-3 rounded-[28px] bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:grid-cols-3">
-          <div className="rounded-2xl bg-blue-50 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Live feed</p>
-            <p className="mt-1 text-2xl font-black text-slate-950">{filteredPosts.length}</p>
-            <p className="text-xs text-slate-500">Posts visible now</p>
-          </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Creators</p>
-            <p className="mt-1 text-2xl font-black text-slate-950">{profiles.length}</p>
-            <p className="text-xs text-slate-500">People in your world</p>
-          </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Notifications</p>
-            <p className="mt-1 text-2xl font-black text-slate-950">{unreadNotificationsCount}</p>
-            <p className="text-xs text-slate-500">Unread updates</p>
-          </div>
+      {signingOut && (
+        <div className="fixed bottom-4 left-1/2 z-[120] -translate-x-1/2 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-2xl">
+          Signing out...
         </div>
-      </section>
-
-      {isMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-sm"
-            onClick={() => setIsMenuOpen(false)}
-          />
-          <aside className="fixed right-0 top-0 z-[70] flex h-full w-[310px] flex-col border-r border-slate-200 bg-white p-5 backdrop-blur-2xl shadow-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center font-bold text-white h-11 w-11 rounded-2xl bg-blue-600">
-                  F
-                </div>
-                <div>
-                  <h2 className="text-lg font-black text-slate-950">FaceGrem</h2>
-                  <p className="text-xs text-slate-500">Navigation</p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsMenuOpen(false)}
-                className="rounded-xl bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
-                aria-label="Close menu"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-6 space-y-2">
-              <Link
-                href="/feed"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                🏠 Home Feed
-              </Link>
-              <Link
-                href="/videos"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                🎬 Videos
-              </Link>
-              <Link
-                href="/communities"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                👥 Communities
-              </Link>
-              <Link
-                href="/messages"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                💬 Messages
-              </Link>
-              <Link
-                href="/saved"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                🔖 Saved
-              </Link>
-              <Link
-                href="/profile"
-                onClick={() => setIsMenuOpen(false)}
-                className="block rounded-2xl px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
-              >
-                👤 Profile
-              </Link>
-            </div>
-
-            <div className="pt-5 mt-8 border-t border-slate-200">
-              <p className="mb-3 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                More
-              </p>
-
-              <div className="space-y-2">
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
-                  ⚙️ Settings
-                </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
-                  🌐 Language
-                </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
-                  🔒 Privacy
-                </button>
-                <button className="block w-full rounded-2xl px-4 py-3 text-left text-slate-950 transition hover:bg-slate-100">
-                  ❓ Help
-                </button>
-              </div>
-            </div>
-          </aside>
-        </>
       )}
 
-      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+      <FaceGremHamburgerMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        userName={userName}
+        userAvatar={userAvatar}
+        onLogout={handleLogout}
+        notificationCount={unreadNotificationsCount}
+      />
+
+      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[280px_minmax(0,1fr)_360px]">
         <aside className="hidden xl:block">
-          <div className="sticky top-[104px] space-y-4">
-            <div className={`overflow-hidden rounded-[30px] p-4 ${glassCard}`}>
-              <button
-                type="button"
-                onClick={() => setIsProfileCardOpen(!isProfileCardOpen)}
-                className="flex items-center w-full gap-3 text-left"
-              >
-                <img
-                  src={userAvatar}
-                  alt={userName}
-                  className="object-cover h-14 w-14 rounded-2xl ring-2 ring-cyan-400/20"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-950 truncate">{userName}</p>
-                  <p className="text-sm truncate text-slate-500">Tap to view quick details</p>
-                </div>
-                <div className="text-xl text-slate-950">{isProfileCardOpen ? "−" : "+"}</div>
-              </button>
-
-              {isProfileCardOpen && (
-                <div className="pt-4 mt-4 space-y-3 border-t border-slate-200">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
-                      <p className="text-[11px] text-slate-500">Saved</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-950">{savedPosts.length}</p>
-                    </div>
-                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
-                      <p className="text-[11px] text-slate-500">Alerts</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-950">
-                        {unreadNotificationsCount}
-                      </p>
-                    </div>
-                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
-                      <p className="text-[11px] text-slate-500">Groups</p>
-                      <p className="mt-1 text-sm font-semibold text-slate-950">
-                        {myCommunityIds.length}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <Link
-                      href="/profile"
-                      className={`rounded-2xl px-4 py-3 text-center text-sm text-slate-950 transition hover:bg-slate-100 ${softCard}`}
-                    >
-                      Open Profile
-                    </Link>
-                    <Link
-                      href="/saved"
-                      className={`rounded-2xl px-4 py-3 text-center text-sm text-slate-950 transition hover:bg-slate-100 ${softCard}`}
-                    >
-                      Saved Posts
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className={`rounded-[28px] p-4 ${glassCard}`}>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-blue-600">Your communities</p>
-                <Link
-                  href="/communities"
-                  className="text-xs transition text-blue-600 hover:text-blue-600"
+          <div className="sticky top-[96px] space-y-5">
+            <section className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
+              <div className="h-24 bg-gradient-to-br from-blue-600 via-blue-500 to-sky-400" />
+              <div className="-mt-10 p-5">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileCardOpen((value) => !value)}
+                  className="text-left"
                 >
+                  <img
+                    src={userAvatar}
+                    alt={userName}
+                    className="h-20 w-20 rounded-[26px] border-4 border-white object-cover shadow-sm"
+                  />
+                </button>
+                <div className="mt-4">
+                  <p className="truncate text-lg font-black text-slate-950">{userName}</p>
+                  <p className="text-sm text-slate-500">Creator workspace</p>
+                </div>
+
+                <div className="mt-5 grid grid-cols-3 gap-2">
+                  <div className="rounded-2xl bg-blue-50 px-3 py-3 text-center">
+                    <p className="text-[11px] font-bold text-blue-600">Saved</p>
+                    <p className="mt-1 text-lg font-black text-slate-950">{savedPosts.length}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 px-3 py-3 text-center">
+                    <p className="text-[11px] font-bold text-slate-500">Alerts</p>
+                    <p className="mt-1 text-lg font-black text-slate-950">{unreadNotificationsCount}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 px-3 py-3 text-center">
+                    <p className="text-[11px] font-bold text-slate-500">Groups</p>
+                    <p className="mt-1 text-lg font-black text-slate-950">{myCommunityIds.length}</p>
+                  </div>
+                </div>
+
+                {isProfileCardOpen && (
+                  <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                    Quick profile tools are ready. Open your profile or saved posts below.
+                  </div>
+                )}
+
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <Link
+                    href="/profile"
+                    className="rounded-2xl bg-slate-100 px-4 py-3 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-200"
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    href="/saved"
+                    className="rounded-2xl bg-slate-100 px-4 py-3 text-center text-sm font-bold text-slate-700 transition hover:bg-slate-200"
+                  >
+                    Saved
+                  </Link>
+                </div>
+              </div>
+            </section>
+
+            <section className="rounded-[32px] bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-slate-950">Your communities</p>
+                  <p className="mt-1 text-xs text-slate-500">Spaces you joined</p>
+                </div>
+                <Link href="/communities" className="text-xs font-bold text-blue-600">
                   View all
                 </Link>
               </div>
 
               <div className="mt-4 space-y-3">
-                {communities.filter((community) => myCommunityIds.includes(community.id))
-                  .length === 0 ? (
-                  <p className="text-sm leading-7 text-slate-500">
+                {communities.filter((community) => myCommunityIds.includes(community.id)).length === 0 ? (
+                  <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-500">
                     Join communities to keep your favorite spaces close.
                   </p>
                 ) : (
@@ -1274,9 +1127,9 @@ export default function FeedPage() {
                       <Link
                         key={community.id}
                         href={`/communities/${community.id}`}
-                        className={`block rounded-2xl px-4 py-3 transition hover:bg-slate-100 ${softCard}`}
+                        className="block rounded-2xl border border-slate-200 bg-white px-4 py-3 transition hover:bg-slate-50"
                       >
-                        <p className="font-medium text-slate-950">{community.name}</p>
+                        <p className="truncate font-bold text-slate-950">{community.name}</p>
                         <p className="mt-1 text-xs text-slate-500">
                           {community.category || "Community"}
                         </p>
@@ -1284,72 +1137,98 @@ export default function FeedPage() {
                     ))
                 )}
               </div>
-            </div>
+            </section>
+
+            <section className="rounded-[32px] bg-slate-950 p-5 text-white shadow-sm">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
+                Pro workspace
+              </p>
+              <h3 className="mt-3 text-xl font-black tracking-tight">
+                Clean, fast, social.
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-slate-300">
+                Built for clear reading, strong spacing, quick actions, and consistent mobile-to-desktop behavior.
+              </p>
+            </section>
           </div>
         </aside>
 
-        <section className="min-w-0 space-y-5 sm:space-y-6">
-          <div className="overflow-hidden rounded-[32px] border border-cyan-400/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.35),rgba(2,8,23,0.18)_55%,rgba(15,23,42,0.32))] p-6 backdrop-blur-2xl shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
-            <div className="max-w-2xl">
-              <p className="text-sm font-semibold text-blue-600">Welcome back</p>
-              <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 sm:text-5xl">
-                Good to see you, {userName.split(" ")[0]}.
-              </h2>
-              <p className="max-w-xl mt-4 text-sm leading-8 text-slate-600 sm:text-base">
-                Discover what people are sharing right now across FaceGrem —
-                moments, ideas, videos, conversations, and communities.
-              </p>
-            </div>
-          </div>
-
-          <div className={`overflow-x-auto rounded-[28px] p-3 sm:rounded-[30px] sm:p-4 ${glassCard}`}>
-            <div className="flex items-center justify-between gap-3 mb-4">
+        <section className="min-w-0 space-y-5">
+          <section className="overflow-hidden rounded-[34px] bg-white shadow-sm ring-1 ring-slate-200">
+            <div className="grid gap-5 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center">
               <div>
-                <p className="text-sm font-semibold text-blue-600">Stories</p>
-                <p className="text-xs text-slate-500">Quick moments from people around you</p>
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">
+                  FaceGrem Feed
+                </p>
+                <h2 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                  Good to see you, {userName.split(" ")[0] || "Creator"}.
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+                  Discover posts, stories, videos, creators, and conversations from across your FaceGrem world.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-[24px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Feed</p>
+                  <p className="mt-2 text-3xl font-black text-slate-950">{filteredPosts.length}</p>
+                </div>
+                <div className="rounded-[24px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">People</p>
+                  <p className="mt-2 text-3xl font-black text-slate-950">{profiles.length}</p>
+                </div>
+                <div className="rounded-[24px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Alerts</p>
+                  <p className="mt-2 text-3xl font-black text-slate-950">{unreadNotificationsCount}</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="overflow-hidden rounded-[32px] bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-black text-slate-950">Stories</p>
+                <p className="text-xs text-slate-500">Fresh moments from people around you</p>
               </div>
 
               <button
                 type="button"
                 onClick={handleOpenStoryCreator}
                 disabled={storyUploading}
-                className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-70"
+                className="rounded-full bg-blue-600 px-4 py-2 text-xs font-black text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-70"
               >
                 {storyUploading ? "Uploading..." : "Create story"}
               </button>
             </div>
 
-            <div className="flex gap-3 min-w-max sm:gap-4">
+            <div className="flex gap-3 overflow-x-auto pb-1">
               <button
                 type="button"
                 onClick={handleOpenStoryCreator}
                 disabled={storyUploading}
-                className="group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-cyan-400/15 bg-white/[0.04] p-1 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-1 disabled:opacity-70 sm:h-52 sm:w-36"
+                className="relative h-44 w-28 shrink-0 overflow-hidden rounded-[28px] bg-slate-950 text-left shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 disabled:opacity-70 sm:h-52 sm:w-36"
               >
-                <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/60">
-                  <img
-                    src={userAvatar}
-                    alt={userName}
-                    className="absolute inset-0 object-cover w-full h-full opacity-35"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-[#020817]/20 to-transparent" />
-
-                  <div className="relative flex flex-col justify-between h-full p-4">
-                    <div className="flex items-center justify-center w-12 h-12 text-2xl font-semibold text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-cyan-500/30">
-                      +
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-semibold text-slate-950">
-                        {storyUploading ? "Uploading..." : "Create story"}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-950/75">Share a quick moment</p>
-                    </div>
+                <img
+                  src={userAvatar}
+                  alt={userName}
+                  className="absolute inset-0 h-full w-full object-cover opacity-40"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/25 to-transparent" />
+                <div className="relative flex h-full flex-col justify-between p-4">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-black text-white">
+                    +
+                  </span>
+                  <div>
+                    <p className="text-sm font-black text-white">
+                      {storyUploading ? "Uploading..." : "Create story"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-300">Share a moment</p>
                   </div>
                 </div>
               </button>
 
-              {storyGroups.map((group, index) => {
+              {storyGroups.map((group) => {
                 const storyProfile = getProfileById(group.userId);
                 const storyUserName = storyProfile?.full_name || "FaceGrem User";
                 const storyUserAvatar =
@@ -1362,139 +1241,101 @@ export default function FeedPage() {
                     key={group.userId}
                     type="button"
                     onClick={() => openStoryViewer(group.userId)}
-                    className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br ${
-                      index % 2 === 0
-                        ? "from-cyan-400/35 via-blue-500/25 to-fuchsia-500/25"
-                        : "from-fuchsia-500/35 via-orange-400/20 to-cyan-500/25"
-                    } p-1 text-left backdrop-blur-xl transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36`}
+                    className="relative h-44 w-28 shrink-0 overflow-hidden rounded-[28px] bg-slate-950 text-left shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 sm:h-52 sm:w-36"
                   >
-                    <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/55">
+                    <img
+                      src={previewStory.image_url}
+                      alt={storyUserName}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/10" />
+                    <div className="relative flex h-full flex-col justify-between p-4">
                       <img
-                        src={previewStory.image_url}
+                        src={storyUserAvatar}
                         alt={storyUserName}
-                        className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-80 group-hover:scale-105"
+                        className="h-12 w-12 rounded-2xl border-2 border-white object-cover shadow-sm"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-black/10" />
-
-                      <div className="relative flex flex-col justify-between h-full p-4">
-                        <img
-                          src={storyUserAvatar}
-                          alt={storyUserName}
-                          className="object-cover w-12 h-12 border-2 shadow-lg rounded-2xl border-cyan-300/90"
-                        />
-
-                        <div>
-                          <p className="text-sm font-semibold text-slate-950 line-clamp-2">
-                            {storyUserName}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-950/75">
-                            {group.userId === userId
-                              ? "Your story"
-                              : `@${storyProfile?.username || "member"}`}
-                          </p>
-                        </div>
+                      <div>
+                        <p className="line-clamp-2 text-sm font-black text-white">{storyUserName}</p>
+                        <p className="mt-1 text-xs text-slate-300">
+                          {group.userId === userId ? "Your story" : `@${storyProfile?.username || "member"}`}
+                        </p>
                       </div>
                     </div>
                   </button>
                 );
               })}
 
-              {highlightedProfiles.map((profile, index) => (
+              {highlightedProfiles.map((profile) => (
                 <Link
                   key={profile.id}
                   href={`/profile?id=${profile.id}`}
-                  className={`group relative h-48 w-28 shrink-0 overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br ${
-                    index % 2 === 0
-                      ? "from-violet-500/30 via-blue-500/20 to-cyan-500/20"
-                      : "from-amber-400/25 via-rose-500/20 to-fuchsia-500/20"
-                  } p-1 backdrop-blur-xl transition duration-300 hover:-translate-y-1 sm:h-52 sm:w-36`}
+                  className="relative h-44 w-28 shrink-0 overflow-hidden rounded-[28px] bg-slate-950 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 sm:h-52 sm:w-36"
                 >
-                  <div className="relative h-full overflow-hidden rounded-[24px] bg-[#0f172a]/55">
+                  <img
+                    src={profile.avatar_url || getAvatarUrl(profile.full_name || "FaceGrem User")}
+                    alt={profile.full_name}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/10" />
+                  <div className="relative flex h-full flex-col justify-between p-4">
                     <img
-                      src={
-                        profile.avatar_url ||
-                        getAvatarUrl(profile.full_name || "FaceGrem User")
-                      }
+                      src={profile.avatar_url || getAvatarUrl(profile.full_name || "FaceGrem User")}
                       alt={profile.full_name}
-                      className="absolute inset-0 object-cover w-full h-full transition duration-300 opacity-80 group-hover:scale-105"
+                      className="h-12 w-12 rounded-2xl border-2 border-white object-cover shadow-sm"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#020817] via-transparent to-black/10" />
-
-                    <div className="relative flex flex-col justify-between h-full p-4">
-                      <img
-                        src={
-                          profile.avatar_url ||
-                          getAvatarUrl(profile.full_name || "FaceGrem User")
-                        }
-                        alt={profile.full_name}
-                        className="object-cover w-12 h-12 border-2 shadow-lg rounded-2xl border-cyan-300/90"
-                      />
-
-                      <div>
-                        <p className="text-sm font-semibold text-slate-950 line-clamp-2">
-                          {profile.full_name}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-950/75">
-                          @{profile.username || "member"}
-                        </p>
-                      </div>
+                    <div>
+                      <p className="line-clamp-2 text-sm font-black text-white">{profile.full_name}</p>
+                      <p className="mt-1 text-xs text-slate-300">@{profile.username || "member"}</p>
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className={`overflow-hidden rounded-[30px] ${glassCard}`}>
-            <div className="px-4 py-4 border-b border-slate-200 sm:px-6">
+          <section className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
+            <div className="border-b border-slate-200 px-5 py-4 sm:px-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-blue-600">Create post</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Share a thought, photo, story, or video with FaceGrem
-                  </p>
+                  <p className="text-sm font-black text-slate-950">Create post</p>
+                  <p className="mt-1 text-xs text-slate-500">Share a thought, photo, story, or video.</p>
                 </div>
-
-                <div className="items-center hidden gap-2 sm:flex">
-                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600">
-                    Public post
-                  </span>
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-blue-600">
-                    Live composer
-                  </span>
-                </div>
+                <span className="hidden rounded-full bg-blue-50 px-3 py-1.5 text-xs font-black text-blue-700 sm:inline-flex">
+                  Public post
+                </span>
               </div>
             </div>
 
-            <div className="p-4 sm:p-6">
+            <div className="p-5 sm:p-6">
               <div className="flex items-start gap-3 sm:gap-4">
                 <img
                   src={userAvatar}
                   alt={userName}
-                  className="object-cover w-12 h-12 rounded-2xl ring-2 ring-cyan-400/15 sm:h-14 sm:w-14"
+                  className="h-12 w-12 rounded-2xl object-cover sm:h-14 sm:w-14"
                 />
 
-                <div className="flex-1 min-w-0">
-                  <div className={`rounded-[24px] p-4 ${softCard}`}>
-                    <div className="flex flex-wrap items-center gap-2 mb-3 sm:gap-3">
-                      <p className="font-medium text-slate-950">{userName}</p>
-                      <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600">
+                <div className="min-w-0 flex-1">
+                  <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4 transition focus-within:border-blue-300 focus-within:bg-white">
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <p className="font-bold text-slate-950">{userName}</p>
+                      <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-slate-500 ring-1 ring-slate-200">
                         Posting to everyone
                       </span>
                     </div>
 
                     <textarea
                       value={postText}
-                      onChange={(e) => setPostText(e.target.value)}
+                      onChange={(event) => setPostText(event.target.value)}
                       rows={4}
                       placeholder="What’s on your mind today?"
-                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-slate-950 placeholder:text-slate-500 outline-none"
+                      className="w-full resize-none bg-transparent text-[15px] leading-7 text-slate-900 outline-none placeholder:text-slate-500"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-5 sm:gap-3">
+              <div className="mt-4 flex flex-wrap gap-2.5">
                 {quickActions.map((action) => (
                   <button
                     key={action}
@@ -1503,10 +1344,10 @@ export default function FeedPage() {
                       setActiveComposerAction(action);
                       if (action === "Story") handleOpenStoryCreator();
                     }}
-                    className={`rounded-full px-4 py-2.5 text-sm font-medium transition sm:px-5 sm:py-3 ${
+                    className={`rounded-full px-4 py-2.5 text-sm font-bold transition ${
                       activeComposerAction === action
                         ? "bg-blue-600 text-white shadow-sm"
-                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                   >
                     {action}
@@ -1515,17 +1356,15 @@ export default function FeedPage() {
               </div>
 
               {(activeComposerAction === "Photo" || activeComposerAction === "Story") && (
-                <div className={`mt-5 rounded-[24px] p-4 ${softCard}`}>
-                  <div>
-                    <p className="text-sm font-medium text-slate-950">
-                      {activeComposerAction === "Story" ? "Story image" : "Photo upload"}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {activeComposerAction === "Story"
-                        ? "Use the Create story button above to publish a real story"
-                        : "Add a strong visual to make your post stand out"}
-                    </p>
-                  </div>
+                <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-black text-slate-950">
+                    {activeComposerAction === "Story" ? "Story image" : "Photo upload"}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {activeComposerAction === "Story"
+                      ? "Use the Create story button above to publish a story."
+                      : "Add a strong visual to make your post stand out."}
+                  </p>
 
                   {activeComposerAction === "Photo" && (
                     <>
@@ -1533,73 +1372,63 @@ export default function FeedPage() {
                         type="file"
                         accept="image/*"
                         onChange={handleImageChange}
-                        className="mt-4 block w-full rounded-2xl text-sm text-slate-950 file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-4 file:py-2.5 file:text-blue-600"
+                        className="mt-4 block w-full rounded-2xl text-sm text-slate-900 file:mr-4 file:rounded-xl file:border-0 file:bg-blue-50 file:px-4 file:py-2.5 file:font-bold file:text-blue-700"
                       />
 
                       {imagePreview && (
-                        <div className="mt-4 overflow-hidden rounded-[20px] border border-slate-200">
-                          <img
-                            src={imagePreview}
-                            alt="Preview"
-                            className="object-cover w-full max-h-96"
-                          />
+                        <div className="mt-4 overflow-hidden rounded-[22px] border border-slate-200 bg-white">
+                          <img src={imagePreview} alt="Preview" className="max-h-96 w-full object-cover" />
                         </div>
                       )}
                     </>
                   )}
 
                   {activeComposerAction === "Story" && (
-                    <div className="mt-4">
-                      <button
-                        type="button"
-                        onClick={handleOpenStoryCreator}
-                        disabled={storyUploading}
-                        className="px-4 py-3 text-sm font-medium transition border rounded-2xl border-cyan-400/20 bg-cyan-500/10 text-blue-600 hover:bg-cyan-500/20 disabled:opacity-70"
-                      >
-                        {storyUploading ? "Uploading story..." : "Choose story image"}
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleOpenStoryCreator}
+                      disabled={storyUploading}
+                      className="mt-4 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-70"
+                    >
+                      {storyUploading ? "Uploading story..." : "Choose story image"}
+                    </button>
                   )}
                 </div>
               )}
 
               {(activeComposerAction === "Video" || activeComposerAction === "Live") && (
-                <div className={`mt-5 rounded-[24px] p-4 ${softCard}`}>
-                  <div>
-                    <p className="text-sm font-medium text-slate-950">
-                      {activeComposerAction === "Live" ? "Live stream link" : "Video link"}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Paste a YouTube link or direct video URL
-                    </p>
-                  </div>
+                <div className="mt-5 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-black text-slate-950">
+                    {activeComposerAction === "Live" ? "Live stream link" : "Video link"}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">Paste a YouTube link or direct video URL.</p>
 
                   <input
                     type="text"
                     value={videoUrl}
-                    onChange={(e) => setVideoUrl(e.target.value)}
+                    onChange={(event) => setVideoUrl(event.target.value)}
                     placeholder={
                       activeComposerAction === "Live"
                         ? "Paste a live stream or video URL"
                         : "Paste a YouTube or video URL"
                     }
-                    className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 placeholder:text-slate-500 outline-none transition focus:border-cyan-400/40"
+                    className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-500 transition focus:border-blue-300"
                   />
                 </div>
               )}
 
-              <div className="flex flex-col gap-4 pt-4 mt-5 border-t border-slate-200 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mt-5 flex flex-col gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap gap-2">
-                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600">
+                  <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
                     Text
                   </span>
                   {imagePreview && (
-                    <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-3 py-1.5 text-xs text-fuchsia-200">
+                    <span className="rounded-full bg-purple-50 px-3 py-1.5 text-xs font-bold text-purple-700">
                       Image attached
                     </span>
                   )}
                   {videoUrl.trim() && (
-                    <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-blue-600">
+                    <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
                       Video linked
                     </span>
                   )}
@@ -1615,24 +1444,25 @@ export default function FeedPage() {
                       setImagePreview("");
                       setActiveComposerAction("Photo");
                     }}
-                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-100"
                   >
                     Clear
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleCreatePost}
                     disabled={posting}
-                    className="px-6 py-3 text-sm font-semibold text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-200 disabled:opacity-70"
+                    className="rounded-2xl bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-70"
                   >
                     {posting ? "Posting..." : "Post"}
                   </button>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2 rounded-[28px] bg-white p-3 shadow-sm ring-1 ring-slate-200">
             {feedTabs.map((tab) => (
               <button
                 key={tab}
@@ -1641,10 +1471,10 @@ export default function FeedPage() {
                   setActiveFeedTab(tab);
                   if (tab === "Videos") router.push("/videos");
                 }}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                className={`rounded-full px-4 py-2 text-sm font-black transition ${
                   activeFeedTab === tab
                     ? "bg-blue-600 text-white shadow-sm"
-                    : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
                 {tab}
@@ -1653,22 +1483,16 @@ export default function FeedPage() {
           </div>
 
           {filteredPosts.length === 0 ? (
-            <div className={`rounded-[30px] p-8 text-center ${glassCard}`}>
-              <p className="text-lg font-medium text-slate-950">No posts found here yet.</p>
-              <p className="mt-2 text-sm text-slate-500">
-                Try another feed tab or create the first post.
-              </p>
+            <div className="rounded-[32px] bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
+              <p className="text-lg font-black text-slate-950">No posts found here yet.</p>
+              <p className="mt-2 text-sm text-slate-500">Try another feed tab or create the first post.</p>
             </div>
           ) : (
             <div className="space-y-6">
               {filteredPosts.map((post) => {
                 const authorProfile = getProfileById(post.user_id);
                 const authorName = getBestNameForUser(post.user_id, post.full_name);
-                const authorAvatar = getBestAvatarForUser(
-                  post.user_id,
-                  post.full_name,
-                  post.avatar_url
-                );
+                const authorAvatar = getBestAvatarForUser(post.user_id, post.full_name, post.avatar_url);
                 const likesCount = getPostLikesCount(post.id);
                 const commentsCount = getPostCommentsCount(post.id);
 
@@ -1676,55 +1500,51 @@ export default function FeedPage() {
                   .filter((comment) => comment.post_id === post.id)
                   .sort(
                     (a, b) =>
-                      new Date(b.created_at).getTime() -
-                      new Date(a.created_at).getTime()
+                      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                   )
                   .slice(0, 2);
 
                 return (
-                  <article key={post.id} className={`overflow-hidden rounded-[32px] ${glassCard}`}>
+                  <article
+                    key={post.id}
+                    className="overflow-hidden rounded-[34px] bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg"
+                  >
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4">
-                        <Link
-                          href={`/profile?id=${post.user_id}`}
-                          className="flex items-center min-w-0 gap-3 hover:opacity-90"
-                        >
+                        <Link href={`/profile?id=${post.user_id}`} className="flex min-w-0 items-center gap-3">
                           <img
                             src={authorAvatar}
                             alt={authorName}
-                            className="object-cover w-12 h-12 rounded-2xl ring-1 ring-white/10"
+                            className="h-12 w-12 rounded-2xl object-cover"
                           />
 
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-slate-950 truncate">{authorName}</p>
+                              <p className="truncate font-black text-slate-950">{authorName}</p>
 
                               {authorProfile?.username && (
-                                <span className="text-sm truncate text-slate-500">
-                                  @{authorProfile.username}
-                                </span>
+                                <span className="truncate text-sm text-slate-500">@{authorProfile.username}</span>
                               )}
 
-                              <span className="hidden w-1 h-1 rounded-full bg-slate-500 sm:block" />
-
+                              <span className="hidden h-1 w-1 rounded-full bg-slate-300 sm:block" />
                               <span className="text-xs text-slate-500">
                                 {new Date(post.created_at).toLocaleString()}
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] text-slate-600">
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                              <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">
                                 Public
                               </span>
 
                               {post.video_url && (
-                                <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-blue-600">
+                                <span className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700">
                                   Video post
                                 </span>
                               )}
 
                               {post.image_url && !post.video_url && (
-                                <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-2.5 py-1 text-[11px] text-fuchsia-200">
+                                <span className="rounded-full bg-purple-50 px-3 py-1 text-[11px] font-bold text-purple-700">
                                   Photo post
                                 </span>
                               )}
@@ -1734,8 +1554,9 @@ export default function FeedPage() {
 
                         {post.user_id === userId && (
                           <button
+                            type="button"
                             onClick={() => handleDeletePost(post.id)}
-                            className="px-4 py-2 text-xs text-red-200 transition border rounded-2xl border-red-400/20 bg-red-500/10 hover:bg-red-500/20"
+                            className="rounded-full bg-red-50 px-3 py-2 text-xs font-black text-red-600 transition hover:bg-red-100"
                           >
                             Delete
                           </button>
@@ -1743,26 +1564,22 @@ export default function FeedPage() {
                       </div>
 
                       {post.content && (
-                        <div className="mt-5">
-                          <p className="text-[15px] leading-8 text-slate-700">{post.content}</p>
-                        </div>
+                        <p className="mt-5 whitespace-pre-line text-[15px] leading-8 text-slate-700">
+                          {post.content}
+                        </p>
                       )}
                     </div>
 
                     {post.image_url && (
-                      <div className="px-3 pb-3 border-y border-slate-200 bg-black/20 sm:px-4 sm:pb-4">
-                        <div className="overflow-hidden rounded-[28px]">
-                          <img
-                            src={post.image_url}
-                            alt="Post"
-                            className="max-h-[720px] w-full object-cover"
-                          />
+                      <div className="border-y border-slate-200 bg-slate-100 px-3 py-3 sm:px-4">
+                        <div className="overflow-hidden rounded-[28px] bg-white">
+                          <img src={post.image_url} alt="Post" className="max-h-[720px] w-full object-cover" />
                         </div>
                       </div>
                     )}
 
                     {post.video_url && (
-                      <div className="px-3 pb-3 border-y border-slate-200 bg-slate-950 sm:px-4 sm:pb-4">
+                      <div className="border-y border-slate-200 bg-slate-950 px-3 py-3 sm:px-4">
                         <div className="overflow-hidden rounded-[28px]">
                           {isYouTubeUrl(post.video_url) ? (
                             <iframe
@@ -1772,46 +1589,36 @@ export default function FeedPage() {
                               allowFullScreen
                             />
                           ) : (
-                            <video
-                              controls
-                              className="h-80 w-full bg-black md:h-[480px]"
-                              src={post.video_url}
-                            />
+                            <video controls className="h-80 w-full bg-black md:h-[480px]" src={post.video_url} />
                           )}
                         </div>
                       </div>
                     )}
 
                     <div className="p-5 sm:p-6">
-                      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-200">
-                        <div className="flex items-center gap-3 text-sm">
-                          <div className="flex items-center gap-2 rounded-full bg-white px-3 py-1.5">
-                            <span className="text-base">❤️</span>
-                            <span className="text-slate-700">
-                              {likesCount} {likesCount === 1 ? "like" : "likes"}
-                            </span>
-                          </div>
-
-                          <div className="rounded-full bg-white px-3 py-1.5 text-slate-600">
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                        <div className="flex flex-wrap items-center gap-2 text-sm">
+                          <span className="rounded-full bg-slate-100 px-3 py-1.5 font-bold text-slate-700">
+                            ❤️ {likesCount} {likesCount === 1 ? "like" : "likes"}
+                          </span>
+                          <span className="rounded-full bg-slate-100 px-3 py-1.5 font-bold text-slate-700">
                             {commentsCount} {commentsCount === 1 ? "comment" : "comments"}
-                          </div>
+                          </span>
                         </div>
 
-                        <Link
-                          href={`/post/${post.id}`}
-                          className="text-sm font-medium transition text-blue-600 hover:text-blue-600"
-                        >
+                        <Link href={`/post/${post.id}`} className="text-sm font-black text-blue-600 hover:text-blue-700">
                           View discussion
                         </Link>
                       </div>
 
-                      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
+                      <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
                         <button
+                          type="button"
                           onClick={() => handleToggleLike(post.id, post.user_id)}
-                          className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                          className={`rounded-2xl px-4 py-3 text-sm font-black transition ${
                             isLiked(post.id)
-                              ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
-                              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                              ? "bg-blue-600 text-white"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                           }`}
                         >
                           {isLiked(post.id) ? "Liked" : "Like"}
@@ -1819,17 +1626,18 @@ export default function FeedPage() {
 
                         <Link
                           href={`/post/${post.id}`}
-                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-medium text-slate-600 transition hover:bg-slate-100"
+                          className="rounded-2xl bg-slate-100 px-4 py-3 text-center text-sm font-black text-slate-600 transition hover:bg-slate-200"
                         >
                           Comment
                         </Link>
 
                         <button
+                          type="button"
                           onClick={() => handleToggleSave(post.id)}
-                          className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                          className={`rounded-2xl px-4 py-3 text-sm font-black transition ${
                             isSaved(post.id)
-                              ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
-                              : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                              ? "bg-blue-600 text-white"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                           }`}
                         >
                           {isSaved(post.id) ? "Saved" : "Save"}
@@ -1837,51 +1645,37 @@ export default function FeedPage() {
 
                         <Link
                           href={`/post/${post.id}`}
-                          className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-medium text-blue-600 transition hover:bg-slate-100"
+                          className="rounded-2xl bg-blue-50 px-4 py-3 text-center text-sm font-black text-blue-700 transition hover:bg-blue-100"
                         >
                           Open
                         </Link>
                       </div>
 
                       {latestComments.length > 0 && (
-                        <div className="pt-4 mt-5 space-y-3 border-t border-slate-200">
-                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        <div className="mt-5 space-y-3 border-t border-slate-200 pt-4">
+                          <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
                             Recent comments
                           </p>
 
                           {latestComments.map((comment) => {
-                            const commentAuthorName = getBestNameForUser(
-                              comment.user_id,
-                              comment.full_name
-                            );
-                            const commentAuthorAvatar = getBestAvatarForUser(
-                              comment.user_id,
-                              comment.full_name,
-                              null
-                            );
+                            const commentAuthorName = getBestNameForUser(comment.user_id, comment.full_name);
+                            const commentAuthorAvatar = getBestAvatarForUser(comment.user_id, comment.full_name, null);
 
                             return (
-                              <div
-                                key={comment.id}
-                                className={`flex items-start gap-3 rounded-2xl px-3 py-3 ${softCard}`}
-                              >
+                              <div key={comment.id} className="flex items-start gap-3 rounded-2xl bg-slate-50 px-3 py-3">
                                 <img
                                   src={commentAuthorAvatar}
                                   alt={commentAuthorName}
-                                  className="object-cover h-9 w-9 rounded-xl"
+                                  className="h-9 w-9 rounded-xl object-cover"
                                 />
-
-                                <div className="flex-1 min-w-0">
+                                <div className="min-w-0 flex-1">
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <p className="text-sm font-medium text-slate-950">
-                                      {commentAuthorName}
-                                    </p>
+                                    <p className="text-sm font-black text-slate-950">{commentAuthorName}</p>
                                     <span className="text-[11px] text-slate-500">
                                       {new Date(comment.created_at).toLocaleString()}
                                     </span>
                                   </div>
-
-                                  <p className="mt-1 text-sm leading-6 line-clamp-2 text-slate-600">
+                                  <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">
                                     {comment.content}
                                   </p>
                                 </div>
@@ -1899,391 +1693,237 @@ export default function FeedPage() {
         </section>
 
         <aside className="space-y-5">
-          <div className={`rounded-[28px] p-5 ${glassCard}`}>
-            {activeRightPanel === "friends" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-blue-600">Friends</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Online, suggestions, and your friends
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveFriendsTab("online")}
-                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
-                      activeFriendsTab === "online"
-                        ? "bg-cyan-500/20 text-blue-600"
-                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    Online
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveFriendsTab("suggestions")}
-                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
-                      activeFriendsTab === "suggestions"
-                        ? "bg-cyan-500/20 text-blue-600"
-                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    Suggestions
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveFriendsTab("your_friends")}
-                    className={`rounded-full px-3 py-2 text-xs font-medium transition ${
-                      activeFriendsTab === "your_friends"
-                        ? "bg-cyan-500/20 text-blue-600"
-                        : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    Your Friends
-                  </button>
-                </div>
-
-                {activeFriendsTab === "online" && (
-                  <div className="space-y-4">
-                    {onlinePeople.length === 0 ? (
-                      <p className="text-sm text-slate-500">No online friends to show yet.</p>
-                    ) : (
-                      onlinePeople.map((person) => (
-                        <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
-                          <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
-                            <div className="relative">
-                              <img
-                                src={
-                                  person.avatar_url ||
-                                  getAvatarUrl(person.full_name || "FaceGrem User")
-                                }
-                                alt={person.full_name}
-                                className="object-cover w-12 h-12 rounded-2xl"
-                              />
-                              <span className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#07111f] bg-emerald-400" />
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-950 truncate">{person.full_name}</p>
-                              <p className="text-xs truncate text-slate-500">
-                                @{person.username || "member"} • online
-                              </p>
-                            </div>
-                          </Link>
-
-                          <div className="grid grid-cols-2 gap-2 mt-3">
-                            <Link
-                              href={`/messages?user=${person.id}`}
-                              className="rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-sm shadow-blue-200"
-                            >
-                              Message
-                            </Link>
-
-                            <Link
-                              href={`/profile?id=${person.id}`}
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm text-slate-600 transition hover:bg-slate-100"
-                            >
-                              View
-                            </Link>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-
-                {activeFriendsTab === "suggestions" && (
-                  <div className="space-y-4">
-                    {suggestedPeople.length === 0 ? (
-                      <p className="text-sm text-slate-500">No suggestions yet.</p>
-                    ) : (
-                      suggestedPeople.map((person) => {
-                        const following = isFollowingUser(person.id);
-
-                        return (
-                          <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
-                            <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
-                              <img
-                                src={
-                                  person.avatar_url ||
-                                  getAvatarUrl(person.full_name || "FaceGrem User")
-                                }
-                                alt={person.full_name}
-                                className="object-cover w-12 h-12 rounded-2xl"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-slate-950 truncate">{person.full_name}</p>
-                                <p className="text-xs truncate text-slate-500">
-                                  @{person.username || "member"}
-                                </p>
-                              </div>
-                            </Link>
-
-                            <div className="flex gap-2 mt-3">
-                              <button
-                                onClick={() => handleToggleFollow(person.id)}
-                                className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
-                                  following
-                                    ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
-                                    : "bg-blue-600 text-white shadow-sm"
-                                }`}
-                              >
-                                {following ? "Following" : "Follow"}
-                              </button>
-
-                              <Link
-                                href={`/profile?id=${person.id}`}
-                                className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-600 transition hover:bg-slate-100"
-                              >
-                                View
-                              </Link>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-                )}
-
-                {activeFriendsTab === "your_friends" && (
-                  <div className="space-y-4">
-                    {yourFriends.length === 0 ? (
-                      <p className="text-sm text-slate-500">You have no friends to show yet.</p>
-                    ) : (
-                      yourFriends.map((person) => (
-                        <div key={person.id} className={`rounded-2xl p-4 ${softCard}`}>
-                          <Link href={`/profile?id=${person.id}`} className="flex items-center gap-3">
-                            <img
-                              src={
-                                person.avatar_url ||
-                                getAvatarUrl(person.full_name || "FaceGrem User")
-                              }
-                              alt={person.full_name}
-                              className="object-cover w-12 h-12 rounded-2xl"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-950 truncate">{person.full_name}</p>
-                              <p className="text-xs truncate text-slate-500">
-                                @{person.username || "member"}
-                              </p>
-                            </div>
-                          </Link>
-
-                          <div className="grid grid-cols-2 gap-2 mt-3">
-                            <Link
-                              href={`/messages?user=${person.id}`}
-                              className="rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2.5 text-center text-sm font-medium text-white shadow-sm shadow-blue-200"
-                            >
-                              Message
-                            </Link>
-
-                            <Link
-                              href={`/profile?id=${person.id}`}
-                              className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-center text-sm text-slate-600 transition hover:bg-slate-100"
-                            >
-                              View
-                            </Link>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
+          <section className="rounded-[32px] bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-black text-slate-950">People</p>
+                <p className="mt-1 text-xs text-slate-500">Connect with members</p>
               </div>
-            )}
+              <FriendsFistIcon className="h-6 w-6 text-blue-600" />
+            </div>
 
-            {activeRightPanel === "communities" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-blue-600">Communities</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Discover and open communities
-                  </p>
-                </div>
-
-                {suggestedCommunities.length === 0 ? (
-                  <p className="text-sm text-slate-500">No communities to show yet.</p>
-                ) : (
-                  suggestedCommunities.map((community) => {
-                    const memberCount = communityMembers.filter(
-                      (member) => member.community_id === community.id
-                    ).length;
-
-                    return (
-                      <Link
-                        key={community.id}
-                        href={`/communities/${community.id}`}
-                        className={`block rounded-2xl p-4 transition hover:bg-slate-100 ${softCard}`}
-                      >
-                        <p className="font-medium text-slate-950">{community.name}</p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {community.category || "Community"} • {memberCount} members
-                        </p>
-                      </Link>
-                    );
-                  })
-                )}
-
-                <Link
-                  href="/communities"
-                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-200"
+            <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-1">
+              {(["online", "suggestions", "your_friends"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setActiveFriendsTab(tab)}
+                  className={`rounded-xl px-2 py-2 text-[11px] font-black transition ${
+                    activeFriendsTab === tab
+                      ? "bg-white text-blue-700 shadow-sm"
+                      : "text-slate-500 hover:bg-white/70"
+                  }`}
                 >
-                  Open communities page
-                </Link>
-              </div>
-            )}
+                  {tab === "online" ? "Online" : tab === "suggestions" ? "Suggested" : "Friends"}
+                </button>
+              ))}
+            </div>
 
-            {activeRightPanel === "messages" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-blue-600">Messages</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Recent activity and quick access
-                  </p>
-                </div>
-
-                {latestActivity.length === 0 ? (
-                  <p className="text-sm text-slate-500">No activity yet.</p>
-                ) : (
-                  latestActivity.map((notification) => (
-                    <div key={notification.id} className={`rounded-2xl px-4 py-3 ${softCard}`}>
-                      <p className="text-sm leading-6 text-slate-950">
-                        <span className="font-medium">
-                          {notification.actor_name || "Someone"}
-                        </span>{" "}
-                        {notification.type}
-                        {notification.content ? `: ${notification.content}` : ""}
-                      </p>
-                      <p className="mt-2 text-xs text-slate-500">
-                        {new Date(notification.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                  ))
-                )}
-
-                <Link
-                  href="/messages"
-                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-200"
-                >
-                  Open messages
-                </Link>
-              </div>
-            )}
-
-            {activeRightPanel === "videos" && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-blue-600">Videos</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Trending and recent videos
-                  </p>
-                </div>
-
-                {latestVideoCards.length === 0 ? (
-                  <p className="text-sm text-slate-500">No videos published yet.</p>
-                ) : (
-                  latestVideoCards.map((video) => (
-                    <Link
-                      key={video.id}
-                      href="/videos"
-                      className={`block rounded-2xl p-4 transition hover:bg-slate-100 ${softCard}`}
-                    >
-                      <p className="font-medium text-slate-950">{video.title}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {(video.views_count || 0).toLocaleString()} views
-                      </p>
+            <div className="mt-4 space-y-3">
+              {(activeFriendsTab === "online"
+                ? onlinePeople
+                : activeFriendsTab === "suggestions"
+                  ? suggestedPeople
+                  : yourFriends
+              ).length === 0 ? (
+                <p className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-500">
+                  People will appear here as your network grows.
+                </p>
+              ) : (
+                (activeFriendsTab === "online"
+                  ? onlinePeople
+                  : activeFriendsTab === "suggestions"
+                    ? suggestedPeople
+                    : yourFriends
+                ).map((profile) => (
+                  <div
+                    key={profile.id}
+                    className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3"
+                  >
+                    <Link href={`/profile?id=${profile.id}`} className="flex min-w-0 flex-1 items-center gap-3">
+                      <img
+                        src={profile.avatar_url || getAvatarUrl(profile.full_name || "FaceGrem User")}
+                        alt={profile.full_name}
+                        className="h-11 w-11 rounded-2xl object-cover"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-black text-slate-950">{profile.full_name}</p>
+                        <p className="truncate text-xs text-slate-500">@{profile.username || "member"}</p>
+                      </div>
                     </Link>
-                  ))
-                )}
 
-                <Link
-                  href="/videos"
-                  className="block px-4 py-3 text-sm font-medium text-center text-white shadow-sm rounded-2xl bg-gradient-to-r from-blue-500 to-blue-600 shadow-blue-200"
-                >
-                  Open videos page
-                </Link>
+                    {profile.id !== userId && (
+                      <button
+                        type="button"
+                        onClick={() => handleToggleFollow(profile.id)}
+                        className={`rounded-full px-3 py-1.5 text-xs font-black transition ${
+                          isFollowingUser(profile.id)
+                            ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+                      >
+                        {isFollowingUser(profile.id) ? "Following" : "Follow"}
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-[32px] bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-black text-slate-950">Suggested communities</p>
+                <p className="mt-1 text-xs text-slate-500">Find places to belong</p>
               </div>
-            )}
-          </div>
+              <GroupPeopleIcon className="h-6 w-6 text-blue-600" />
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {suggestedCommunities.length === 0 ? (
+                <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
+                  No new communities to show yet.
+                </p>
+              ) : (
+                suggestedCommunities.map((community) => (
+                  <Link
+                    key={community.id}
+                    href={`/communities/${community.id}`}
+                    className="block rounded-2xl border border-slate-200 bg-white p-4 transition hover:bg-slate-50"
+                  >
+                    <p className="truncate font-black text-slate-950">{community.name}</p>
+                    <p className="mt-1 text-xs text-slate-500">{community.category || "Community"}</p>
+                  </Link>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-[32px] bg-white p-5 shadow-sm ring-1 ring-slate-200">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-black text-slate-950">Latest videos</p>
+                <p className="mt-1 text-xs text-slate-500">Fresh creator content</p>
+              </div>
+              <Link href="/videos" className="text-xs font-black text-blue-600">
+                View
+              </Link>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {latestVideoCards.length === 0 ? (
+                <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
+                  Videos will appear here soon.
+                </p>
+              ) : (
+                latestVideoCards.map((video) => (
+                  <Link
+                    key={video.id}
+                    href="/videos"
+                    className="block rounded-2xl border border-slate-200 bg-white p-3 transition hover:bg-slate-50"
+                  >
+                    <div className="flex gap-3">
+                      <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-950 text-white">
+                        {video.thumbnail_url ? (
+                          <img src={video.thumbnail_url} alt={video.title} className="h-full w-full object-cover" />
+                        ) : (
+                          "▶"
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="line-clamp-2 text-sm font-black text-slate-950">{video.title}</p>
+                        <p className="mt-1 text-xs text-slate-500">{video.category || "Video"}</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </section>
         </aside>
       </main>
 
       {storyViewerOpen && activeStory && activeStoryGroup && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 px-4 backdrop-blur-md">
-          <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-slate-200 bg-[#07111f] shadow-2xl">
-            <div className="absolute inset-x-0 top-0 z-10 flex gap-1 px-4 pt-4">
-              {activeStoryGroup.stories.map((story, index) => (
-                <div key={story.id} className="flex-1 h-1 rounded-full bg-white/20">
-                  <div
-                    className={`h-1 rounded-full ${
-                      index <= activeStoryIndex ? "bg-white" : "bg-transparent"
-                    }`}
-                  />
-                </div>
-              ))}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 p-4">
+          <button
+            type="button"
+            onClick={closeStoryViewer}
+            className="absolute right-5 top-5 rounded-full bg-white/10 px-4 py-2 text-sm font-black text-white transition hover:bg-white/20"
+          >
+            Close
+          </button>
+
+          <button
+            type="button"
+            onClick={goToPreviousStory}
+            className="absolute left-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/10 px-4 py-4 text-2xl text-white transition hover:bg-white/20 sm:block"
+            aria-label="Previous story"
+          >
+            ‹
+          </button>
+
+          <div className="w-full max-w-md overflow-hidden rounded-[34px] bg-white shadow-2xl">
+            <div className="flex items-center gap-3 border-b border-slate-200 p-4">
+              <img
+                src={getBestAvatarForUser(activeStoryGroup.userId)}
+                alt={getBestNameForUser(activeStoryGroup.userId)}
+                className="h-11 w-11 rounded-2xl object-cover"
+              />
+              <div className="min-w-0">
+                <p className="truncate font-black text-slate-950">
+                  {getBestNameForUser(activeStoryGroup.userId)}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {new Date(activeStory.created_at).toLocaleString()}
+                </p>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={closeStoryViewer}
-              className="absolute z-20 px-3 py-1 text-sm text-slate-950 border rounded-full right-4 top-6 border-slate-200 bg-slate-950"
-            >
-              ✕
-            </button>
-
-            <div className="relative">
+            <div className="relative bg-slate-950">
               <img
                 src={activeStory.image_url}
-                alt={getBestNameForUser(activeStory.user_id)}
-                className="h-[72vh] w-full object-cover"
+                alt="Story"
+                className="max-h-[72vh] w-full object-contain"
               />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
-
-              <button
-                type="button"
-                onClick={goToPreviousStory}
-                className="absolute top-0 left-0 w-1/3 h-full"
-                aria-label="Previous story"
-              />
-              <button
-                type="button"
-                onClick={goToNextStory}
-                className="absolute top-0 right-0 w-1/3 h-full"
-                aria-label="Next story"
-              />
-
-              <div className="absolute z-10 flex items-center gap-3 pt-4 left-4 top-6">
-                <img
-                  src={getBestAvatarForUser(activeStory.user_id)}
-                  alt={getBestNameForUser(activeStory.user_id)}
-                  className="object-cover border h-11 w-11 rounded-2xl border-white/20"
-                />
-                <div>
-                  <p className="font-medium text-slate-950">
-                    {getBestNameForUser(activeStory.user_id)}
-                  </p>
-                  <p className="text-xs text-slate-950/75">
-                    {new Date(activeStory.created_at).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-
-              {activeStory.caption && (
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <p className="text-sm leading-7 text-slate-950">{activeStory.caption}</p>
-                </div>
-              )}
             </div>
+
+            {activeStory.caption && (
+              <p className="border-t border-slate-200 p-4 text-sm leading-7 text-slate-700">
+                {activeStory.caption}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={goToNextStory}
+            className="absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/10 px-4 py-4 text-2xl text-white transition hover:bg-white/20 sm:block"
+            aria-label="Next story"
+          >
+            ›
+          </button>
+
+          <div className="absolute bottom-6 flex gap-3 sm:hidden">
+            <button
+              type="button"
+              onClick={goToPreviousStory}
+              className="rounded-full bg-white/10 px-5 py-3 text-white"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={goToNextStory}
+              className="rounded-full bg-white/10 px-5 py-3 text-white"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}
 
-      <MobileBottomNav unreadNotificationsCount={unreadNotificationsCount} />
+      <MobileBottomNav />
     </div>
   );
 }
