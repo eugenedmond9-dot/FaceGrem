@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { LanguageProvider } from "../components/LanguageProvider";
+import CookieConsentBanner from "../components/CookieConsentBanner";
 
 export const metadata: Metadata = {
   title: "FaceGrem",
@@ -16,7 +17,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider>
+          {children}
+          <CookieConsentBanner />
+        </LanguageProvider>
       </body>
     </html>
   );
