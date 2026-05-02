@@ -113,6 +113,12 @@ const glassCard =
 const softCard =
   "border border-slate-200 bg-white shadow-sm";
 
+const premiumSurface =
+  "rounded-[32px] border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)]";
+
+const subtleSurface =
+  "rounded-[26px] border border-slate-200 bg-white/95 shadow-[0_10px_35px_rgba(15,23,42,0.06)]";
+
 export default function FeedPage() {
   const router = useRouter();
   const storyInputRef = useRef<HTMLInputElement | null>(null);
@@ -913,7 +919,7 @@ export default function FeedPage() {
         <div className="absolute bottom-[-8rem] left-1/3 h-[24rem] w-[24rem] rounded-full bg-indigo-100/40 blur-3xl" />
       </div>
 
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 shadow-[0_10px_40px_rgba(15,23,42,0.06)] backdrop-blur-xl">
         <div className="flex items-center gap-3 px-4 py-4 mx-auto max-w-7xl sm:px-6">
           <div className="flex items-center gap-3">
             <button
@@ -940,7 +946,7 @@ export default function FeedPage() {
 
           <div className="flex-1 hidden lg:block">
             <div className="max-w-xl mx-auto">
-              <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
+              <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 shadow-inner transition focus-within:border-blue-300 focus-within:bg-white">
                 <span className="text-sm text-slate-500">⌕</span>
                 <input
                   type="text"
@@ -1043,7 +1049,7 @@ export default function FeedPage() {
 
         <div className="px-4 pb-4 sm:px-6 lg:hidden">
           <div className="mx-auto space-y-3 max-w-7xl">
-            <div className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${softCard}`}>
+            <div className="flex items-center gap-3 rounded-full border border-slate-200 bg-slate-50 px-4 py-3 shadow-inner transition focus-within:border-blue-300 focus-within:bg-white">
               <span className="text-sm text-slate-500">⌕</span>
               <input
                 type="text"
@@ -1088,22 +1094,38 @@ export default function FeedPage() {
         </div>
       </header>
 
-      <section className="relative mx-auto mt-4 max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-3 rounded-[28px] bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:grid-cols-3">
-          <div className="rounded-2xl bg-blue-50 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Live feed</p>
-            <p className="mt-1 text-2xl font-black text-slate-950">{filteredPosts.length}</p>
-            <p className="text-xs text-slate-500">Posts visible now</p>
-          </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Creators</p>
-            <p className="mt-1 text-2xl font-black text-slate-950">{profiles.length}</p>
-            <p className="text-xs text-slate-500">People in your world</p>
-          </div>
-          <div className="rounded-2xl bg-slate-50 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Notifications</p>
-            <p className="mt-1 text-2xl font-black text-slate-950">{unreadNotificationsCount}</p>
-            <p className="text-xs text-slate-500">Unread updates</p>
+      <section className="relative mx-auto mt-5 max-w-7xl px-4 sm:px-6">
+        <div className="overflow-hidden rounded-[34px] bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] ring-1 ring-slate-200">
+          <div className="grid gap-4 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">
+                FaceGrem command center
+              </p>
+              <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                Welcome back, {userName.split(" ")[0] || "Creator"}.
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
+                Your feed, creators, communities, videos, stories, and notifications are organized in one clean professional workspace.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-[24px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Feed</p>
+                <p className="mt-2 text-3xl font-black text-slate-950">{filteredPosts.length}</p>
+                <p className="mt-1 text-xs text-slate-500">Visible</p>
+              </div>
+              <div className="rounded-[24px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">People</p>
+                <p className="mt-2 text-3xl font-black text-slate-950">{profiles.length}</p>
+                <p className="mt-1 text-xs text-slate-500">Creators</p>
+              </div>
+              <div className="rounded-[24px] bg-white p-4 text-center shadow-sm ring-1 ring-slate-200">
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Alerts</p>
+                <p className="mt-2 text-3xl font-black text-slate-950">{unreadNotificationsCount}</p>
+                <p className="mt-1 text-xs text-slate-500">Unread</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -1123,10 +1145,10 @@ export default function FeedPage() {
         notificationCount={unreadNotificationsCount}
       />
 
-      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 xl:grid-cols-[260px_minmax(0,1fr)_340px]">
+      <main className="relative mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 xl:grid-cols-[280px_minmax(0,1fr)_360px]">
         <aside className="hidden xl:block">
           <div className="sticky top-[104px] space-y-4">
-            <div className={`overflow-hidden rounded-[30px] p-4 ${glassCard}`}>
+            <div className={`overflow-hidden ${premiumSurface} p-5`}>
               <button
                 type="button"
                 onClick={() => setIsProfileCardOpen(!isProfileCardOpen)}
@@ -1135,7 +1157,7 @@ export default function FeedPage() {
                 <img
                   src={userAvatar}
                   alt={userName}
-                  className="object-cover h-14 w-14 rounded-2xl ring-2 ring-cyan-400/20"
+                  className="object-cover h-14 w-14 rounded-2xl ring-2 ring-blue-100"
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-950 truncate">{userName}</p>
@@ -1147,17 +1169,17 @@ export default function FeedPage() {
               {isProfileCardOpen && (
                 <div className="pt-4 mt-4 space-y-3 border-t border-slate-200">
                   <div className="grid grid-cols-3 gap-2">
-                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
+                    <div className="rounded-2xl bg-slate-50 px-3 py-3 text-center ring-1 ring-slate-100">
                       <p className="text-[11px] text-slate-500">Saved</p>
                       <p className="mt-1 text-sm font-semibold text-slate-950">{savedPosts.length}</p>
                     </div>
-                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
+                    <div className="rounded-2xl bg-slate-50 px-3 py-3 text-center ring-1 ring-slate-100">
                       <p className="text-[11px] text-slate-500">Alerts</p>
                       <p className="mt-1 text-sm font-semibold text-slate-950">
                         {unreadNotificationsCount}
                       </p>
                     </div>
-                    <div className={`rounded-2xl px-3 py-3 text-center ${softCard}`}>
+                    <div className="rounded-2xl bg-slate-50 px-3 py-3 text-center ring-1 ring-slate-100">
                       <p className="text-[11px] text-slate-500">Groups</p>
                       <p className="mt-1 text-sm font-semibold text-slate-950">
                         {myCommunityIds.length}
@@ -1221,6 +1243,19 @@ export default function FeedPage() {
             </div>
           </div>
         </aside>
+
+
+            <section className="rounded-[30px] bg-slate-950 p-5 text-white shadow-[0_18px_60px_rgba(15,23,42,0.18)]">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
+                Pro workspace
+              </p>
+              <h3 className="mt-3 text-xl font-black tracking-tight">
+                Clean, fast, social.
+              </h3>
+              <p className="mt-3 text-sm leading-7 text-slate-300">
+                Every section is built to feel clear on phone and desktop, with stronger spacing, readable cards, and modern interaction states.
+              </p>
+            </section>
 
         <section className="min-w-0 space-y-5 sm:space-y-6">
           <div className="overflow-hidden rounded-[32px] border border-cyan-400/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.35),rgba(2,8,23,0.18)_55%,rgba(15,23,42,0.32))] p-6 backdrop-blur-2xl shadow-[0_30px_120px_rgba(6,182,212,0.10)]">
@@ -1393,7 +1428,7 @@ export default function FeedPage() {
                   <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-600">
                     Public post
                   </span>
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-blue-600">
+                  <span className="rounded-full border border-cyan-400/20 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-600">
                     Live composer
                   </span>
                 </div>
@@ -1467,7 +1502,7 @@ export default function FeedPage() {
                         type="file"
                         accept="image/*"
                         onChange={handleImageChange}
-                        className="mt-4 block w-full rounded-2xl text-sm text-slate-950 file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-500/20 file:px-4 file:py-2.5 file:text-blue-600"
+                        className="mt-4 block w-full rounded-2xl text-sm text-slate-950 file:mr-4 file:rounded-xl file:border-0 file:bg-blue-500/20 file:px-4 file:py-2.5 file:text-blue-600"
                       />
 
                       {imagePreview && (
@@ -1488,7 +1523,7 @@ export default function FeedPage() {
                         type="button"
                         onClick={handleOpenStoryCreator}
                         disabled={storyUploading}
-                        className="px-4 py-3 text-sm font-medium transition border rounded-2xl border-cyan-400/20 bg-cyan-500/10 text-blue-600 hover:bg-cyan-500/20 disabled:opacity-70"
+                        className="px-4 py-3 text-sm font-medium transition border rounded-2xl border-cyan-400/20 bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 disabled:opacity-70"
                       >
                         {storyUploading ? "Uploading story..." : "Choose story image"}
                       </button>
@@ -1517,7 +1552,7 @@ export default function FeedPage() {
                         ? "Paste a live stream or video URL"
                         : "Paste a YouTube or video URL"
                     }
-                    className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 placeholder:text-slate-500 outline-none transition focus:border-cyan-400/40"
+                    className="mt-4 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 placeholder:text-slate-500 outline-none transition focus:border-blue-300"
                   />
                 </div>
               )}
@@ -1533,7 +1568,7 @@ export default function FeedPage() {
                     </span>
                   )}
                   {videoUrl.trim() && (
-                    <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 text-xs text-blue-600">
+                    <span className="rounded-full border border-cyan-400/20 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-600">
                       Video linked
                     </span>
                   )}
@@ -1616,7 +1651,7 @@ export default function FeedPage() {
                   .slice(0, 2);
 
                 return (
-                  <article key={post.id} className={`overflow-hidden rounded-[32px] ${glassCard}`}>
+                  <article key={post.id} className="overflow-hidden rounded-[34px] bg-white shadow-[0_16px_55px_rgba(15,23,42,0.08)] ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4">
                         <Link
@@ -1652,7 +1687,7 @@ export default function FeedPage() {
                               </span>
 
                               {post.video_url && (
-                                <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[11px] text-blue-600">
+                                <span className="rounded-full border border-cyan-400/20 bg-blue-500/10 px-2.5 py-1 text-[11px] text-blue-600">
                                   Video post
                                 </span>
                               )}
@@ -1744,7 +1779,7 @@ export default function FeedPage() {
                           onClick={() => handleToggleLike(post.id, post.user_id)}
                           className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
                             isLiked(post.id)
-                              ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
+                              ? "border border-cyan-400/20 bg-blue-500/20 text-blue-600"
                               : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
                           }`}
                         >
@@ -1762,7 +1797,7 @@ export default function FeedPage() {
                           onClick={() => handleToggleSave(post.id)}
                           className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${
                             isSaved(post.id)
-                              ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
+                              ? "border border-cyan-400/20 bg-blue-500/20 text-blue-600"
                               : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
                           }`}
                         >
@@ -1849,7 +1884,7 @@ export default function FeedPage() {
                     onClick={() => setActiveFriendsTab("online")}
                     className={`rounded-full px-3 py-2 text-xs font-medium transition ${
                       activeFriendsTab === "online"
-                        ? "bg-cyan-500/20 text-blue-600"
+                        ? "bg-blue-500/20 text-blue-600"
                         : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
                     }`}
                   >
@@ -1861,7 +1896,7 @@ export default function FeedPage() {
                     onClick={() => setActiveFriendsTab("suggestions")}
                     className={`rounded-full px-3 py-2 text-xs font-medium transition ${
                       activeFriendsTab === "suggestions"
-                        ? "bg-cyan-500/20 text-blue-600"
+                        ? "bg-blue-500/20 text-blue-600"
                         : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
                     }`}
                   >
@@ -1873,7 +1908,7 @@ export default function FeedPage() {
                     onClick={() => setActiveFriendsTab("your_friends")}
                     className={`rounded-full px-3 py-2 text-xs font-medium transition ${
                       activeFriendsTab === "your_friends"
-                        ? "bg-cyan-500/20 text-blue-600"
+                        ? "bg-blue-500/20 text-blue-600"
                         : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
                     }`}
                   >
@@ -1962,7 +1997,7 @@ export default function FeedPage() {
                                 onClick={() => handleToggleFollow(person.id)}
                                 className={`flex-1 rounded-2xl px-4 py-2.5 text-sm font-medium transition ${
                                   following
-                                    ? "border border-cyan-400/20 bg-cyan-500/20 text-blue-600"
+                                    ? "border border-cyan-400/20 bg-blue-500/20 text-blue-600"
                                     : "bg-blue-600 text-white shadow-sm"
                                 }`}
                               >
