@@ -917,7 +917,10 @@ export default function FeedPage() {
           <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setActiveRightPanel("friends")}
+              onClick={() => {
+                setActiveRightPanel("friends");
+                router.push("/friends");
+              }}
               className={`relative inline-flex h-11 w-11 items-center justify-center rounded-full transition ${
                 activeRightPanel === "friends"
                   ? "bg-blue-600 text-white shadow-sm"
@@ -936,7 +939,10 @@ export default function FeedPage() {
 
             <button
               type="button"
-              onClick={() => setActiveRightPanel("communities")}
+              onClick={() => {
+                setActiveRightPanel("communities");
+                router.push("/communities");
+              }}
               className={`hidden h-11 w-11 items-center justify-center rounded-full transition sm:inline-flex ${
                 activeRightPanel === "communities"
                   ? "bg-blue-600 text-white shadow-sm"
@@ -950,7 +956,10 @@ export default function FeedPage() {
 
             <button
               type="button"
-              onClick={() => setActiveRightPanel("messages")}
+              onClick={() => {
+                setActiveRightPanel("messages");
+                router.push("/messages");
+              }}
               className={`relative inline-flex h-11 w-11 items-center justify-center rounded-full transition ${
                 activeRightPanel === "messages"
                   ? "bg-blue-600 text-white shadow-sm"
