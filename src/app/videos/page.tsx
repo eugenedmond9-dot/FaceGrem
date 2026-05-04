@@ -197,6 +197,59 @@ export default function VideosPage() {
 
     void loadVideosPage();
   }, [router]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    const videosChannel = supabase
+      .channel("facegrem-videos-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "videos" },
+        (payload) => {
+          const newVideo = payload.new as VideoRecord;
+
+          setVideos((current) => {
+            const alreadyExists = current.some((video) => video.id === newVideo.id);
+            if (alreadyExists) return current;
+
+            return [newVideo, ...current];
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "videos" },
+        (payload) => {
+          const updatedVideo = payload.new as VideoRecord;
+
+          setVideos((current) =>
+            current.map((video) =>
+              video.id === updatedVideo.id ? { ...video, ...updatedVideo } : video
+            )
+          );
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "videos" },
+        (payload) => {
+          const deletedVideo = payload.old as Partial<VideoRecord>;
+
+          if (!deletedVideo.id) return;
+
+          setVideos((current) =>
+            current.filter((video) => video.id !== deletedVideo.id)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(videosChannel);
+    };
+  }, [userId]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
