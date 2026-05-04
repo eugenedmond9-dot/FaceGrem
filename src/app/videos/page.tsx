@@ -83,6 +83,8 @@ export default function VideosPage() {
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [expandedVideoIds, setExpandedVideoIds] = useState<string[]>([]);
+  const [countedVideoViews, setCountedVideoViews] = useState<string[]>([]);
 
   const [activeTab, setActiveTab] =
     useState<(typeof videoTabs)[number]>("For You");
@@ -290,6 +292,32 @@ export default function VideosPage() {
   const trendingCreators = useMemo(() => {
     return profiles.filter((profile) => profile.id !== userId).slice(0, 4);
   }, [profiles, userId]);
+
+  const handleViewVideo = async (video: VideoRecord) => {
+    setExpandedVideoIds((current) =>
+      current.includes(video.id) ? current : [...current, video.id]
+    );
+
+    if (countedVideoViews.includes(video.id)) return;
+
+    const nextViewsCount = (video.views_count || 0) + 1;
+
+    setCountedVideoViews((current) => [...current, video.id]);
+    setVideos((current) =>
+      current.map((item) =>
+        item.id === video.id ? { ...item, views_count: nextViewsCount } : item
+      )
+    );
+
+    const { error } = await supabase
+      .from("videos")
+      .update({ views_count: nextViewsCount })
+      .eq("id", video.id);
+
+    if (error) {
+      console.error("Could not update video view count:", error.message);
+    }
+  };
 
 
   const handleUploadVideo = async (e: FormEvent) => {
@@ -813,22 +841,56 @@ export default function VideosPage() {
                       </div>
                     </div>
 
-                    <div className="border-y border-slate-200 bg-slate-950 px-3 pb-3 sm:px-4 sm:pb-4">
+                    <div className="border-y border-slate-200 bg-slate-950 px-3 py-3 sm:px-4">
                       <div className="overflow-hidden rounded-[28px]">
-                        {isYouTubeUrl(video.video_url) ? (
-                          <iframe
-                            src={getYouTubeEmbedUrl(video.video_url)}
-                            title={`video-${video.id}`}
-                            className="h-80 w-full md:h-[480px]"
-                            allowFullScreen
-                          />
+                        {expandedVideoIds.includes(video.id) ? (
+                          isYouTubeUrl(video.video_url) ? (
+                            <iframe
+                              src={getYouTubeEmbedUrl(video.video_url)}
+                              title={`video-${video.id}`}
+                              className="h-80 w-full md:h-[480px]"
+                              allowFullScreen
+                            />
+                          ) : (
+                            <video
+                              controls
+                              autoPlay
+                              poster={video.thumbnail_url || undefined}
+                              className="h-80 w-full bg-black md:h-[480px]"
+                              src={video.video_url}
+                            />
+                          )
                         ) : (
-                          <video
-                            controls
-                            poster={video.thumbnail_url || undefined}
-                            className="h-80 w-full bg-black md:h-[480px]"
-                            src={video.video_url}
-                          />
+                          <button
+                            type="button"
+                            onClick={() => void handleViewVideo(video)}
+                            className="group relative flex h-80 w-full items-center justify-center overflow-hidden bg-slate-950 text-white md:h-[480px]"
+                            aria-label={`Watch ${video.title}`}
+                          >
+                            {video.thumbnail_url ? (
+                              <img
+                                src={video.thumbnail_url}
+                                alt={video.title}
+                                className="absolute inset-0 h-full w-full object-cover opacity-75 transition duration-300 group-hover:scale-105"
+                              />
+                            ) : (
+                              <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950" />
+                            )}
+
+                            <div className="absolute inset-0 bg-black/35" />
+
+                            <div className="relative flex flex-col items-center px-6 text-center">
+                              <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-3xl font-black text-blue-600 shadow-2xl transition group-hover:scale-105">
+                                ▶
+                              </span>
+                              <span className="mt-5 rounded-full bg-white/95 px-5 py-2.5 text-sm font-black text-slate-950 shadow-sm">
+                                Watch video
+                              </span>
+                              <span className="mt-3 rounded-full bg-black/40 px-4 py-2 text-xs font-bold text-white backdrop-blur">
+                                {(video.views_count || 0).toLocaleString()} {t.views}
+                              </span>
+                            </div>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -845,12 +907,22 @@ export default function VideosPage() {
                           </div>
                         </div>
 
-                        <Link
-                          href={`/profile?id=${video.user_id}`}
-                          className="rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
-                        >
-                          View creator
-                        </Link>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => void handleViewVideo(video)}
+                            className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-700"
+                          >
+                            {expandedVideoIds.includes(video.id) ? "Watching" : "Watch video"}
+                          </button>
+
+                          <Link
+                            href={`/profile?id=${video.user_id}`}
+                            className="rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+                          >
+                            View creator
+                          </Link>
+                        </div>
                       </div>
                     </div>
                   </article>
